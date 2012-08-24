@@ -1,0 +1,72 @@
+#+TITLE:     org-page: static page generator
+#+AUTHOR:    Kelvin Hu
+#+EMAIL:     ini.kelvin@gmail.com
+#+DATE:      2012-08-23
+#+OPTIONS:   H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+
+
+* Introduction
+
+  Org-page is a static page generator based on [[http://orgmode.org/][org-mode]].
+
+  Org-page is designed to enhance the org publish process(only improve
+  the html format), actually the publish process of org mode is already
+  simple and powerful enough, but org-page can make it simpler and more
+  powerful.
+
+  And, org-page is only a static page generator, NOT an "org to blog"
+  program, if you want to write blog with org mode, you may could have
+  a look at [[https://github.com/renard/o-blog][o-blog]], or [[https://github.com/punchagan/org2blog][org2blog]].
+
+  Org-page provides following features:
+
+  1) recent posts support (auto generated)
+  2) tags support (auto generated)
+  3) search engine support (auto generated)
+  4) a much more beautiful theme than the default one
+  5) customized theme support
+  6) highly customizable
+
+* Usage
+
+** installation
+
+   - clone the repo from github:
+
+     : git clone http://github.com/kelvinh/org-page.git
+
+   - add following lines into your =.emacs= file:
+
+     : (add-to-list 'load-path "path/to/org-page")
+     : (require 'org-page)
+     : (setq op/root-directory "path/to/your/project")
+     : (setq op/publish-search-url "your.personal.site.com")
+     : (global-set-key (kbd "<f9>") 'op/publish-pages)
+     : (global-set-key (kbd "C-<f9>") (lambda () (interactive)
+     :                                           (op/publish-pages t)))
+
+
+   =op/root-directory= is the directory for your project, note that it
+   is *NOT* the directory for you to put your org files, instead you
+   should put all your org files into a subdirectory named ~src~, and
+   all published files will be placed into a subdirectory named ~pub~
+
+   =op/publish-search-url= stands for your personal site, which the
+   search engine will base on
+
+** publishing
+
+   Now you can publish your org files with a single key press: *<F9>*,
+   or if you want to republish all your files even they have already
+   been published and not modified since last publishing, your can
+   just press *Ctrl + <F9>*.
+
+* Dependencies
+
+  1. [[http://orgmode.org/][org mode]]: which is already included in Emacs
+  2. [[http://fly.srk.fer.hr/~hniksic/emacs/htmlize.el.cgi][htmlize]]: a package for converting Emacs fontification into HTML
+
+* Additional information
+
+  If you need more customization info, please see the =Commentary=
+  section in file =org-page.el=.
