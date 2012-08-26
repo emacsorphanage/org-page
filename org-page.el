@@ -117,7 +117,7 @@ it has higher priority than `op/exclude-filename-regexp'."
 (defcustom op/theme-directory (cond
                                (op/load-file-name (concat (file-name-directory op/load-file-name) "themes/"))
                                ((symbol-file 'op/publish-pages) (concat (file-name-directory (symbol-file 'op/publish-pages)) "themes/"))
-                               ((string= (file-name-nondirectory buffer-file-name) "org-page.el") (concat (file-name-directory buffer-file-name) "themes/"))
+                               ((equal (file-name-nondirectory buffer-file-name) "org-page.el") (concat (file-name-directory buffer-file-name) "themes/"))
                                (t nil))
   "the directory stores org-page styles/scripts/images"
   :group 'org-page
@@ -243,6 +243,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
                                      :html-preamble t
                                      :html-postamble t
                                      :auto-sitemap t
+                                     :sitemap-function op/publish-sitemap
                                      :sitemap-title ,(concat "Sitemap of " user-full-name "'s Personal Site")
                                      :table-of-contents nil
                                      :section-numbers nil
@@ -282,14 +283,20 @@ directory `%s' first, usually it is <org-page directory>/themes/"
 
 (defun op/publish-preparation ()
   "the preparation-function hook of org publishing process"
-  (let ((current-project project))
+  (let* ((current-project project)
+        (project-plist (cdr current-project))
+        (exclude-regexp (plist-get project-plist :exclude)))
 
     (op/prepare-theme project)
 
     (op/publish-generate-tags current-project)
 
     ; TODO the count number in below line should could be customized
-    (op/publish-generate-recent-posts 7 project)))
+    (op/publish-generate-recent-posts 7 project)
+
+    ; update the org file list
+    ; "files" is defined in the "let" scope of function org-publish-projects
+    (setq files (org-publish-get-base-files current-project exclude-regexp))))
 
 (defun op/publish-completion ()
   "the completion-function hook of org publish process"
@@ -349,14 +356,14 @@ TODO: update the doc string here"
           ;  add normal logic here)
 
           (unless (or (equal (file-truename tag-index-filename) (file-truename file))
-                      (string= (file-truename tag-dir) (file-name-directory (file-truename file))))
+                      (equal (file-truename tag-dir) (file-name-directory (file-truename file))))
             (goto-char (point-min))
             (if (re-search-forward tag-match-regexp nil t)
                 (setq tags (match-string-no-properties 2 nil))
               (setq tags nil))
             (when tags
               (mapcar '(lambda (tag)
-                         (unless (string= "" (replace-regexp-in-string " +" "" tag))
+                         (unless (equal "" (replace-regexp-in-string " +" "" tag))
                            (let* ((tag-list (assoc tag tags-alist)))
                              (unless tag-list
                                (setq tag-list (list tag))
@@ -422,6 +429,8 @@ project: stands for org project"
                              "sitemap.org"))
        (root-dir (file-name-as-directory
                   (plist-get project-plist :base-directory)))
+       (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory
+                                                             "tags/"))))
 
        ; TODO to be refined
        (rp-filename (concat root-dir "recentposts.org"))
@@ -443,7 +452,8 @@ project: stands for org project"
         ;  add normal logic here)
 
         (unless (or (equal (file-truename rp-filename) (file-truename file))
-                    (equal (file-truename sitemap-filename) (file-truename file)))
+                    (equal (file-truename sitemap-filename) (file-truename file))
+                    (equal (file-truename tag-dir) (file-name-directory (file-truename file))))
           (let* ((fn (file-name-nondirectory file))
                  (opt-plist (org-infile-export-plist))
                  (date (plist-get opt-plist :date))
@@ -566,6 +576,89 @@ filename: the whole name of file to publish"
                                                                                                            (?i . ,(org-html-expand email))
                                                                                                            (?h . ,cdate) (?m . ,mdate))))))
         (or file-visiting (kill-buffer file-buffer))))))
+
+(defun op/publish-sitemap (project &optional sitemap-filename)
+  "Create a sitemap of project, this function is copied and customized
+from `org-publish-org-sitemap' defined in `org-publish.el'."
+  (let* ((project-plist (cdr project))
+         (root-dir (file-name-as-directory
+                    (plist-get project-plist :base-directory)))
+         (localdir (file-name-directory root-dir))
+         (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory
+                                                               "tags/"))))
+         ; TODO here should could be customized
+         (recent-posts-filename (concat root-dir "recentposts.org"))
+
+         (indent-str (make-string 2 ?\ ))
+         (exclude-regexp (plist-get project-plist :exclude))
+         (files (nreverse (org-publish-get-base-files project exclude-regexp)))
+         (sitemap-filename (concat root-dir (or sitemap-filename "sitemap.org")))
+         (sitemap-title (or (plist-get project-plist :sitemap-title)
+                            (concat "Sitemap for project " (car project))))
+         (sitemap-style (or (plist-get project-plist :sitemap-style)
+                            'tree))
+         (sitemap-sans-extension (plist-get project-plist :sitemap-sans-extension))
+         (visiting (find-buffer-visiting sitemap-filename))
+         (ifn (file-name-nondirectory sitemap-filename))
+         file sitemap-buffer)
+    (with-current-buffer (setq sitemap-buffer
+                               (or visiting (find-file sitemap-filename)))
+      (erase-buffer)
+      (insert (concat "#+TITLE: " sitemap-title "\n\n"))
+      (while (setq file (pop files))
+        (let ((fn (file-name-nondirectory file))
+              (link (file-relative-name file root-dir))
+              (oldlocal localdir))
+          (when sitemap-sans-extension
+            (setq link (file-name-sans-extension link)))
+          ; do not include sitemap itself, tags and recentposts
+          (unless (or (equal (file-truename sitemap-filename) (file-truename file))
+                      (equal (file-truename recent-posts-filename) (file-truename file))
+                      (equal (file-truename tag-dir) (file-name-directory (file-truename file))))
+            (if (eq sitemap-style 'list)
+                (message "Generating list-style sitemap for %s" sitemap-title)
+              (message "Generating tree-style sitemap for %s" sitemap-title)
+              (setq localdir (concat (file-name-as-directory root-dir)
+                                     (file-name-directory link)))
+              (unless (string= localdir oldlocal)
+                (if (string= localdir root-dir)
+                    (setq indent-str (make-string 2 ?\ ))
+                  (let ((subdirs
+                         (split-string
+                          (directory-file-name
+                           (file-name-directory
+                            (file-relative-name localdir root-dir))) "/"))
+                        (subdir "")
+                        (old-subdirs (split-string
+                                      (file-relative-name oldlocal root-dir) "/")))
+                    (setq indent-str (make-string 2 ?\ ))
+                    (while (string= (car old-subdirs) (car subdirs))
+                      (setq indent-str (concat indent-str (make-string 2 ?\ )))
+                      (pop old-subdirs)
+                      (pop subdirs))
+                    (dolist (d subdirs)
+                      (setq subdir (concat subdir d "/"))
+                      (insert (concat indent-str " + " d "\n"))
+                      (setq indent-str (make-string
+                                        (+ (length indent-str) 2) ?\ )))))))
+            ;; This is common to 'flat and 'tree
+            (let ((entry
+                   (org-publish-format-file-entry org-sitemap-file-entry-format
+                                                  file project-plist))
+                  (regexp "\\(.*\\)\\[\\([^][]+\\)\\]\\(.*\\)"))
+              (cond ((string-match-p regexp entry)
+                     (string-match regexp entry)
+                     (insert (concat indent-str " + " (match-string 1 entry)
+                                     "[[file:" link "]["
+                                     (match-string 2 entry)
+                                     "]]" (match-string 3 entry) "\n")))
+                    (t
+                     (insert (concat indent-str " + [[file:" link "]["
+                                     entry
+                                     "]]\n"))))))))
+      (save-buffer))
+    (or visiting (kill-buffer sitemap-buffer))))
+
 
 
 (provide 'org-page)
