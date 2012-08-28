@@ -172,7 +172,7 @@ these files will be considered in folder <`:base-directory'>/media/css as defaul
 ; TODO the copyright info in below variable should could be customized
 (defcustom op/publish-html-postamble-template "
 <div id=\"post-meta\">
-  <p class=\"post-info\">Posted on %h, last modified on %m. Author: %a.</p>
+  <p class=\"post-info\">Posted on %h, last modified on %m. Author: %a. (view the <a href=\"%l\">htmlized org file</a>)</p>
   <!--<p class=\"author\">Author: %a (%e)</p>
   <p class=\"date\">Date: %d</p>-->
 </div>
@@ -196,7 +196,8 @@ these files will be considered in folder <`:base-directory'>/media/css as defaul
 %h: last changed date (this change means meta change, not content change)
 %m: last modified date
 %i: author's email, the difference from %e is this one will keep the email address unchanged,
-but %e will expand it to html tag <a href=\"mailto:\"> automatically"
+but %e will expand it to html tag <a href=\"mailto:\"> automatically
+%l: the link links to the corresponding htmlized org file"
   :group 'org-page
   :type 'string)
 
@@ -550,7 +551,9 @@ please see `op/publish-html-postamble-template' for more detail.
 filename: the whole name of file to publish"
 
   (if (not (or (string-match "%h" op/publish-html-postamble-template)
-               (string-match "%m" op/publish-html-postamble-template)))
+               (string-match "%m" op/publish-html-postamble-template)
+               (string-match "%i" op/publish-html-postamble-template)
+               (string-match "%l" op/publish-html-postamble-template)))
       (setq org-export-html-postamble-format `(("en" ,op/publish-html-postamble-template)))
 
     (let* ((root-dir (plist-get project-plist :base-directory))
@@ -560,6 +563,7 @@ filename: the whole name of file to publish"
            (mdate (format-time-string "%Y-%m-%d" (nth 5 file-attrs)))
            (email (or (plist-get project-plist :email)
                       (confound-email user-mail-address)))
+           (org-link (op/get-htmlized-org-link filename project-plist))
            opt-plist cdate template file-buffer)
 
       (with-current-buffer (setq file-buffer (or file-visiting
@@ -574,6 +578,7 @@ filename: the whole name of file to publish"
 
         (setq org-export-html-postamble-format `(("en" ,(format-spec op/publish-html-postamble-template `((?a . "%a") (?c . "%c") (?d . "%d") (?e . "%e") (?v . "%v")
                                                                                                            (?i . ,(org-html-expand email))
+                                                                                                           (?l . ,org-link)
                                                                                                            (?h . ,cdate) (?m . ,mdate))))))
         (or file-visiting (kill-buffer file-buffer))))))
 
@@ -658,6 +663,19 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
                                      "]]\n"))))))))
       (save-buffer))
     (or visiting (kill-buffer sitemap-buffer))))
+
+(defun op/get-htmlized-org-link (file project-plist)
+  "returns the corresponding htmlized org file relative link"
+  (let* ((root-dir (plist-get project-plist :base-directory))
+         (relative-path (file-relative-name file root-dir))
+         (pub-dir (or op/pub-root-directory
+                      (concat (file-name-directory (directory-file-name root-dir)) "pub/")))
+         (html-dir (file-name-directory (concat (concat pub-dir "html/")
+                                                relative-path)))
+         (org-html-file (concat (file-name-sans-extension (concat (concat pub-dir "org/") relative-path))
+                                ; TODO here should be got from the "op-src-html" project
+                                ".org.html")))
+    (file-relative-name org-html-file html-dir)))
 
 
 
