@@ -593,7 +593,7 @@ filename: the whole name of file to publish"
            opt-plist cdate template file-buffer)
 
       (with-current-buffer (setq file-buffer (or file-visiting
-                                                 (find-file file)))
+                                                 (find-file filename)))
         (setq opt-plist (org-infile-export-plist))
         (setq cdate (plist-get opt-plist :date))
         (cond
