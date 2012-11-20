@@ -244,6 +244,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
 
   ; TODO the variables below may also should could be customized
   (setq op/src-root-directory (concat op/root-directory "src/"))
+  (setq op/src-temp-directory (concat op/root-directory "tmp/"))
   (setq op/pub-root-directory (concat op/root-directory "pub/"))
   (setq op/pub-html-directory (concat op/pub-root-directory "html/"))
   (setq op/pub-org-directory (concat op/pub-root-directory "org/"))
@@ -283,7 +284,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
                                      :publishing-directory ,op/pub-html-directory
                                      :recursive t
                                      ; TODO add full definition here
-                                     :base-extension "css\\|js\\|png\\|jpg\\|gif\\|el"
+                                     :base-extension "css\\|js\\|png\\|jpg\\|gif\\|eot\\|svg\\|ttf\\|woff\\|el"
                                      :publishing-function org-publish-attachment
                                      :author ,user-full-name
                                      :email ,(confound-email user-mail-address))
@@ -314,12 +315,14 @@ directory `%s' first, usually it is <org-page directory>/themes/"
         (project-plist (cdr current-project))
         (exclude-regexp (plist-get project-plist :exclude)))
 
-    (op/prepare-theme project)
+    (op/prepare-theme current-project)
+
+    (op/reorganize-project-structure current-project)
 
     (op/publish-generate-tags current-project)
 
     ; TODO the count number in below line should could be customized
-    (op/publish-generate-recent-posts 7 project)
+    (op/publish-generate-recent-posts 7 current-project)
 
     ; update the org file list
     ; "files" is defined in the "let" scope of function org-publish-projects
@@ -328,6 +331,10 @@ directory `%s' first, usually it is <org-page directory>/themes/"
 (defun op/publish-completion ()
   "the completion-function hook of org publish process"
   ; TODO clear the customized `org-export-html-preamble-format' to original value
+
+  (let ((current-project project))
+    (op/restore-project-structure current-project))
+
   (message "finished"))
 ;----------------------------------------------------------------------
 
