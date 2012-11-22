@@ -324,6 +324,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
                                      :auto-sitemap t
                                      :sitemap-function op/publish-sitemap
                                      :sitemap-title ,(concat "Sitemap of " user-full-name "'s Personal Site")
+                                     :sitemap-style list
                                      :table-of-contents nil
                                      :section-numbers nil
                                      :preserve-breaks nil
@@ -715,7 +716,7 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
           ; do not include sitemap itself, tags and recentposts
           (unless (or (equal (file-truename sitemap-filename) (file-truename file))
                       (equal (file-truename recent-posts-filename) (file-truename file))
-                      (equal (file-truename tag-dir) (file-name-directory (file-truename file))))
+                      (string-prefix-p (file-truename tag-dir) (file-truename file)))
             (if (eq sitemap-style 'list)
                 (message "Generating list-style sitemap for %s" sitemap-title)
               (message "Generating tree-style sitemap for %s" sitemap-title)
@@ -750,11 +751,11 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
               (cond ((string-match-p regexp entry)
                      (string-match regexp entry)
                      (insert (concat indent-str " + " (match-string 1 entry)
-                                     "[[file:" link "]["
+                                     "[[file:" (get-valid-uri-path link) "]["
                                      (match-string 2 entry)
                                      "]]" (match-string 3 entry) "\n")))
                     (t
-                     (insert (concat indent-str " + [[file:" link "]["
+                     (insert (concat indent-str " + [[file:" (get-valid-uri-path link) "]["
                                      entry
                                      "]]\n"))))))))
       (save-buffer))
