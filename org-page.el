@@ -371,7 +371,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
 
     (op/prepare-theme current-project)
 
-    (op/publish-generate-tags current-project)
+    (op/publish-generate-tags current-project op/org-file-info-list)
 
     ; TODO the count number in below line should could be customized
     (op/publish-generate-recent-posts 7 current-project)
@@ -409,90 +409,90 @@ directory `%s' first, usually it is <org-page directory>/themes/"
                     (concat root-dir "media/")
                     t t t)))
 
-(defun op/publish-generate-tags (project)
-  "the preparation-function hook of org publish process
-TODO: update the doc string here"
-  (let*
-      ((project-plist (cdr project))
-       (exclude-regexp (plist-get project-plist :exclude))
-       (root-dir (file-name-as-directory
-                  (plist-get project-plist :base-directory)))
-       (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory
-                                                             "tags/"))))
-       (tag-index-filename (concat tag-dir (or op/tag-index-filename
-                                               "index.org")))
+;; (defun op/publish-generate-tags (project)
+;;   "the preparation-function hook of org publish process
+;; TODO: update the doc string here"
+;;   (let*
+;;       ((project-plist (cdr project))
+;;        (exclude-regexp (plist-get project-plist :exclude))
+;;        (root-dir (file-name-as-directory
+;;                   (plist-get project-plist :base-directory)))
+;;        (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory
+;;                                                              "tags/"))))
+;;        (tag-index-filename (concat tag-dir (or op/tag-index-filename
+;;                                                "index.org")))
 
-       (tag-match-regexp (org-make-options-regexp '("FILETAGS")))
-       (files (org-publish-get-base-files project exclude-regexp))
-       tag-title file tag-visiting file-visiting tags-alist tags
-       tag-filename file-buffer tag-buffer)
+;;        (tag-match-regexp (org-make-options-regexp '("FILETAGS")))
+;;        (files (org-publish-get-base-files project exclude-regexp))
+;;        tag-title file tag-visiting file-visiting tags-alist tags
+;;        tag-filename file-buffer tag-buffer)
 
-    (unless (file-exists-p tag-dir)
-      (make-directory tag-dir t))
+;;     (unless (file-exists-p tag-dir)
+;;       (make-directory tag-dir t))
 
-    (while (setq file (pop files))
-      (setq file-visiting (find-buffer-visiting file))
-      (with-current-buffer (setq file-buffer (or file-visiting
-                                                 (find-file file)))
-        (let* ((fn (file-name-nondirectory file))
-               (relative-path (file-relative-name file tag-dir))
-               (title (or (plist-get (org-infile-export-plist) :title)
-                          fn)))
+;;     (while (setq file (pop files))
+;;       (setq file-visiting (find-buffer-visiting file))
+;;       (with-current-buffer (setq file-buffer (or file-visiting
+;;                                                  (find-file file)))
+;;         (let* ((fn (file-name-nondirectory file))
+;;                (relative-path (file-relative-name file tag-dir))
+;;                (title (or (plist-get (org-infile-export-plist) :title)
+;;                           fn)))
 
-          ; TODO here should exclude "sitemap.org" and "tags.org"
-          ;(unless (or (equal (file-truename tag-filename) (file-truename file))
-          ;            (equal (file-truename <"sitemap.org">) (file-truename file)))
-          ;  add normal logic here)
+;;           ; TODO here should exclude "sitemap.org" and "tags.org"
+;;           ;(unless (or (equal (file-truename tag-filename) (file-truename file))
+;;           ;            (equal (file-truename <"sitemap.org">) (file-truename file)))
+;;           ;  add normal logic here)
 
-          (unless (or (equal (file-truename tag-index-filename) (file-truename file))
-                      (equal (file-truename tag-dir) (file-name-directory (file-truename file))))
-            (goto-char (point-min))
-            (if (re-search-forward tag-match-regexp nil t)
-                (setq tags (match-string-no-properties 2 nil))
-              (setq tags nil))
-            (when tags
-              (mapcar '(lambda (tag)
-                         (unless (equal "" (replace-regexp-in-string " +" "" tag))
-                           (let* ((tag-list (assoc tag tags-alist)))
-                             (unless tag-list
-                               (setq tag-list (list tag))
-                               (add-to-list 'tags-alist tag-list))
-                             (nconc tag-list (list (cons relative-path title))))))
-                      (org-split-string tags ":")))))
-        (or file-visiting (kill-buffer file-buffer))))
+;;           (unless (or (equal (file-truename tag-index-filename) (file-truename file))
+;;                       (equal (file-truename tag-dir) (file-name-directory (file-truename file))))
+;;             (goto-char (point-min))
+;;             (if (re-search-forward tag-match-regexp nil t)
+;;                 (setq tags (match-string-no-properties 2 nil))
+;;               (setq tags nil))
+;;             (when tags
+;;               (mapcar '(lambda (tag)
+;;                          (unless (equal "" (replace-regexp-in-string " +" "" tag))
+;;                            (let* ((tag-list (assoc tag tags-alist)))
+;;                              (unless tag-list
+;;                                (setq tag-list (list tag))
+;;                                (add-to-list 'tags-alist tag-list))
+;;                              (nconc tag-list (list (cons relative-path title))))))
+;;                       (org-split-string tags ":")))))
+;;         (or file-visiting (kill-buffer file-buffer))))
 
-    (mapc '(lambda (tag-list)
-             (setq tag-filename (concat tag-dir (car tag-list) ".org"))
-             (setq tag-visiting (find-buffer-visiting tag-filename))
-             (setq tag-title (concat "Tags: " (car tag-list)))
-             (with-current-buffer (setq tag-buffer (or tag-visiting
-                                                       (find-file tag-filename)))
-               (erase-buffer)
-               (insert (concat "#+TITLE: " tag-title "\n\n"))
-               (mapc '(lambda (path-title-cell)
-                        (insert (concat "* [[file:" (car path-title-cell) "][" (cdr path-title-cell) "]]" "\n")))
-                     (cdr tag-list))
-               (save-buffer)
-               (or tag-visiting (kill-buffer tag-buffer))))
-          tags-alist)
+;;     (mapc '(lambda (tag-list)
+;;              (setq tag-filename (concat tag-dir (car tag-list) ".org"))
+;;              (setq tag-visiting (find-buffer-visiting tag-filename))
+;;              (setq tag-title (concat "Tags: " (car tag-list)))
+;;              (with-current-buffer (setq tag-buffer (or tag-visiting
+;;                                                        (find-file tag-filename)))
+;;                (erase-buffer)
+;;                (insert (concat "#+TITLE: " tag-title "\n\n"))
+;;                (mapc '(lambda (path-title-cell)
+;;                         (insert (concat "* [[file:" (car path-title-cell) "][" (cdr path-title-cell) "]]" "\n")))
+;;                      (cdr tag-list))
+;;                (save-buffer)
+;;                (or tag-visiting (kill-buffer tag-buffer))))
+;;           tags-alist)
 
-    (setq tag-visiting (find-buffer-visiting tag-index-filename))
-    ; TODO here may should could be customized
-    (setq tag-title "Tags")
-    (with-current-buffer (setq tag-buffer (or tag-visiting
-                                              (find-file tag-index-filename)))
-      (erase-buffer)
-      (insert (concat "#+TITLE: " tag-title "\n\n"))
-      (mapc '(lambda (tag-list)
-               ; TODO here it is better to convert to relative path using related functions
-               ; than just hard code the path
-               (insert (concat "* [[file:./" (car tag-list) ".org][" (car tag-list) "]]" "\n\n"))
-               (mapc '(lambda (path-title-cell)
-                        (insert (concat "  - [[file:" (car path-title-cell) "][" (cdr path-title-cell) "]]" "\n")))
-                     (cdr tag-list))
-               (insert "\n")) tags-alist)
-      (save-buffer)
-      (or tag-visiting (kill-buffer tag-buffer)))))
+;;     (setq tag-visiting (find-buffer-visiting tag-index-filename))
+;;     ; TODO here may should could be customized
+;;     (setq tag-title "Tags")
+;;     (with-current-buffer (setq tag-buffer (or tag-visiting
+;;                                               (find-file tag-index-filename)))
+;;       (erase-buffer)
+;;       (insert (concat "#+TITLE: " tag-title "\n\n"))
+;;       (mapc '(lambda (tag-list)
+;;                ; TODO here it is better to convert to relative path using related functions
+;;                ; than just hard code the path
+;;                (insert (concat "* [[file:./" (car tag-list) ".org][" (car tag-list) "]]" "\n\n"))
+;;                (mapc '(lambda (path-title-cell)
+;;                         (insert (concat "  - [[file:" (car path-title-cell) "][" (cdr path-title-cell) "]]" "\n")))
+;;                      (cdr tag-list))
+;;                (insert "\n")) tags-alist)
+;;       (save-buffer)
+;;       (or tag-visiting (kill-buffer tag-buffer)))))
 
 (defun op/publish-generate-recent-posts (count project)
   "this function is used to generate recent posts org file, it

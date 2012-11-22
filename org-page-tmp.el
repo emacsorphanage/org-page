@@ -84,7 +84,7 @@ strongly discouraged."
                                                  (cadr date-list) "/"
                                                  (caddr date-list) "/"
                                                  ;;(file-name-sans-extension (file-name-nondirectory old-relative-path)) "/"))
-                                                 (replace-regexp-in-string "[ :/\\]+" "-" (plist-get file-attrs :title)) "/"))
+                                                 (convert-string-to-path (plist-get file-attrs :title)) "/"))
                                         "index." (file-name-extension old-relative-path)))
         (setq new-path (expand-file-name new-relative-path root-dir))
         (plist-put file-attrs :new-path new-path)
@@ -112,3 +112,65 @@ invocation of this function is strongly discouraged."
     (if (file-directory-p root-dir)
         (delete-directory root-dir t nil))
     (rename-file tmp-dir root-dir)))
+
+(defun op/publish-generate-tags (project org-file-info-list)
+  "The new tag generation function"
+  (let* ((project-plist (cdr project))
+         (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
+         (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory "tags/"))))
+         (tag-index-filename (concat tag-dir (or op/tag-index-filename "index.org")))
+
+         tag-subdir tag-file-list tags-alist tag-filename tag-visiting tag-title tag-buffer relative-path)
+
+    (unless (file-directory-p tag-dir)
+      (make-directory tag-dir t))
+
+    (dolist (info-plist org-file-info-list)
+      (if (plist-get info-plist :tags)
+          (mapc '(lambda (tag-name)
+                  (setq tag-subdir (file-name-as-directory (concat tag-dir (convert-string-to-path tag-name) "/")))
+                  (setq relative-path (file-relative-name (plist-get info-plist :new-path) tag-subdir))
+                  (unless (file-directory-p tag-subdir)
+                    (make-directory tag-subdir t))
+                  (setq tag-file-list (assoc tag-name tags-alist))
+                  (unless tag-file-list
+                    (setq tag-file-list (list tag-name))
+                    (add-to-list 'tags-alist tag-file-list))
+                  (nconc tag-file-list (list (cons relative-path (plist-get info-plist :title)))))
+                (plist-get info-plist :tags))))
+
+    ;; write single tag file info
+    (mapc '(lambda (tag-list)
+             (setq tag-subdir (file-name-as-directory (concat tag-dir (convert-string-to-path (car tag-list)) "/")))
+             (setq tag-filename (concat tag-subdir "index.org"))
+             (setq tag-visiting (find-buffer-visiting tag-filename))
+             (setq tag-title (concat "Tag: " (car tag-list)))
+             (with-current-buffer (setq tag-buffer (or tag-visiting (find-file tag-filename)))
+               (erase-buffer)
+               (insert (concat "#+TITLE: " tag-title "\n\n"))
+               (mapc '(lambda (path-title-cell)
+                        (insert (concat "* [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+                     (cdr tag-list))
+               (save-buffer)
+               (or tag-visiting (kill-buffer tag-buffer))))
+          tags-alist)
+
+    ;; write the index tag file
+    (setq tag-visiting (find-buffer-visiting tag-index-filename))
+    ;; TODO here may should could be customized
+    (setq tag-title "Tags")
+    (with-current-buffer (setq tag-buffer (or tag-visiting (find-file tag-index-filename)))
+      (erase-buffer)
+      (insert (concat "#+TITLE: " tag-title "\n\n"))
+      (mapc '(lambda (tag-list)
+               (setq relative-path (concat (convert-string-to-path (car tag-list)) "/index.org"))
+               (insert (concat "* [[file:" (get-valid-uri-path relative-path) "][" (car tag-list) "]]" "\n\n"))
+               (mapc '(lambda (path-title-cell)
+                        ;; here the relative-path in path-title-cell is wrong,
+                        ;; because it is relative to the tag sub dir, not the tag root dir
+                        (insert (concat "  - [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+                     (cdr tag-list))
+               (insert "\n"))
+            tags-alist)
+      (save-buffer)
+      (or tag-visiting (kill-buffer tag-buffer)))))

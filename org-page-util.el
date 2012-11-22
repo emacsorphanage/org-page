@@ -129,6 +129,23 @@ name@domain.com => name <at> domain <dot> com"
                             (replace-regexp-in-string "@" " <at> "
                                                       (replace-regexp-in-string "\\." " <dot> " email))))
 
+(defun convert-string-to-path (string)
+  "convert a string to legal URL path
+TODO: improve doc here
+TODO2: maybe DBCS strings should also be converted into ASCII URL path"
+  (replace-regexp-in-string "[ :/\\]+" "-" string))
+
+(defun get-valid-uri-path (path)
+  "This function is used to remove the html file name from the path,
+e.g. path '../blog/index.org' will be converted into '../blog/', since
+'index.html' will be the default request page under a folder."
+  (let ((name (file-name-nondirectory path)))
+    (if (or (string= name "index.org")
+            (string= name "index.html")
+            (string= name "index.htm"))
+        (file-name-directory path)
+      path)))
+
 
 (provide 'org-page-util)
 
