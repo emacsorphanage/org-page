@@ -210,14 +210,48 @@ h3 {
     width: 970px;
     margin: 0 auto;
     padding: 15px 0;
+    overflow: hidden;
+}
+#post-meta span {
+    border-left: 2px solid #666666;
+    margin-left: -2px;
+    padding-right: 10px;
 }
 #post-meta .post-info:before {
-    content: "\f044";
-    /* font: 24px/30px FontAwesome; */
+    content: "\f073";
     font-family: FontAwesome;
     font-size: 15px;
     padding-right: 10px;
-    /* padding-left: 30px; */
+}
+#post-meta .update-info:before {
+    content: "\f044";
+    font-family: FontAwesome;
+    font-size: 15px;
+    padding: 0 10px;
+}
+#post-meta .category:before {
+    content: "\f07b";
+    font-family: FontAwesome;
+    font-size: 15px;
+    padding: 0 10px;
+}
+#post-meta .tags:before {
+    content: "\f02c";
+    font-family: FontAwesome;
+    font-size: 15px;
+    padding: 0 10px;
+}
+#post-meta .author:before {
+    content: "\f007";
+    font-family: FontAwesome;
+    font-size: 15px;
+    padding: 0 10px;
+}
+#post-meta .org-source:before {
+    content: "\f0c1";
+    font-family: FontAwesome;
+    font-size: 15px;
+    padding: 0 10px;
 }
 #comment {
     border-top: 1px solid #FFFFFF;
