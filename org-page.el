@@ -193,7 +193,7 @@ these files will be considered in folder <`:base-directory'>/media/css as defaul
   <span title=\"post date\" class=\"post-info\">%h</span>
   <span title=\"last modification date\" class=\"update-info\">%m</span>
   <span title=\"category\" class=\"category\"><a href=\"TODO\">category(TODO)</a></span>
-  <span title=\"tags\" class=\"tags\"><a href=\"#\">tag1</a>, <a href=\"#\">tag2</a>, <a href=\"#\">tag3</a></span>
+  <span title=\"tags\" class=\"tags\">%t</span>
   <span title=\"author\" class=\"author\">%a</span>
   <span title=\"htmlized org source file\" class=\"org-source\"><a href=\"%l\">htmlized org source</a></span>
 </div>"
@@ -261,6 +261,8 @@ below parameter can be used:
 
 %h: last changed date (this change means meta change, not content change)
 %m: last modified date
+%t: tags of file, it will be expanded to the following format(assume the file has tag tag1, tag2):
+<a href=\"tag1-link\">tag1</a>, <a href=\"tag2-link\">tag2</a>
 %i: author's email, the difference from %e is this one will keep the email address unchanged,
 but %e will expand it to html tag <a href=\"mailto:\"> automatically
 %l: the link links to the corresponding htmlized org file"
@@ -636,24 +638,33 @@ filename: the whole name of file to publish"
     (setq org-export-html-style css-links)))
 
 (defun op/publish-customize-footer (project-plist filename pub-dir)
-  "this function is called before publishing process of each file.
-it's purpose is to customize the footer of each generated html file.
+  "This function is called before publishing process of each file.
+its purpose is to customize the footer of each generated html file.
 please see `op/publish-html-postamble-template' for more detail.
 filename: the whole name of file to publish"
 
   (let* ((root-dir (plist-get project-plist :base-directory))
-         (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory "tags/"))))
+         (html-extension (or (plist-get project-plist :html-extension) "html"))
+         (pub-file (concat pub-dir (file-name-nondirectory (file-name-sans-extension filename)) html-extension))
+         (file-info (find-if '(lambda (plist)
+                                (string= (plist-get plist :new-path) filename))
+                             op/org-file-info-list))
+         (pub-tag-dir (file-name-as-directory (concat (or op/pub-html-directory
+                                                          (concat op/root-directory "pub/html/"))
+                                                      (or op/tag-directory "tags/"))))
          (sitemap-filename (concat root-dir (or (plist-get project-plist :sitemap-filename) "sitemap.org")))
-         (file-visiting (find-buffer-visiting filename))
-         (file-attrs (file-attributes filename))
-         (fcdate (format-time-string "%Y-%m-%d" (nth 6 file-attrs)))
-         (mdate (format-time-string "%Y-%m-%d" (nth 5 file-attrs)))
+         ;; TODO the name should not be hard coded, should could be customized
+         (rp-filename (concat root-dir "recentposts.org"))
+         (cdate (plist-get file-info :creation-date))
+         (mdate (plist-get file-info :mod-date))
+         (tags-list (plist-get file-info :tags))
          (email (or (plist-get project-plist :email)
                     (confound-email user-mail-address)))
          (org-link (op/get-htmlized-org-link filename project-plist))
-         opt-plist cdate template file-buffer)
+         pub-tag-file tag-relative-path tag-links)
 
-    (if (or (string-prefix-p tag-dir filename)
+    (if (or (string-prefix-p pub-tag-dir pub-file)
+            (string= rp-filename filename)
             (string= sitemap-filename filename))
         (setq op/publish-html-postamble-template op/publish-footer)
       (setq op/publish-html-postamble-template (concat op/publish-meta-info op/publish-comment op/publish-footer)))
@@ -661,23 +672,24 @@ filename: the whole name of file to publish"
     (if (not (or (string-match "%h" op/publish-html-postamble-template)
                  (string-match "%m" op/publish-html-postamble-template)
                  (string-match "%i" op/publish-html-postamble-template)
-                 (string-match "%l" op/publish-html-postamble-template)))
+                 (string-match "%l" op/publish-html-postamble-template)
+                 (string-match "%t" op/publish-html-postamble-template)))
         (setq org-export-html-postamble-format `(("en" ,op/publish-html-postamble-template)))
 
-      (with-current-buffer (setq file-buffer (or file-visiting (find-file filename)))
-        (setq opt-plist (org-infile-export-plist))
-        (setq cdate (plist-get opt-plist :date))
-        (cond
-         ((and cdate (string-match "%" cdate))
-          (setq cdate fcdate))
-         (cdate (setq cdate (fix-timestamp-string cdate)))
-         (t (setq cdate fcdate)))
-
+      (progn
+        (mapc '(lambda (tag)
+                 (setq pub-tag-file (concat pub-tag-dir (convert-string-to-path tag) "/index.html"))
+                 (setq tag-relative-path (file-relative-name pub-tag-file pub-dir))
+                 (setq tag-links (concat tag-links (format-spec "<a href=\"%l\">%n</a>, " `((?l . ,(get-valid-uri-path tag-relative-path)) (?n . ,tag))))))
+              tags-list)
+        (if tag-links
+            (setq tag-links (substring tag-links 0 -2))) ; remove the last two characters, comma and space
         (setq org-export-html-postamble-format `(("en" ,(format-spec op/publish-html-postamble-template `((?a . "%a") (?c . "%c") (?d . "%d") (?e . "%e") (?v . "%v")
-                                                                                                           (?i . ,(org-html-expand email))
-                                                                                                           (?l . ,org-link)
-                                                                                                           (?h . ,cdate) (?m . ,mdate))))))
-        (or file-visiting (kill-buffer file-buffer))))))
+                                                                                                          (?i . ,(org-html-expand email))
+                                                                                                          (?l . ,(or org-link "javascript:void(0);"))
+                                                                                                          (?h . ,(or cdate "N/A"))
+                                                                                                          (?m . ,(or mdate "N/A"))
+                                                                                                          (?t . ,(or tag-links "N/A")))))))))))
 
 (defun op/publish-sitemap (project &optional sitemap-filename)
   "Create a sitemap of project, this function is copied and customized
@@ -767,13 +779,14 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
          (relative-path (file-relative-name file root-dir))
          (pub-dir (or op/pub-root-directory
                       (concat (file-name-directory (directory-file-name root-dir)) "pub/")))
-         (html-dir (file-name-directory (concat (concat pub-dir "html/")
+         (html-dir (file-name-directory (concat (or op/pub-html-directory (concat pub-dir "html/"))
                                                 relative-path)))
-         (org-html-file (concat (file-name-sans-extension (concat (concat pub-dir "org/") relative-path))
+         (org-html-file (concat (file-name-sans-extension (concat (or op/pub-org-directory
+                                                                      (concat pub-dir "org/"))
+                                                                  relative-path))
                                 ; TODO here should be got from the "op-src-html" project
                                 ".org.html")))
     (file-relative-name org-html-file html-dir)))
-
 
 
 (provide 'org-page)
