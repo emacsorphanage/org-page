@@ -23,7 +23,7 @@ change if its meta info changed."
         (setq opt-plist (org-infile-export-plist))
         (setq cdate (plist-get opt-plist :date))
         (if (and cdate (not (string-match "%" cdate)))
-            (plist-put attr-plist :creation-date cdate))
+            (plist-put attr-plist :creation-date (fix-timestamp-string cdate)))
         (plist-put attr-plist :title (or (plist-get opt-plist :title)
                                          (file-name-sans-extension (file-name-nondirectory filename))))
         (goto-char (point-min))
@@ -76,7 +76,7 @@ strongly discouraged."
       (unless  (not (file-exists-p file))
         (setq file-attrs (op/read-file-info file))
         (add-to-list 'file-attr-list file-attrs)
-        (setq date-list (split-string (fix-timestamp-string (plist-get file-attrs :creation-date)) "-"))
+        (setq date-list (split-string (plist-get file-attrs :creation-date) "-"))
         (setq old-relative-path (file-relative-name file tmp-dir))
         (setq new-relative-path (concat (file-name-as-directory
                                          (concat (file-name-directory old-relative-path)
