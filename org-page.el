@@ -392,7 +392,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
     (op/publish-generate-categories current-project op/org-file-info-list)
 
     ; TODO the count number in below line should could be customized
-    (op/publish-generate-recent-posts 7 current-project)
+    (op/publish-generate-recent-posts 30 current-project op/org-file-info-list)
 
     ; update the org file list
     ; "files" is defined in the "let" scope of function org-publish-projects
@@ -581,7 +581,7 @@ TODO: improve the doc here"
 ;;       (save-buffer)
 ;;       (or tag-visiting (kill-buffer tag-buffer)))))
 
-(defun op/publish-generate-recent-posts (count project)
+(defun op/publish-generate-recent-posts (count project org-file-info-list)
   "this function is used to generate recent posts org file, it
 uses the meta data #+DATE defined in org files to compare, if it
 is not defined or defined as date format, uses the files' creation
@@ -600,72 +600,38 @@ project: stands for org project"
 
   (let*
       ((project-plist (cdr project))
-       (exclude-regexp (plist-get project-plist :exclude))
-       (sitemap-filename (or (plist-get project-plist :sitemap-filename)
-                             "sitemap.org"))
-       (root-dir (file-name-as-directory
-                  (plist-get project-plist :base-directory)))
-       (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory
-                                                             "tags/"))))
-
-       ; TODO to be refined
+       (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
+       ; TODO the name should be customizable
        (rp-filename (concat root-dir "recentposts.org"))
-       (rp-title "recent posts")
-
+       (rp-title "Recent Posts")
        (rp-visiting (find-buffer-visiting rp-filename))
-       (files (org-publish-get-base-files project exclude-regexp))
-       date-alist file file-visiting file-buffer rp-buffer)
+       relative-path date-alist rp-buffer)
 
-    (while (setq file (pop files))
-      (setq file-visiting (find-buffer-visiting file))
-      (with-current-buffer (setq file-buffer (or file-visiting
-                                                 (find-file file)))
+    (dolist (info-plist org-file-info-list)
+      (setq relative-path (file-relative-name (plist-get info-plist :new-path) root-dir))
+      (add-to-list 'date-alist (list (plist-get info-plist :creation-date)
+                                     relative-path
+                                     (plist-get info-plist :title))))
 
-        ; TODO here should also exclude tags related files
-        ; but because the tags feature implementation may need to change, so
-        ; complete the logic here later
-        ;(unless (equal (file-truename tag-filename) (file-truename file))
-        ;  add normal logic here)
+    (setq date-alist (sort date-alist
+                           '(lambda (list1 list2)
+                              (let* ((date1 (car list1))
+                                     (date2 (car list2))
+                                     (result (compare-standard-date
+                                              (fix-timestamp-string date1)
+                                              (fix-timestamp-string date2))))
+                                (cond
+                                 ((<= result 0) t)
+                                 (t nil))))))
 
-        (unless (or (equal (file-truename rp-filename) (file-truename file))
-                    (equal (file-truename sitemap-filename) (file-truename file))
-                    (equal (file-truename tag-dir) (file-name-directory (file-truename file))))
-          (let* ((fn (file-name-nondirectory file))
-                 (opt-plist (org-infile-export-plist))
-                 (date (plist-get opt-plist :date))
-                 (relative-path (file-relative-name file root-dir))
-                 (title (or (plist-get opt-plist :title)
-                            fn)))
-            (cond
-             ((and date (string-match "%" date))
-              ; set date with last change time of this file
-              ;(setq date (format-time-string date (nth 6 (file-attributes file)))))
-              (setq date (format-time-string "%Y-%m-%d" (nth 6 (file-attributes file)))))
-             (date (setq date (fix-timestamp-string date))) ;(setq date (format-time-string "%m/%d/%Y" date)))
-             (t (setq date (format-time-string "%Y-%m-%d" (nth 6 (file-attributes file))))))
-
-            (add-to-list 'date-alist (list date relative-path title) 'eq)))
-        (or file-visiting (kill-buffer file-buffer))))
-
-    (setq date-alist (sort date-alist '(lambda (list1 list2)
-                                         (let* ((date1 (car list1))
-                                                (date2 (car list2))
-                                                (result (compare-standard-date
-                                                         (fix-timestamp-string date1)
-                                                         (fix-timestamp-string date2))))
-                                           (cond
-                                            ((<= result 0) t)
-                                            (t nil))))))
-
-    (with-current-buffer (setq rp-buffer (or rp-visiting
-                                             (find-file rp-filename)))
+    (with-current-buffer (setq rp-buffer (or rp-visiting (find-file rp-filename)))
       (erase-buffer)
       (insert (concat "#+TITLE: " rp-title "\n\n"))
       (while (and (> count 0)
                   (> (length date-alist) 0))
         (setq count (1- count))
         (let ((date-path-title-list (pop date-alist)))
-          (insert (concat "* " (car date-path-title-list)
+          (insert (concat "+ " (car date-path-title-list)
                           "  [[file:" (nth 1 date-path-title-list) "]["
                           (nth 2 date-path-title-list) "]]"))
           (insert "\n\n")))
