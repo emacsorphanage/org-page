@@ -140,11 +140,16 @@ TODO2: maybe DBCS strings should also be converted into ASCII URL path"
 e.g. path '../blog/index.org' will be converted into '../blog/', since
 'index.html' will be the default request page under a folder."
   (let ((name (file-name-nondirectory path)))
-    (if (or (string= name "index.org")
-            (string= name "index.html")
-            (string= name "index.htm"))
-        (file-name-directory path)
-      path)))
+    (cond
+     ((or (string= path "index.org")
+          (string= path "index.html")
+          (string= path "index.htm"))
+      "./")
+     ((or (string= name "index.org")
+          (string= name "index.html")
+          (string= name "index.htm"))
+      (file-name-directory path))
+     (t path))))
 
 
 (provide 'org-page-util)
