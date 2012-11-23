@@ -138,6 +138,16 @@ it has higher priority than `op/exclude-filename-regexp'."
   :group 'org-page
   :type 'string)
 
+(defcustom op/category-directory "categories/"
+  "the directory used to store generated categories"
+  :group 'org-page
+  :type 'string)
+
+(defcustom op/category-index-filename "index.org"
+  "the index category filename"
+  :group 'org-page
+  :type 'string)
+
 (defcustom op/publish-search-url nil
   "searching using google will based on this url"
   :group 'org-page
@@ -159,6 +169,7 @@ it has higher priority than `op/exclude-filename-regexp'."
    <nav id=\"main-nav\">
      <ul id=\"nav-list-main\">
        <li><a href=\"%s\" class=\"menu\">Sitemap</a></li>
+       <li><a href=\"%c\" class=\"menu\">Categories</a></li>
        <li><a href=\"%t\" class=\"menu\">Tags</a></li>
        <li><a href=\"%r\" class=\"menu\">Recent Posts</a></li>
      </ul>
@@ -176,9 +187,10 @@ it has higher priority than `op/exclude-filename-regexp'."
    </nav>"
   "the template used to construct page header, below parameters can be used:
 %h: the title/headline of entire site (defined by `op/publish-site-title')
-%s: the relative path to sitemap.html
-%t: the relative path to tags.html
-%r: the relative path to recentposts.html
+%s: the relative path to sitemap html file
+%c: the relative path to category root html file
+%t: the relative path to tag root html file
+%r: the relative path to recent posts html file
 %g: the github link (defined by `op/personal-github-link')
 %u: the url of current site, used for search (defined by `op/publish-search-url')")
 
@@ -192,7 +204,7 @@ these files will be considered in folder <`:base-directory'>/media/css as defaul
 (defcustom op/publish-meta-info "<div id=\"post-meta\">
   <span title=\"post date\" class=\"post-info\">%h</span>
   <span title=\"last modification date\" class=\"update-info\">%m</span>
-  <span title=\"category\" class=\"category\"><a href=\"TODO\">category(TODO)</a></span>
+  <span title=\"category\" class=\"category\">%g</span>
   <span title=\"tags\" class=\"tags\">%t</span>
   <span title=\"author\" class=\"author\">%a</span>
   <span title=\"htmlized org source file\" class=\"org-source\"><a href=\"%l\">htmlized org source</a></span>
@@ -261,6 +273,7 @@ below parameter can be used:
 
 %h: last changed date (this change means meta change, not content change)
 %m: last modified date
+%g: category of current file, it will be automatically wrapped with <a> html tag, like %t
 %t: tags of file, it will be expanded to the following format(assume the file has tag tag1, tag2):
 <a href=\"tag1-link\">tag1</a>, <a href=\"tag2-link\">tag2</a>
 %i: author's email, the difference from %e is this one will keep the email address unchanged,
@@ -376,6 +389,8 @@ directory `%s' first, usually it is <org-page directory>/themes/"
 
     (op/publish-generate-tags current-project op/org-file-info-list)
 
+    (op/publish-generate-categories current-project op/org-file-info-list)
+
     ; TODO the count number in below line should could be customized
     (op/publish-generate-recent-posts 7 current-project)
 
@@ -411,6 +426,69 @@ directory `%s' first, usually it is <org-page directory>/themes/"
     (copy-directory theme-dir
                     (concat root-dir "media/")
                     t t t)))
+
+(defun op/publish-generate-categories (project org-file-info-list)
+  "The category generation function
+TODO: improve the doc here"
+  (let* ((project-plist (cdr project))
+         (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
+         (cat-dir (file-name-as-directory (concat root-dir (or op/category-directory "categories/"))))
+         (cat-index-filename (concat cat-dir (or op/category-index-filename "index.org")))
+
+         cat-name cat-subdir cat-file-list cat-alist
+         cat-filename cat-visiting cat-title cat-buffer relative-path
+         )
+
+    (unless (file-directory-p cat-dir)
+      (make-directory cat-dir t))
+
+    (dolist (info-plist org-file-info-list)
+      (setq cat-name (plist-get info-plist :category))
+      (setq cat-subdir (file-name-as-directory (concat cat-dir (convert-string-to-path cat-name) "/")))
+      (setq relative-path (file-relative-name (plist-get info-plist :new-path) cat-subdir))
+      (unless (file-directory-p cat-subdir)
+        (make-directory cat-subdir t))
+      (setq cat-file-list (assoc cat-name cat-alist))
+      (unless cat-file-list
+        (setq cat-file-list (list cat-name))
+        (add-to-list 'cat-alist cat-file-list))
+      (nconc cat-file-list (list (cons relative-path (plist-get info-plist :title)))))
+
+    ;; write single category file info
+    (mapc '(lambda (cat-list)
+             (setq cat-subdir (file-name-as-directory (concat cat-dir (convert-string-to-path (car cat-list)) "/")))
+             (setq cat-filename (concat cat-subdir "index.org"))
+             (setq cat-visiting (find-buffer-visiting cat-filename))
+             (setq cat-title (concat "Category: " (car cat-list)))
+             (with-current-buffer (setq cat-buffer (or cat-visiting (find-file cat-filename)))
+               (erase-buffer)
+               (insert (concat "#+TITLE: " cat-title "\n\n"))
+               (mapc '(lambda (path-title-cell)
+                        (insert (concat "* [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+                     (cdr cat-list))
+               (save-buffer)
+               (or cat-visiting (kill-buffer cat-buffer))))
+          cat-alist)
+
+    ;; write the index category file
+    (setq cat-visiting (find-buffer-visiting cat-index-filename))
+    ;; TODO here may should could be customized
+    (setq cat-title "Categories")
+    (with-current-buffer (setq cat-buffer (or cat-visiting (find-file cat-index-filename)))
+      (erase-buffer)
+      (insert (concat "#+TITLE: " cat-title "\n\n"))
+      (mapc '(lambda (cat-list)
+               (setq relative-path (concat (convert-string-to-path (car cat-list)) "/index.org"))
+               (insert (concat "* [[file:" (get-valid-uri-path relative-path) "][" (car cat-list) "]]" "\n\n"))
+               (mapc '(lambda (path-title-cell)
+                        ;; here the relative-path in path-title-cell is wrong,
+                        ;; because it is relative to the category sub dir, not the category root dir
+                        (insert (concat "  - [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+                     (cdr cat-list))
+               (insert "\n"))
+            cat-alist)
+      (save-buffer)
+      (or cat-visiting (kill-buffer cat-buffer)))))
 
 ;; (defun op/publish-generate-tags (project)
 ;;   "the preparation-function hook of org publish process
@@ -599,6 +677,8 @@ filename: the whole name of file to publish"
    (let* ((root-dir (plist-get project-plist :base-directory))
           (html-extension (or (plist-get project-plist :html-extension)
                               "html"))
+          (cat-file-path (concat (file-name-as-directory (concat root-dir (or op/category-directory "categories/")))
+                                 (concat (file-name-sans-extension (or op/category-index-filename "index.org")) "." html-extension)))
           (tags-file-path (concat (file-name-as-directory (concat root-dir (or op/tag-directory "tags/")))
                                   (concat (file-name-sans-extension (or op/tag-index-filename "index.org")) "." html-extension)))
           ; TODO the variable in the below line should could be customized
@@ -608,9 +688,10 @@ filename: the whole name of file to publish"
                                                                                                              "sitemap.org")) "." html-extension)))
 
           (header (format-spec op/publish-html-header-template `((?h . ,(or op/publish-site-title "org-page"))
-                                                                 (?s . ,(file-relative-name sitemap-file-path (file-name-directory filename)))
-                                                                 (?t . ,(file-relative-name tags-file-path (file-name-directory filename)))
-                                                                 (?r . ,(file-relative-name rp-file-path (file-name-directory filename)))
+                                                                 (?s . ,(get-valid-uri-path (file-relative-name sitemap-file-path (file-name-directory filename))))
+                                                                 (?c . ,(get-valid-uri-path (file-relative-name cat-file-path (file-name-directory filename))))
+                                                                 (?t . ,(get-valid-uri-path (file-relative-name tags-file-path (file-name-directory filename))))
+                                                                 (?r . ,(get-valid-uri-path (file-relative-name rp-file-path (file-name-directory filename))))
                                                                  (?g . ,(or op/personal-github-link "https://github.com/kelvinh/org-page"))
                                                                  (?u . ,op/publish-search-url)))))
      (setq org-export-html-preamble-format `(("en" ,header)))))
@@ -649,6 +730,9 @@ filename: the whole name of file to publish"
          (file-info (find-if '(lambda (plist)
                                 (string= (plist-get plist :new-path) filename))
                              op/org-file-info-list))
+         (pub-cat-dir (file-name-as-directory (concat (or op/pub-html-directory
+                                                          (concat op/root-directory "pub/html/"))
+                                                      (or op/category-directory "categories/"))))
          (pub-tag-dir (file-name-as-directory (concat (or op/pub-html-directory
                                                           (concat op/root-directory "pub/html/"))
                                                       (or op/tag-directory "tags/"))))
@@ -657,13 +741,15 @@ filename: the whole name of file to publish"
          (rp-filename (concat root-dir "recentposts.org"))
          (cdate (plist-get file-info :creation-date))
          (mdate (plist-get file-info :mod-date))
+         (category (plist-get file-info :category))
          (tags-list (plist-get file-info :tags))
          (email (or (plist-get project-plist :email)
                     (confound-email user-mail-address)))
          (org-link (op/get-htmlized-org-link filename project-plist))
-         pub-tag-file tag-relative-path tag-links)
+         pub-tag-file cat-relative-path cat-link tag-relative-path tag-links)
 
-    (if (or (string-prefix-p pub-tag-dir pub-file)
+    (if (or (string-prefix-p pub-cat-dir pub-file)
+            (string-prefix-p pub-tag-dir pub-file)
             (string= rp-filename filename)
             (string= sitemap-filename filename))
         (setq op/publish-html-postamble-template op/publish-footer)
@@ -673,14 +759,25 @@ filename: the whole name of file to publish"
                  (string-match "%m" op/publish-html-postamble-template)
                  (string-match "%i" op/publish-html-postamble-template)
                  (string-match "%l" op/publish-html-postamble-template)
-                 (string-match "%t" op/publish-html-postamble-template)))
+                 (string-match "%t" op/publish-html-postamble-template)
+                 (string-match "%g" op/publish-html-postamble-template)))
         (setq org-export-html-postamble-format `(("en" ,op/publish-html-postamble-template)))
 
       (progn
+        (unless (not category)
+          (setq cat-relative-path (file-relative-name (concat pub-cat-dir
+                                                              (convert-string-to-path category)
+                                                              "/index.html")
+                                                      pub-dir))
+          (setq cat-link (format-spec "<a href=\"%l\">%n</a>"
+                                      `((?l . ,(get-valid-uri-path cat-relative-path))
+                                        (?n . ,category)))))
         (mapc '(lambda (tag)
                  (setq pub-tag-file (concat pub-tag-dir (convert-string-to-path tag) "/index.html"))
                  (setq tag-relative-path (file-relative-name pub-tag-file pub-dir))
-                 (setq tag-links (concat tag-links (format-spec "<a href=\"%l\">%n</a>, " `((?l . ,(get-valid-uri-path tag-relative-path)) (?n . ,tag))))))
+                 (setq tag-links (concat tag-links (format-spec "<a href=\"%l\">%n</a>, "
+                                                                `((?l . ,(get-valid-uri-path tag-relative-path))
+                                                                  (?n . ,tag))))))
               tags-list)
         (if tag-links
             (setq tag-links (substring tag-links 0 -2))) ; remove the last two characters, comma and space
@@ -689,7 +786,8 @@ filename: the whole name of file to publish"
                                                                                                           (?l . ,(or org-link "javascript:void(0);"))
                                                                                                           (?h . ,(or cdate "N/A"))
                                                                                                           (?m . ,(or mdate "N/A"))
-                                                                                                          (?t . ,(or tag-links "N/A")))))))))))
+                                                                                                          (?t . ,(or tag-links "N/A"))
+                                                                                                          (?g . ,(or cat-link "N/A")))))))))))
 
 (defun op/publish-sitemap (project &optional sitemap-filename)
   "Create a sitemap of project, this function is copied and customized
@@ -698,8 +796,8 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
          (root-dir (file-name-as-directory
                     (plist-get project-plist :base-directory)))
          (localdir (file-name-directory root-dir))
-         (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory
-                                                               "tags/"))))
+         (cat-dir (file-name-as-directory (concat root-dir (or op/category-directory "categories/"))))
+         (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory "tags/"))))
          ; TODO here should could be customized
          (recent-posts-filename (concat root-dir "recentposts.org"))
 
@@ -728,6 +826,7 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
           ; do not include sitemap itself, tags and recentposts
           (unless (or (equal (file-truename sitemap-filename) (file-truename file))
                       (equal (file-truename recent-posts-filename) (file-truename file))
+                      (string-prefix-p (file-truename cat-dir) (file-truename file))
                       (string-prefix-p (file-truename tag-dir) (file-truename file)))
             (if (eq sitemap-style 'list)
                 (message "Generating list-style sitemap for %s" sitemap-title)

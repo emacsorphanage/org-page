@@ -1,5 +1,5 @@
 ;; TODO merge this file to the main file after the feature is finished.
-(defun op/read-file-info (filename)
+(defun op/read-file-info (filename base-directory)
   "Read info of given org file (the `filename' should be full-path), include:
 1. path; 2. creation date; 3. modification date; 4. tags. The creation date
 info will be firstly read from #+DATE defined in the file, if no date info
@@ -41,9 +41,14 @@ change if its meta info changed."
           (setq tag-list nil))
         (plist-put attr-plist :tags tag-list)
         (goto-char (point-min))
-        (if (re-search-forward tag-match-regexp nil t)
+        (if (re-search-forward category-match-regexp nil t)
             (setq category (match-string-no-properties 2 nil))
           (setq category nil))
+        (unless category
+          (setq category (if (string= (file-name-directory filename) base-directory)
+                             ;; TODO the default category name should be customizable
+                             "default"
+                           (file-name-nondirectory (directory-file-name (file-name-directory filename)))))) ; read parent folder name
         (plist-put attr-plist :category (or category nil))
         (or file-visiting (kill-buffer file-buffer)))
       attr-plist)))
@@ -74,7 +79,7 @@ strongly discouraged."
                                             (plist-get project-plist :exclude)))
     (while (setq file (pop files))
       (unless  (not (file-exists-p file))
-        (setq file-attrs (op/read-file-info file))
+        (setq file-attrs (op/read-file-info file tmp-dir))
         (add-to-list 'file-attr-list file-attrs)
         (setq date-list (split-string (plist-get file-attrs :creation-date) "-"))
         (setq old-relative-path (file-relative-name file tmp-dir))
@@ -114,7 +119,8 @@ invocation of this function is strongly discouraged."
     (rename-file tmp-dir root-dir)))
 
 (defun op/publish-generate-tags (project org-file-info-list)
-  "The new tag generation function"
+  "The new tag generation function
+TODO: improve the doc here"
   (let* ((project-plist (cdr project))
          (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
          (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory "tags/"))))
