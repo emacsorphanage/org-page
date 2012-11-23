@@ -464,7 +464,7 @@ TODO: improve the doc here"
                (erase-buffer)
                (insert (concat "#+TITLE: " cat-title "\n\n"))
                (mapc '(lambda (path-title-cell)
-                        (insert (concat "* [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+                        (insert (concat "+ [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
                      (cdr cat-list))
                (save-buffer)
                (or cat-visiting (kill-buffer cat-buffer))))
@@ -479,12 +479,18 @@ TODO: improve the doc here"
       (insert (concat "#+TITLE: " cat-title "\n\n"))
       (mapc '(lambda (cat-list)
                (setq relative-path (concat (convert-string-to-path (car cat-list)) "/index.org"))
-               (insert (concat "* [[file:" (get-valid-uri-path relative-path) "][" (car cat-list) "]]" "\n\n"))
-               (mapc '(lambda (path-title-cell)
-                        ;; here the relative-path in path-title-cell is wrong,
-                        ;; because it is relative to the category sub dir, not the category root dir
-                        (insert (concat "  - [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
-                     (cdr cat-list))
+               (insert (concat "** [[file:"
+                               (get-valid-uri-path relative-path)
+                               "]["
+                               (car cat-list)
+                               "]] ("
+                               (int-to-string (length (cdr cat-list)))
+                               ")\n"))
+               ;; (mapc '(lambda (path-title-cell)
+               ;;          ;; here the relative-path in path-title-cell is wrong,
+               ;;          ;; because it is relative to the category sub dir, not the category root dir
+               ;;          (insert (concat "  - [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+               ;;       (cdr cat-list))
                (insert "\n"))
             cat-alist)
       (save-buffer)

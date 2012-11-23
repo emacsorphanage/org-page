@@ -155,7 +155,7 @@ TODO: improve the doc here"
                (erase-buffer)
                (insert (concat "#+TITLE: " tag-title "\n\n"))
                (mapc '(lambda (path-title-cell)
-                        (insert (concat "* [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+                        (insert (concat "+ [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
                      (cdr tag-list))
                (save-buffer)
                (or tag-visiting (kill-buffer tag-buffer))))
@@ -170,12 +170,18 @@ TODO: improve the doc here"
       (insert (concat "#+TITLE: " tag-title "\n\n"))
       (mapc '(lambda (tag-list)
                (setq relative-path (concat (convert-string-to-path (car tag-list)) "/index.org"))
-               (insert (concat "* [[file:" (get-valid-uri-path relative-path) "][" (car tag-list) "]]" "\n\n"))
-               (mapc '(lambda (path-title-cell)
-                        ;; here the relative-path in path-title-cell is wrong,
-                        ;; because it is relative to the tag sub dir, not the tag root dir
-                        (insert (concat "  - [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
-                     (cdr tag-list))
+               (insert (concat "** [[file:"
+                               (get-valid-uri-path relative-path)
+                               "]["
+                               (car tag-list)
+                               "]] ("
+                               (int-to-string (length (cdr tag-list)))
+                               ")\n"))
+               ;; (mapc '(lambda (path-title-cell)
+               ;;          ;; here the relative-path in path-title-cell is wrong,
+               ;;          ;; because it is relative to the tag sub dir, not the tag root dir
+               ;;          (insert (concat "  - [[file:" (get-valid-uri-path (car path-title-cell)) "][" (cdr path-title-cell) "]]" "\n")))
+               ;;       (cdr tag-list))
                (insert "\n"))
             tags-alist)
       (save-buffer)
