@@ -1029,7 +1029,7 @@ Note: generating html file directly, not index.org"
       (insert (format-spec "<!DOCTYPE html><html><head><title>%t</title>
 <meta charset=\"UTF-8\">%c</head><body>
 <script type=\"text/javascript\">
-    var ie = /(msie) ([\w.]+)/.exec(navigator.userAgent.toLowerCase());
+    var ie = /(msie) ([\\w.]+)/.exec(navigator.userAgent.toLowerCase());
     var div = document.createElement('div');
     div.className = ie ? 'fucking-ie' : 'loading-center';
     div.innerHTML = ie ? 'Sorry, this site does not support the fucking IE.' : 'Loading...';
