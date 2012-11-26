@@ -476,15 +476,16 @@ TODO: improve the doc here"
 
     (dolist (info-plist org-file-info-list)
       (setq cat-name (plist-get info-plist :category))
-      (setq cat-subdir (file-name-as-directory (concat cat-dir (convert-string-to-path cat-name) "/")))
-      (setq relative-path (file-relative-name (plist-get info-plist :new-path) cat-subdir))
-      (unless (file-directory-p cat-subdir)
-        (make-directory cat-subdir t))
-      (setq cat-file-list (assoc cat-name cat-alist))
-      (unless cat-file-list
-        (setq cat-file-list (list cat-name))
-        (add-to-list 'cat-alist cat-file-list))
-      (nconc cat-file-list (list (cons relative-path (plist-get info-plist :title)))))
+      (unless (not cat-name)
+        (setq cat-subdir (file-name-as-directory (concat cat-dir (convert-string-to-path cat-name) "/")))
+        (setq relative-path (file-relative-name (plist-get info-plist :new-path) cat-subdir))
+        (unless (file-directory-p cat-subdir)
+          (make-directory cat-subdir t))
+        (setq cat-file-list (assoc cat-name cat-alist))
+        (unless cat-file-list
+          (setq cat-file-list (list cat-name))
+          (add-to-list 'cat-alist cat-file-list))
+        (nconc cat-file-list (list (cons relative-path (plist-get info-plist :title))))))
 
     ;; write single category file info
     (mapc '(lambda (cat-list)
@@ -891,12 +892,12 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
     (file-relative-name org-html-file html-dir)))
 
 (defun op/read-file-info (filename base-directory)
-  "Read info of given org file (the `filename' should be full-path), include:
-1. path; 2. creation date; 3. modification date; 4. tags. The creation date
-info will be firstly read from #+DATE defined in the file, if no date info
-found, will be read from the file's last change date. However, it is recommended
-to use #+DATE to record creation date, since the file's last change date will
-change if its meta info changed."
+  "Read info of given org file (`filename' should be full-path), include:
+1. path; 2. creation date; 3. modification date; 4. tags; 5. category. The
+creation date info will be firstly read from #+DATE defined in the file, if no
+date info found, will be read from the file's last change date. However, it is
+recommended to use #+DATE to record creation date, since the file's last change
+date will change if its meta info changed."
   (if (or (not (file-exists-p filename))
           (file-directory-p filename))
       nil
@@ -940,6 +941,12 @@ change if its meta info changed."
                              ;; TODO the default category name should be customizable
                              "default"
                            (file-name-nondirectory (directory-file-name (file-name-directory filename)))))) ; read parent folder name
+        ;;; the following 4 files should have no category info, even the "default" category
+        (if (or (string= filename (concat (file-name-directory base-directory) "index.org"))
+                (string= filename (concat (file-name-directory base-directory) "about.org"))
+                (string= filename (concat (file-name-directory base-directory) "sitemap.org"))
+                (string= filename (concat (file-name-directory base-directory) "recentposts.org")))
+            (setq category nil))
         (plist-put attr-plist :category (or category nil))
         (or file-visiting (kill-buffer file-buffer)))
       attr-plist)))
