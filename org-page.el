@@ -153,6 +153,11 @@ it has higher priority than `op/exclude-filename-regexp'."
   :group 'org-page
   :type 'string)
 
+(defcustom op/publish-site-url nil
+  "the url of entire site"
+  :group 'org-page
+  :type 'string)
+
 (defcustom op/publish-site-title "org-page"
   "the title of entire site"
   :group 'org-page
@@ -160,6 +165,11 @@ it has higher priority than `op/exclude-filename-regexp'."
 
 (defcustom op/personal-github-link "https://github.com/kelvinh/org-page"
   "the personal github link"
+  :group 'org-page
+  :type 'string)
+
+(defcustom op/personal-disqus-shortname nil
+  "the personal disqus shortname"
   :group 'org-page
   :type 'string)
 
@@ -221,10 +231,10 @@ please see `op/publish-html-postamble-template' for detailed information."
   <script type=\"text/javascript\">
     // TODO: change the following variables to proper value
     var disqus_developer = 1;
-    var disqus_title = \"testing\";
-    var disqus_identifier = \"/blog/2012/06/17/hello-github-pages/\";
-    var disqus_url = \"http://kelvinh.github.com/\";
-    var disqus_shortname = 'kelvinh'; // required: replace example with your forum shortname
+    //var disqus_title = \"testing\";
+    var disqus_identifier = \"%n\";
+    var disqus_url = \"%u\";
+    var disqus_shortname = '%s'; // required: replace example with your forum shortname
 
     /* * * DON'T EDIT BELOW THIS LINE * * */
     (function() {
@@ -276,6 +286,9 @@ below parameter can be used:
 %g: category of current file, it will be automatically wrapped with <a> html tag, like %t
 %t: tags of file, it will be expanded to the following format(assume the file has tag tag1, tag2):
 <a href=\"tag1-link\">tag1</a>, <a href=\"tag2-link\">tag2</a>
+%n: javascript variable 'disqus_identifier' of current page
+%u: javascript variable 'disqus_url' of current page
+%s: javascript variable 'disqus_shortname' of current page
 %i: author's email, the difference from %e is this one will keep the email address unchanged,
 but %e will expand it to html tag <a href=\"mailto:\"> automatically
 %l: the link links to the corresponding htmlized org file"
@@ -306,6 +319,9 @@ directory `%s' first, usually it is <org-page directory>/themes/"
 
   (unless op/theme
     (setq op/theme 'default))
+
+  ;;; expand the root-directory path, to avoid path looks like ~/xxx
+  (setq op/root-directory (expand-file-name op/root-directory))
 
   ; TODO the variables below may also should could be customized
   (setq op/src-root-directory (concat op/root-directory "src/"))
@@ -682,7 +698,14 @@ filename: the whole name of file to publish"
 
   (let* ((root-dir (plist-get project-plist :base-directory))
          (html-extension (or (plist-get project-plist :html-extension) "html"))
-         (pub-file (concat pub-dir (file-name-nondirectory (file-name-sans-extension filename)) html-extension))
+         (pub-root-dir (or op/pub-html-directory (concat op/root-directory "pub/html/")))
+         (pub-file (concat pub-dir (file-name-nondirectory (file-name-sans-extension filename)) "." html-extension))
+         (disqus-identifier (get-valid-uri-path (substring pub-file (1- (length pub-root-dir)))))
+         (disqus-url (concat (if (string= (substring op/publish-site-url -1) "/")
+                                 (substring op/publish-site-url 0 -1)
+                               concat op/publish-site-url)
+                             disqus-identifier))
+         (disqus-shortname op/personal-disqus-shortname)
          (file-info (find-if '(lambda (plist)
                                 (string= (plist-get plist :new-path) filename))
                              op/org-file-info-list))
@@ -716,7 +739,10 @@ filename: the whole name of file to publish"
                  (string-match "%i" op/publish-html-postamble-template)
                  (string-match "%l" op/publish-html-postamble-template)
                  (string-match "%t" op/publish-html-postamble-template)
-                 (string-match "%g" op/publish-html-postamble-template)))
+                 (string-match "%g" op/publish-html-postamble-template)
+                 (string-match "%n" op/publish-html-postamble-template)
+                 (string-match "%u" op/publish-html-postamble-template)
+                 (string-match "%s" op/publish-html-postamble-template)))
         (setq org-export-html-postamble-format `(("en" ,op/publish-html-postamble-template)))
 
       (progn
@@ -743,7 +769,10 @@ filename: the whole name of file to publish"
                                                                                                           (?h . ,(or cdate "N/A"))
                                                                                                           (?m . ,(or mdate "N/A"))
                                                                                                           (?t . ,(or tag-links "N/A"))
-                                                                                                          (?g . ,(or cat-link "N/A")))))))))))
+                                                                                                          (?g . ,(or cat-link "N/A"))
+                                                                                                          (?n . ,disqus-identifier)
+                                                                                                          (?u . ,disqus-url)
+                                                                                                          (?s . ,disqus-shortname))))))))))
 
 (defun op/publish-sitemap (project &optional sitemap-filename)
   "Create a sitemap of project, this function is copied and customized
