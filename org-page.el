@@ -179,6 +179,7 @@ uses http protocol"
        <li><a href=\"%c\" class=\"menu\">Categories</a></li>
        <li><a href=\"%t\" class=\"menu\">Tags</a></li>
        <li><a href=\"%r\" class=\"menu\">Recent Posts</a></li>
+       <li><a href=\"%a\" class=\"menu\">About</a></li>
      </ul>
    </nav>
    <nav id=\"sub-nav\" class=\"align-right\">
@@ -198,6 +199,7 @@ uses http protocol"
 %c: the relative path to category root html file
 %t: the relative path to tag root html file
 %r: the relative path to recent posts html file
+%a: the relative path to about html file
 %g: the github link (defined by `op/personal-github-link')
 %u: the url of current site, used for search (defined by `op/publish-site-url')")
 
@@ -668,7 +670,7 @@ filename: the whole name of file to publish"
                                   (concat (file-name-sans-extension (or op/tag-index-filename "index.org")) "." html-extension)))
           ; TODO the variable in the below line should could be customized
           (rp-file-path (concat (file-name-as-directory root-dir) (concat "recentposts." html-extension)))
-
+          (about-file-path (concat (file-name-as-directory root-dir) (concat "about" "." html-extension)))
           (sitemap-file-path (concat (file-name-as-directory root-dir) (concat (file-name-sans-extension (or (plist-get project-plist :sitemap-filename)
                                                                                                              "sitemap.org")) "." html-extension)))
 
@@ -677,6 +679,7 @@ filename: the whole name of file to publish"
                                                                  (?c . ,(get-valid-uri-path (file-relative-name cat-file-path (file-name-directory filename))))
                                                                  (?t . ,(get-valid-uri-path (file-relative-name tags-file-path (file-name-directory filename))))
                                                                  (?r . ,(get-valid-uri-path (file-relative-name rp-file-path (file-name-directory filename))))
+                                                                 (?a . ,(get-valid-uri-path (file-relative-name about-file-path (file-name-directory filename))))
                                                                  (?g . ,(or op/personal-github-link "https://github.com/kelvinh/org-page"))
                                                                  (?u . ,search-url)))))
      (setq org-export-html-preamble-format `(("en" ,header)))))
@@ -969,10 +972,12 @@ strongly discouraged."
         (setq file-attrs (op/read-file-info file tmp-dir))
         (add-to-list 'file-attr-list file-attrs)
         (setq date-list (split-string (plist-get file-attrs :creation-date) "-"))
-        (if (string= file (concat tmp-dir "index.org"))
-            ;;; do not modify paths of index.org
-            ;;; TODO add other 3 files: about.org, sitemap.org and recentposts.org
-            (setq new-relative-path "index.org")
+        (if (or (string= file (concat tmp-dir "index.org"))
+                (string= file (concat tmp-dir "about.org"))
+                (string= file (concat tmp-dir "sitemap.org"))
+                (string= file (concat tmp-dir "recentposts.org")))
+            ;;; do not modify paths of index.org, about.org, sitemap.org, recentposts.org
+            (setq new-relative-path (file-name-nondirectory file))
           (setq new-relative-path (concat (file-name-as-directory
                                            (concat (convert-string-to-path (plist-get file-attrs :category)) "/"
                                                    (car date-list) "/"
