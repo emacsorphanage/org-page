@@ -705,13 +705,11 @@ filename: the whole name of file to publish"
 
   (let* ((root-dir (plist-get project-plist :base-directory))
          (html-extension (or (plist-get project-plist :html-extension) "html"))
-         (pub-root-dir (or op/pub-html-directory (concat op/root-directory "pub/blog/")))
+         (pub-root-dir (or op/pub-root-directory (concat op/root-directory "pub/")))
          (pub-file (concat pub-dir (file-name-nondirectory (file-name-sans-extension filename)) "." html-extension))
          (disqus-identifier (get-valid-uri-path (substring pub-file (1- (length pub-root-dir)))))
-         (disqus-url (concat (if (string= (substring op/publish-site-url -1) "/")
-                                 (substring op/publish-site-url 0 -1)
-                               op/publish-site-url)
-                             disqus-identifier))
+         ;;; disqus-identifier has a prefix "/", so remove the suffix "/" from op/publish-site-url
+         (disqus-url (concat (replace-regexp-in-string "/?$" "" op/publish-site-url) disqus-identifier))
          (disqus-shortname op/personal-disqus-shortname)
          (file-info (find-if '(lambda (plist)
                                 (string= (plist-get plist :new-path) filename))
