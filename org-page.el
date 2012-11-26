@@ -148,13 +148,10 @@ it has higher priority than `op/exclude-filename-regexp'."
   :group 'org-page
   :type 'string)
 
-(defcustom op/publish-search-url nil
-  "searching using google will based on this url"
-  :group 'org-page
-  :type 'string)
-
 (defcustom op/publish-site-url nil
-  "the url of entire site"
+  "the domain name of entire site, it is better to assign it with prefix
+http:// or https://, if not assigned, org-page will assume that the site
+uses http protocol"
   :group 'org-page
   :type 'string)
 
@@ -202,7 +199,7 @@ it has higher priority than `op/exclude-filename-regexp'."
 %t: the relative path to tag root html file
 %r: the relative path to recent posts html file
 %g: the github link (defined by `op/personal-github-link')
-%u: the url of current site, used for search (defined by `op/publish-search-url')")
+%u: the url of current site, used for search (defined by `op/publish-site-url')")
 
 (defcustom op/publish-html-style-list '("main.css")
   "style file name list, which will be included in exported html files.
@@ -317,6 +314,17 @@ but %e will expand it to html tag <a href=\"mailto:\"> automatically
 directory `%s' first, usually it is <org-page directory>/themes/"
            (symbol-name 'op/theme-directory)))
 
+  (unless op/publish-site-url
+    (error "Please specify the URL(`%s'), which will be used for searching and commenting."
+           (symbol-name 'op/publish-site-url)))
+  (unless (or (string-prefix-p "http://" op/publish-site-url)
+              (string-prefix-p "https://" op/publish-site-url))
+    (setq op/publish-site-url (concat "http://" op/publish-site-url)))
+
+  (unless op/personal-disqus-shortname
+    (error "Please specify your personal disqus shortname(`%s'), which will be used for commenting."
+           (symbol-name 'op/personal-disqus-shortname)))
+
   (unless op/theme
     (setq op/theme 'default))
 
@@ -327,7 +335,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
   (setq op/src-root-directory (concat op/root-directory "src/"))
   (setq op/src-temp-directory (concat op/root-directory "tmp/"))
   (setq op/pub-root-directory (concat op/root-directory "pub/"))
-  (setq op/pub-html-directory (concat op/pub-root-directory "html/"))
+  (setq op/pub-html-directory (concat op/pub-root-directory "blog/"))
   (setq op/pub-org-directory (concat op/pub-root-directory "org/"))
 
   ;;; do not use the default style
@@ -410,6 +418,10 @@ directory `%s' first, usually it is <org-page directory>/themes/"
     ; TODO the count number in below line should could be customized
     (op/publish-generate-recent-posts 30 current-project op/org-file-info-list)
 
+    (op/publish-generate-index current-project)
+
+    (op/publish-generate-about current-project)
+
     ; update the org file list
     ; "files" is defined in the "let" scope of function org-publish-projects
     (setq files (org-publish-get-base-files current-project exclude-regexp))))
@@ -417,6 +429,8 @@ directory `%s' first, usually it is <org-page directory>/themes/"
 (defun op/publish-completion ()
   "the completion-function hook of org publish process"
   ; TODO clear the customized `org-export-html-preamble-format' to original value
+
+  (op/generate-site-index-html)
 
   ;; clear the variable
   (setq op/org-file-info-list nil)
@@ -641,14 +655,13 @@ project: stands for org project"
 (defun op/publish-customize-header (project-plist filename pub-dir)
   "this function is called before publishing process of each file.
 it's purpose is to customize the page header, mainly about the relative path of tag, recent post, etc.
-please see `op/publish-search-url' and `op/publish-html-header-template' for more detail.
+please see `op/publish-site-url' and `op/publish-html-header-template' for more detail.
 filename: the whole name of file to publish"
 
-  (unless op/publish-search-url
-       (error "Please firstly specify the URL(`op/publish-search-url') Google searching will based on."))
    (let* ((root-dir (plist-get project-plist :base-directory))
-          (html-extension (or (plist-get project-plist :html-extension)
-                              "html"))
+          (html-extension (or (plist-get project-plist :html-extension) "html"))
+          ;; remove the prefix http:// or https://, and the suffix slash /
+          (search-url (replace-regexp-in-string "/?$" "" (replace-regexp-in-string "^https?://" "" op/publish-site-url)))
           (cat-file-path (concat (file-name-as-directory (concat root-dir (or op/category-directory "categories/")))
                                  (concat (file-name-sans-extension (or op/category-index-filename "index.org")) "." html-extension)))
           (tags-file-path (concat (file-name-as-directory (concat root-dir (or op/tag-directory "tags/")))
@@ -665,7 +678,7 @@ filename: the whole name of file to publish"
                                                                  (?t . ,(get-valid-uri-path (file-relative-name tags-file-path (file-name-directory filename))))
                                                                  (?r . ,(get-valid-uri-path (file-relative-name rp-file-path (file-name-directory filename))))
                                                                  (?g . ,(or op/personal-github-link "https://github.com/kelvinh/org-page"))
-                                                                 (?u . ,op/publish-search-url)))))
+                                                                 (?u . ,search-url)))))
      (setq org-export-html-preamble-format `(("en" ,header)))))
 
 (defun op/publish-customize-style (project-plist filename pub-dir)
@@ -698,26 +711,26 @@ filename: the whole name of file to publish"
 
   (let* ((root-dir (plist-get project-plist :base-directory))
          (html-extension (or (plist-get project-plist :html-extension) "html"))
-         (pub-root-dir (or op/pub-html-directory (concat op/root-directory "pub/html/")))
+         (pub-root-dir (or op/pub-root-directory (concat op/root-directory "pub/")))
          (pub-file (concat pub-dir (file-name-nondirectory (file-name-sans-extension filename)) "." html-extension))
          (disqus-identifier (get-valid-uri-path (substring pub-file (1- (length pub-root-dir)))))
-         (disqus-url (concat (if (string= (substring op/publish-site-url -1) "/")
-                                 (substring op/publish-site-url 0 -1)
-                               concat op/publish-site-url)
-                             disqus-identifier))
+         ;;; disqus-identifier has a prefix "/", so remove the suffix "/" from op/publish-site-url
+         (disqus-url (concat (replace-regexp-in-string "/?$" "" op/publish-site-url) disqus-identifier))
          (disqus-shortname op/personal-disqus-shortname)
          (file-info (find-if '(lambda (plist)
                                 (string= (plist-get plist :new-path) filename))
                              op/org-file-info-list))
          (pub-cat-dir (file-name-as-directory (concat (or op/pub-html-directory
-                                                          (concat op/root-directory "pub/html/"))
+                                                          (concat op/root-directory "pub/blog/"))
                                                       (or op/category-directory "categories/"))))
          (pub-tag-dir (file-name-as-directory (concat (or op/pub-html-directory
-                                                          (concat op/root-directory "pub/html/"))
+                                                          (concat op/root-directory "pub/blog/"))
                                                       (or op/tag-directory "tags/"))))
          (sitemap-filename (concat root-dir (or (plist-get project-plist :sitemap-filename) "sitemap.org")))
          ;; TODO the name should not be hard coded, should could be customized
          (rp-filename (concat root-dir "recentposts.org"))
+         (index-filename (concat root-dir "index.org"))
+         (about-filename (concat root-dir "about.org"))
          (cdate (plist-get file-info :creation-date))
          (mdate (plist-get file-info :mod-date))
          (category (plist-get file-info :category))
@@ -730,7 +743,9 @@ filename: the whole name of file to publish"
     (if (or (string-prefix-p pub-cat-dir pub-file)
             (string-prefix-p pub-tag-dir pub-file)
             (string= rp-filename filename)
-            (string= sitemap-filename filename))
+            (string= sitemap-filename filename)
+            (string= index-filename filename)
+            (string= about-filename filename))
         (setq op/publish-html-postamble-template op/publish-footer)
       (setq op/publish-html-postamble-template (concat op/publish-meta-info op/publish-comment op/publish-footer)))
 
@@ -863,7 +878,7 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
          (relative-path (file-relative-name file root-dir))
          (pub-dir (or op/pub-root-directory
                       (concat (file-name-directory (directory-file-name root-dir)) "pub/")))
-         (html-dir (file-name-directory (concat (or op/pub-html-directory (concat pub-dir "html/"))
+         (html-dir (file-name-directory (concat (or op/pub-html-directory (concat pub-dir "blog/"))
                                                 relative-path)))
          (org-html-file (concat (file-name-sans-extension (concat (or op/pub-org-directory
                                                                       (concat pub-dir "org/"))
@@ -940,7 +955,7 @@ strongly discouraged."
          (tmp-dir (or op/src-temp-directory
                       (file-name-as-directory (concat op/root-directory "tmp/"))))
          tmp-project files file file-attrs file-attr-list
-         date-list old-relative-path new-relative-path new-path)
+         date-list new-relative-path new-path)
     (if (file-directory-p tmp-dir)
         (delete-directory tmp-dir t nil))
     (rename-file root-dir tmp-dir)
@@ -954,15 +969,17 @@ strongly discouraged."
         (setq file-attrs (op/read-file-info file tmp-dir))
         (add-to-list 'file-attr-list file-attrs)
         (setq date-list (split-string (plist-get file-attrs :creation-date) "-"))
-        (setq old-relative-path (file-relative-name file tmp-dir))
-        (setq new-relative-path (concat (file-name-as-directory
-                                         (concat (file-name-directory old-relative-path)
-                                                 (car date-list) "/"
-                                                 (cadr date-list) "/"
-                                                 (caddr date-list) "/"
-                                                 ;;(file-name-sans-extension (file-name-nondirectory old-relative-path)) "/"))
-                                                 (convert-string-to-path (plist-get file-attrs :title)) "/"))
-                                        "index." (file-name-extension old-relative-path)))
+        (if (string= file (concat tmp-dir "index.org"))
+            ;;; do not modify paths of index.org
+            ;;; TODO add other 3 files: about.org, sitemap.org and recentposts.org
+            (setq new-relative-path "index.org")
+          (setq new-relative-path (concat (file-name-as-directory
+                                           (concat (convert-string-to-path (plist-get file-attrs :category)) "/"
+                                                   (car date-list) "/"
+                                                   (cadr date-list) "/"
+                                                   (caddr date-list) "/"
+                                                   (convert-string-to-path (plist-get file-attrs :title)) "/"))
+                                          "index." (file-name-extension file))))
         (setq new-path (expand-file-name new-relative-path root-dir))
         (plist-put file-attrs :new-path new-path)
         (unless (file-directory-p (file-name-directory new-path))
@@ -989,6 +1006,96 @@ invocation of this function is strongly discouraged."
     (if (file-directory-p root-dir)
         (delete-directory root-dir t nil))
     (rename-file tmp-dir root-dir)))
+
+(defun op/generate-site-index-html ()
+  "This function is used to generate the index.html for current site.
+Note: generating html file directly, not index.org"
+  (let* ((index-file (concat (or op/pub-root-directory (concat op/root-directory "pub/")) "index.html"))
+         (index-visiting (find-buffer-visiting index-file))
+         (index-relative-path (file-relative-name (concat (or op/pub-html-directory
+                                                              (concat op/root-directory "pub/blog/"))
+                                                          "index.html")
+                                                  (file-name-directory index-file)))
+         (css-folder (concat (or op/pub-html-directory (concat op/root-directory "pub/blog/")) "media/css/"))
+         (css-template "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\" />")
+         css-links index-buffer)
+
+    (unless op/publish-html-style-list
+      (setq op/publish-html-style-list '("main.css")))
+
+    (dolist (css op/publish-html-style-list)
+      (setq css-links (concat css-links "\n"
+                              (format css-template (file-relative-name (concat css-folder css)
+                                                                       (file-name-directory index-file))))))
+
+    (with-current-buffer (setq index-buffer (or index-visiting (find-file index-file)))
+      (erase-buffer)
+      (insert (format-spec "<!DOCTYPE html><html><head><title>%t</title>
+<meta charset=\"UTF-8\">%c</head><body>
+<script type=\"text/javascript\">
+    var ie = /(msie) ([\\w.]+)/.exec(navigator.userAgent.toLowerCase());
+    var div = document.createElement('div');
+    div.className = ie ? 'fucking-ie' : 'loading-center';
+    div.innerHTML = ie ? 'Sorry, this site does not support the fucking IE.' : 'Loading...';
+    document.getElementsByTagName('body')[0].appendChild(div);
+    ie || setTimeout(function() { window.location.replace('%p');}, 1000);
+</script></body></html>" `((?t . ,(or op/publish-site-title "org-page"))
+                           (?c . ,css-links)
+                           (?p . ,(get-valid-uri-path index-relative-path)))))
+      (save-buffer)
+      (or index-visiting (kill-buffer index-buffer)))))
+
+(defun op/publish-generate-index (project)
+  "The index file generation function, be careful with `op/generate-site-index-html'"
+  (let* ((project-plist (cdr project))
+         (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
+         (index-file (concat root-dir "index.org"))
+         (sitemap-file (concat root-dir (or (plist-get project-plist :sitemap-filename) "sitemap.org")))
+         (index-visiting (find-buffer-visiting index-file))
+         index-buffer
+         )
+
+    (unless (file-exists-p index-file)
+      (with-current-buffer (setq index-buffer (or index-visiting (find-file index-file)))
+        (erase-buffer)
+        (insert "#+TITLE: The index page")
+        (insert "\n\n")
+        (insert (format "You are visiting %s's personal site, generated by [[http://github.com/kelvinh/org-page][org-page]]." user-full-name))
+        (insert "\n\n")
+        (insert (format "This page is automatically generated by org-page, since the site's author %s did not provide a customized index page." user-full-name))
+        (insert "\n\n")
+        (insert "It is recommanded to provide a customzied index page if you are the site's owner.")
+        (insert "\n\n")
+        (insert "Or, you may prefer to visit the [[file:./sitemap.org][sitemap]], it will provide more info than this page.")
+        (save-buffer)
+        (or index-visiting (kill-buffer index-buffer))))))
+
+(defun op/publish-generate-about (project)
+  "The about file generation function"
+  (let* ((project-plist (cdr project))
+         (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
+         (about-file (concat root-dir "about.org"))
+         (about-visiting (find-buffer-visiting about-file))
+         about-buffer)
+
+    (unless (file-exists-p about-file)
+      (with-current-buffer (setq about-buffer (or about-visiting (find-file about-file)))
+        (erase-buffer)
+        (insert "#+TITLE: About")
+        (insert "\n\n")
+        (insert (format "* About %s" user-full-name))
+        (insert "\n\n")
+        (insert (format "I am org-page, [[http://github.com/kelvinh/org-page][here]] is my home, this site is generated by %s, and I provided a little help." user-full-name))
+        (insert "\n\n")
+        (insert (format "Since %s is a little lazy, he/she did not provide an about page, so I generated this page myself." user-full-name))
+        (insert "\n\n")
+        (insert (format "As a result, I did not know much about %s, I just know his/her [[mailto:%s][email]], you may contact him/her, and please tell him/her to improve this page." user-full-name (or (plist-get project-plist :email) (confound-email user-mail-address))))
+        (insert "\n\n")
+        (insert "* About me(org-page)")
+        (insert "\n\n")
+        (insert (format "I was created by [[http://github.com/kelvinh][Kelvin Hu]], in his thought, I am pretty enough, but if you think there is something can be done to make me much more beautiful, please [[mailto:%s][contact him]] to improve me, many thanks. :-)" (confound-email "ini.kelvin@gmail.com")))
+        (save-buffer)
+        (or about-visiting (kill-buffer about-buffer))))))
 
 
 (provide 'org-page)
