@@ -426,6 +426,8 @@ directory `%s' first, usually it is <org-page directory>/themes/"
   "the completion-function hook of org publish process"
   ; TODO clear the customized `org-export-html-preamble-format' to original value
 
+  (op/generate-site-index-html)
+
   ;; clear the variable
   (setq op/org-file-info-list nil)
 
@@ -992,6 +994,44 @@ invocation of this function is strongly discouraged."
     (if (file-directory-p root-dir)
         (delete-directory root-dir t nil))
     (rename-file tmp-dir root-dir)))
+
+(defun op/generate-site-index-html ()
+  "This function is used to generate the index.html for current site.
+Note: generating html file directly, not index.org"
+  (let* ((index-file (concat (or op/pub-root-directory (concat op/root-directory "pub/")) "index.html"))
+         (index-visiting (find-buffer-visiting index-file))
+         (index-relative-path (file-relative-name (concat (or op/pub-html-directory
+                                                              (concat op/root-directory "pub/blog/"))
+                                                          "index.html")
+                                                  (file-name-directory index-file)))
+         (css-folder (concat (or op/pub-html-directory (concat op/root-directory "pub/blog/")) "media/css/"))
+         (css-template "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\" />")
+         css-links index-buffer)
+
+    (unless op/publish-html-style-list
+      (setq op/publish-html-style-list '("main.css")))
+
+    (dolist (css op/publish-html-style-list)
+      (setq css-links (concat css-links "\n"
+                              (format css-template (file-relative-name (concat css-folder css)
+                                                                       (file-name-directory index-file))))))
+
+    (with-current-buffer (setq index-buffer (or index-visiting (find-file index-file)))
+      (erase-buffer)
+      (insert (format-spec "<!DOCTYPE html><html><head><title>%t</title>
+<meta charset=\"UTF-8\">%c</head><body>
+<script type=\"text/javascript\">
+    var ie = /(msie) ([\w.]+)/.exec(navigator.userAgent.toLowerCase());
+    var div = document.createElement('div');
+    div.className = ie ? 'fucking-ie' : 'loading-center';
+    div.innerHTML = ie ? 'Sorry, this site does not support the fucking IE.' : 'Loading...';
+    document.getElementsByTagName('body')[0].appendChild(div);
+    ie || setTimeout(function() { window.location.replace('%p');}, 1000);
+</script></body></html>" `((?t . ,(or op/publish-site-title "org-page"))
+                           (?c . ,css-links)
+                           (?p . ,(get-valid-uri-path index-relative-path)))))
+      (save-buffer)
+      (or index-visiting (kill-buffer index-buffer)))))
 
 
 (provide 'org-page)
