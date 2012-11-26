@@ -148,13 +148,10 @@ it has higher priority than `op/exclude-filename-regexp'."
   :group 'org-page
   :type 'string)
 
-(defcustom op/publish-search-url nil
-  "searching using google will based on this url"
-  :group 'org-page
-  :type 'string)
-
 (defcustom op/publish-site-url nil
-  "the url of entire site"
+  "the domain name of entire site, it is better to assign it with prefix
+http:// or https://, if not assigned, org-page will assume that the site
+uses http protocol"
   :group 'org-page
   :type 'string)
 
@@ -202,7 +199,7 @@ it has higher priority than `op/exclude-filename-regexp'."
 %t: the relative path to tag root html file
 %r: the relative path to recent posts html file
 %g: the github link (defined by `op/personal-github-link')
-%u: the url of current site, used for search (defined by `op/publish-search-url')")
+%u: the url of current site, used for search (defined by `op/publish-site-url')")
 
 (defcustom op/publish-html-style-list '("main.css")
   "style file name list, which will be included in exported html files.
@@ -316,6 +313,17 @@ but %e will expand it to html tag <a href=\"mailto:\"> automatically
     (error "Well, org-page cannot detect where the theme is installed, please set the theme
 directory `%s' first, usually it is <org-page directory>/themes/"
            (symbol-name 'op/theme-directory)))
+
+  (unless op/publish-site-url
+    (error "Please specify the URL(`%s'), which will be used for searching and commenting."
+           (symbol-name 'op/publish-site-url)))
+  (unless (or (string-prefix-p op/publish-site-url "http://")
+              (string-prefix-p op/publish-site-url "https://"))
+    (setq op/publish-site-url (concat "http://" op/publish-site-url)))
+
+  (unless op/personal-disqus-shortname
+    (error "Please specify your personal disqus shortname(`%s'), which will be used for commenting."
+           (symbol-name 'op/personal-disqus-shortname)))
 
   (unless op/theme
     (setq op/theme 'default))
@@ -641,14 +649,13 @@ project: stands for org project"
 (defun op/publish-customize-header (project-plist filename pub-dir)
   "this function is called before publishing process of each file.
 it's purpose is to customize the page header, mainly about the relative path of tag, recent post, etc.
-please see `op/publish-search-url' and `op/publish-html-header-template' for more detail.
+please see `op/publish-site-url' and `op/publish-html-header-template' for more detail.
 filename: the whole name of file to publish"
 
-  (unless op/publish-search-url
-       (error "Please firstly specify the URL(`op/publish-search-url') Google searching will based on."))
    (let* ((root-dir (plist-get project-plist :base-directory))
-          (html-extension (or (plist-get project-plist :html-extension)
-                              "html"))
+          (html-extension (or (plist-get project-plist :html-extension) "html"))
+          ;; remove the prefix http:// or https://, and the suffix slash /
+          (search-url (replace-regexp-in-string "/?$" "" (replace-regexp-in-string "^https?://" "" op/publish-site-url)))
           (cat-file-path (concat (file-name-as-directory (concat root-dir (or op/category-directory "categories/")))
                                  (concat (file-name-sans-extension (or op/category-index-filename "index.org")) "." html-extension)))
           (tags-file-path (concat (file-name-as-directory (concat root-dir (or op/tag-directory "tags/")))
@@ -665,7 +672,7 @@ filename: the whole name of file to publish"
                                                                  (?t . ,(get-valid-uri-path (file-relative-name tags-file-path (file-name-directory filename))))
                                                                  (?r . ,(get-valid-uri-path (file-relative-name rp-file-path (file-name-directory filename))))
                                                                  (?g . ,(or op/personal-github-link "https://github.com/kelvinh/org-page"))
-                                                                 (?u . ,op/publish-search-url)))))
+                                                                 (?u . ,search-url)))))
      (setq org-export-html-preamble-format `(("en" ,header)))))
 
 (defun op/publish-customize-style (project-plist filename pub-dir)
@@ -703,7 +710,7 @@ filename: the whole name of file to publish"
          (disqus-identifier (get-valid-uri-path (substring pub-file (1- (length pub-root-dir)))))
          (disqus-url (concat (if (string= (substring op/publish-site-url -1) "/")
                                  (substring op/publish-site-url 0 -1)
-                               concat op/publish-site-url)
+                               op/publish-site-url)
                              disqus-identifier))
          (disqus-shortname op/personal-disqus-shortname)
          (file-info (find-if '(lambda (plist)
