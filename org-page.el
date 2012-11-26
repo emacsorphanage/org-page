@@ -947,7 +947,7 @@ strongly discouraged."
          (tmp-dir (or op/src-temp-directory
                       (file-name-as-directory (concat op/root-directory "tmp/"))))
          tmp-project files file file-attrs file-attr-list
-         date-list old-relative-path new-relative-path new-path)
+         date-list new-relative-path new-path)
     (if (file-directory-p tmp-dir)
         (delete-directory tmp-dir t nil))
     (rename-file root-dir tmp-dir)
@@ -961,15 +961,13 @@ strongly discouraged."
         (setq file-attrs (op/read-file-info file tmp-dir))
         (add-to-list 'file-attr-list file-attrs)
         (setq date-list (split-string (plist-get file-attrs :creation-date) "-"))
-        (setq old-relative-path (file-relative-name file tmp-dir))
         (setq new-relative-path (concat (file-name-as-directory
-                                         (concat (file-name-directory old-relative-path)
+                                         (concat (convert-string-to-path (plist-get file-attrs :category)) "/"
                                                  (car date-list) "/"
                                                  (cadr date-list) "/"
                                                  (caddr date-list) "/"
-                                                 ;;(file-name-sans-extension (file-name-nondirectory old-relative-path)) "/"))
                                                  (convert-string-to-path (plist-get file-attrs :title)) "/"))
-                                        "index." (file-name-extension old-relative-path)))
+                                        "index." (file-name-extension file)))
         (setq new-path (expand-file-name new-relative-path root-dir))
         (plist-put file-attrs :new-path new-path)
         (unless (file-directory-p (file-name-directory new-path))
