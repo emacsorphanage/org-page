@@ -335,7 +335,7 @@ directory `%s' first, usually it is <org-page directory>/themes/"
   (setq op/src-root-directory (concat op/root-directory "src/"))
   (setq op/src-temp-directory (concat op/root-directory "tmp/"))
   (setq op/pub-root-directory (concat op/root-directory "pub/"))
-  (setq op/pub-html-directory (concat op/pub-root-directory "html/"))
+  (setq op/pub-html-directory (concat op/pub-root-directory "blog/"))
   (setq op/pub-org-directory (concat op/pub-root-directory "org/"))
 
   ;;; do not use the default style
@@ -705,7 +705,7 @@ filename: the whole name of file to publish"
 
   (let* ((root-dir (plist-get project-plist :base-directory))
          (html-extension (or (plist-get project-plist :html-extension) "html"))
-         (pub-root-dir (or op/pub-html-directory (concat op/root-directory "pub/html/")))
+         (pub-root-dir (or op/pub-html-directory (concat op/root-directory "pub/blog/")))
          (pub-file (concat pub-dir (file-name-nondirectory (file-name-sans-extension filename)) "." html-extension))
          (disqus-identifier (get-valid-uri-path (substring pub-file (1- (length pub-root-dir)))))
          (disqus-url (concat (if (string= (substring op/publish-site-url -1) "/")
@@ -717,10 +717,10 @@ filename: the whole name of file to publish"
                                 (string= (plist-get plist :new-path) filename))
                              op/org-file-info-list))
          (pub-cat-dir (file-name-as-directory (concat (or op/pub-html-directory
-                                                          (concat op/root-directory "pub/html/"))
+                                                          (concat op/root-directory "pub/blog/"))
                                                       (or op/category-directory "categories/"))))
          (pub-tag-dir (file-name-as-directory (concat (or op/pub-html-directory
-                                                          (concat op/root-directory "pub/html/"))
+                                                          (concat op/root-directory "pub/blog/"))
                                                       (or op/tag-directory "tags/"))))
          (sitemap-filename (concat root-dir (or (plist-get project-plist :sitemap-filename) "sitemap.org")))
          ;; TODO the name should not be hard coded, should could be customized
@@ -870,7 +870,7 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
          (relative-path (file-relative-name file root-dir))
          (pub-dir (or op/pub-root-directory
                       (concat (file-name-directory (directory-file-name root-dir)) "pub/")))
-         (html-dir (file-name-directory (concat (or op/pub-html-directory (concat pub-dir "html/"))
+         (html-dir (file-name-directory (concat (or op/pub-html-directory (concat pub-dir "blog/"))
                                                 relative-path)))
          (org-html-file (concat (file-name-sans-extension (concat (or op/pub-org-directory
                                                                       (concat pub-dir "org/"))
