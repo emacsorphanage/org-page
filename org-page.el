@@ -317,8 +317,8 @@ directory `%s' first, usually it is <org-page directory>/themes/"
   (unless op/publish-site-url
     (error "Please specify the URL(`%s'), which will be used for searching and commenting."
            (symbol-name 'op/publish-site-url)))
-  (unless (or (string-prefix-p op/publish-site-url "http://")
-              (string-prefix-p op/publish-site-url "https://"))
+  (unless (or (string-prefix-p "http://" op/publish-site-url)
+              (string-prefix-p "https://" op/publish-site-url))
     (setq op/publish-site-url (concat "http://" op/publish-site-url)))
 
   (unless op/personal-disqus-shortname
