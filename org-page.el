@@ -5,7 +5,7 @@
 ;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
 ;; Keywords: org-mode, convenience, beautify
 ;; Homepage: https://github.com/kelvinh/org-page
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -31,7 +31,9 @@
 ;; + customized theme support
 ;; + recent posts support (auto generated)
 ;; + tags support (auto generated)
+;; + categories support (auto generated)
 ;; + search engine support (auto generated)
+;; + commenting (implemented using disqus)
 ;;
 ;; To use org-page, you just need a little configuration,as follows:
 ;;
@@ -41,15 +43,19 @@
 ;;    folder named "src" under this directory, and then org-page will
 ;;    automatically publish them to a folder named "pub", which is also
 ;;    under this directory
-;; 2. `op/publish-search-url': the URL search engine will base on, it
-;;    should be the URL of your personal site
+;; 2. `op/publish-site-url': the URL search engine will base on, and
+;;    also disqus commenting will use this url, it should be the URL of
+;;    your personal site
+;; 3. `op/personal-disqus-shortname': the disqus shortname you own on
+;;    disqus website, will be used for commenting
 ;;
 ;; So, the following simple code will make org-page work:
 ;;
 ;;    (add-to-list 'load-path "path/to/org-page")
 ;;    (require 'org-page)
 ;;    (setq op/root-directory "path/to/your/project")
-;;    (setq op/publish-search-url "your.personal.site.com")
+;;    (setq op/publish-site-url "http://your.personal.site.com/")
+;;    (setq op/personal-disqus-shortname "your_disqus_shortname")
 ;;    (global-set-key (kbd "<f9>") 'op/publish-pages)
 ;;    (global-set-key (kbd "C-<f9>") (lambda () (interactive)
 ;;                                              (op/publish-pages t)))
@@ -59,19 +65,33 @@
 ;; even they have already been published and not modified since last
 ;; publishing, your can just press Ctrl + <F9>.
 ;;
-;; The two variable above are required, and the following variables
+;; The three variables above are required, and the following variables
 ;; are optional, but also could be customized:
 ;;
-;; 1. `op/exclude-filename-regexp': describes which org files in the
-;;    project subdirectory "src" should not be published
-;; 2. `op/include-filename-regexp': describes which org files in the
-;;    project subdirectory "src" should always be published
-;; 3. `op/theme-directory': the directory stores themes, it has a
-;;    default value, you could customize it to your own value
-;; 4. `op/theme': the theme will be used, default value is 'default,
-;;    and sorry for that no more themes are provided at present
-;; 5. `op/tag-directory': the folder stores auto-generated tags
-;; 6. `op/tag-index-filename': filename of auto-generated tag index
+;;  1. `op/exclude-filename-regexp': describes which org files in the
+;;     project subdirectory "src" should not be published
+;;  2. `op/include-filename-regexp': describes which org files in the
+;;     project subdirectory "src" should always be published
+;;  3. `op/theme-directory': the directory stores themes, it has a
+;;     default value, you could customize it to your own value
+;;  4. `op/theme': the theme will be used, default value is 'default,
+;;     and sorry for that no more themes are provided at present
+;;  5. `op/tag-directory': the folder stores auto-generated tags
+;;  6. `op/tag-index-filename': filename of auto-generated tag index
+;;  7. `op/category-directory': the folder stores auto-generated
+;;     categories
+;;  8. `op/category-index-filename': filename of auto-generated tag
+;;     index
+;;  9. `op/publish-site-title': the title of your site
+;; 10. `op/personal-github-link': your personal github link if you
+;;     do have one github account
+;; 11. `op/publish-meta-info': the meta info of current post, it is
+;;     discouraged to change this variable unless you have strong
+;;     knowledge in css and html
+;; 12. `op/publish-comment': the comment section of current post, it
+;;     is also discouraged to change this variable
+;; 13. `op/publish-footer': the footer section of current post, also
+;;     discouraged to change
 
 ;;; Code:
 
@@ -172,7 +192,7 @@ uses http protocol"
 
 ; TODO remove "TODO" in below string after rss feature implemented
 (defconst op/publish-html-header-template
-  "<h1><a href=\"/\">%h</a></h1>
+  "<h1><a href=\"%p\">%h</a></h1>
    <nav id=\"main-nav\">
      <ul id=\"nav-list-main\">
        <li><a href=\"%s\" class=\"menu\">Sitemap</a></li>
@@ -194,6 +214,7 @@ uses http protocol"
      </form>
    </nav>"
   "the template used to construct page header, below parameters can be used:
+%p: the relative path to index html file, not the site's index, but index in folder 'blog'
 %h: the title/headline of entire site (defined by `op/publish-site-title')
 %s: the relative path to sitemap html file
 %c: the relative path to category root html file
@@ -620,15 +641,23 @@ project: stands for org project"
        (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
        ; TODO the name should be customizable
        (rp-filename (concat root-dir "recentposts.org"))
+       (sitemap-filename (concat root-dir (or (plist-get project-plist :sitemap-filename) "sitemap.org")))
+       (index-filename (concat root-dir "index.org"))
+       (about-filename (concat root-dir "about.org"))
        (rp-title "Recent Posts")
        (rp-visiting (find-buffer-visiting rp-filename))
-       relative-path date-alist rp-buffer)
+       path relative-path date-alist rp-buffer)
 
     (dolist (info-plist org-file-info-list)
-      (setq relative-path (file-relative-name (plist-get info-plist :new-path) root-dir))
-      (add-to-list 'date-alist (list (plist-get info-plist :creation-date)
-                                     relative-path
-                                     (plist-get info-plist :title))))
+      (setq path (plist-get info-plist :new-path))
+      (unless (or (string= path index-filename)
+                  (string= path about-filename)
+                  (string= path sitemap-filename)
+                  (string= path rp-filename))
+        (setq relative-path (file-relative-name (plist-get info-plist :new-path) root-dir))
+        (add-to-list 'date-alist (list (plist-get info-plist :creation-date)
+                                       relative-path
+                                       (plist-get info-plist :title)))))
 
     (setq date-alist (sort date-alist
                            '(lambda (list1 list2)
@@ -665,6 +694,7 @@ filename: the whole name of file to publish"
           (html-extension (or (plist-get project-plist :html-extension) "html"))
           ;; remove the prefix http:// or https://, and the suffix slash /
           (search-url (replace-regexp-in-string "/?$" "" (replace-regexp-in-string "^https?://" "" op/publish-site-url)))
+          (index-file-path (concat (file-name-as-directory root-dir) "index" "." html-extension))
           (cat-file-path (concat (file-name-as-directory (concat root-dir (or op/category-directory "categories/")))
                                  (concat (file-name-sans-extension (or op/category-index-filename "index.org")) "." html-extension)))
           (tags-file-path (concat (file-name-as-directory (concat root-dir (or op/tag-directory "tags/")))
@@ -675,7 +705,8 @@ filename: the whole name of file to publish"
           (sitemap-file-path (concat (file-name-as-directory root-dir) (concat (file-name-sans-extension (or (plist-get project-plist :sitemap-filename)
                                                                                                              "sitemap.org")) "." html-extension)))
 
-          (header (format-spec op/publish-html-header-template `((?h . ,(or op/publish-site-title "org-page"))
+          (header (format-spec op/publish-html-header-template `((?p . ,(get-valid-uri-path (file-relative-name index-file-path (file-name-directory filename))))
+                                                                 (?h . ,(or op/publish-site-title "org-page"))
                                                                  (?s . ,(get-valid-uri-path (file-relative-name sitemap-file-path (file-name-directory filename))))
                                                                  (?c . ,(get-valid-uri-path (file-relative-name cat-file-path (file-name-directory filename))))
                                                                  (?t . ,(get-valid-uri-path (file-relative-name tags-file-path (file-name-directory filename))))
@@ -804,6 +835,8 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
          (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory "tags/"))))
          ; TODO here should could be customized
          (recent-posts-filename (concat root-dir "recentposts.org"))
+         (index-filename (concat root-dir "index.org"))
+         (about-filename (concat root-dir "about.org"))
 
          (indent-str (make-string 2 ?\ ))
          (exclude-regexp (plist-get project-plist :exclude))
@@ -830,6 +863,8 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
           ; do not include sitemap itself, tags and recentposts
           (unless (or (equal (file-truename sitemap-filename) (file-truename file))
                       (equal (file-truename recent-posts-filename) (file-truename file))
+                      (equal (file-truename index-filename) (file-truename file))
+                      (equal (file-truename about-filename) (file-truename file))
                       (string-prefix-p (file-truename cat-dir) (file-truename file))
                       (string-prefix-p (file-truename tag-dir) (file-truename file)))
             (if (eq sitemap-style 'list)
