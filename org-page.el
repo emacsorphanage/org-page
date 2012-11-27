@@ -172,7 +172,7 @@ uses http protocol"
 
 ; TODO remove "TODO" in below string after rss feature implemented
 (defconst op/publish-html-header-template
-  "<h1><a href=\"/\">%h</a></h1>
+  "<h1><a href=\"%p\">%h</a></h1>
    <nav id=\"main-nav\">
      <ul id=\"nav-list-main\">
        <li><a href=\"%s\" class=\"menu\">Sitemap</a></li>
@@ -194,6 +194,7 @@ uses http protocol"
      </form>
    </nav>"
   "the template used to construct page header, below parameters can be used:
+%p: the relative path to index html file, not the site's index, but index in folder 'blog'
 %h: the title/headline of entire site (defined by `op/publish-site-title')
 %s: the relative path to sitemap html file
 %c: the relative path to category root html file
@@ -620,15 +621,23 @@ project: stands for org project"
        (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
        ; TODO the name should be customizable
        (rp-filename (concat root-dir "recentposts.org"))
+       (sitemap-filename (concat root-dir (or (plist-get project-plist :sitemap-filename) "sitemap.org")))
+       (index-filename (concat root-dir "index.org"))
+       (about-filename (concat root-dir "about.org"))
        (rp-title "Recent Posts")
        (rp-visiting (find-buffer-visiting rp-filename))
-       relative-path date-alist rp-buffer)
+       path relative-path date-alist rp-buffer)
 
     (dolist (info-plist org-file-info-list)
-      (setq relative-path (file-relative-name (plist-get info-plist :new-path) root-dir))
-      (add-to-list 'date-alist (list (plist-get info-plist :creation-date)
-                                     relative-path
-                                     (plist-get info-plist :title))))
+      (setq path (plist-get info-plist :new-path))
+      (unless (or (string= path index-filename)
+                  (string= path about-filename)
+                  (string= path sitemap-filename)
+                  (string= path rp-filename))
+        (setq relative-path (file-relative-name (plist-get info-plist :new-path) root-dir))
+        (add-to-list 'date-alist (list (plist-get info-plist :creation-date)
+                                       relative-path
+                                       (plist-get info-plist :title)))))
 
     (setq date-alist (sort date-alist
                            '(lambda (list1 list2)
@@ -665,6 +674,7 @@ filename: the whole name of file to publish"
           (html-extension (or (plist-get project-plist :html-extension) "html"))
           ;; remove the prefix http:// or https://, and the suffix slash /
           (search-url (replace-regexp-in-string "/?$" "" (replace-regexp-in-string "^https?://" "" op/publish-site-url)))
+          (index-file-path (concat (file-name-as-directory root-dir) "index" "." html-extension))
           (cat-file-path (concat (file-name-as-directory (concat root-dir (or op/category-directory "categories/")))
                                  (concat (file-name-sans-extension (or op/category-index-filename "index.org")) "." html-extension)))
           (tags-file-path (concat (file-name-as-directory (concat root-dir (or op/tag-directory "tags/")))
@@ -675,7 +685,8 @@ filename: the whole name of file to publish"
           (sitemap-file-path (concat (file-name-as-directory root-dir) (concat (file-name-sans-extension (or (plist-get project-plist :sitemap-filename)
                                                                                                              "sitemap.org")) "." html-extension)))
 
-          (header (format-spec op/publish-html-header-template `((?h . ,(or op/publish-site-title "org-page"))
+          (header (format-spec op/publish-html-header-template `((?p . ,(get-valid-uri-path (file-relative-name index-file-path (file-name-directory filename))))
+                                                                 (?h . ,(or op/publish-site-title "org-page"))
                                                                  (?s . ,(get-valid-uri-path (file-relative-name sitemap-file-path (file-name-directory filename))))
                                                                  (?c . ,(get-valid-uri-path (file-relative-name cat-file-path (file-name-directory filename))))
                                                                  (?t . ,(get-valid-uri-path (file-relative-name tags-file-path (file-name-directory filename))))
@@ -804,6 +815,8 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
          (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory "tags/"))))
          ; TODO here should could be customized
          (recent-posts-filename (concat root-dir "recentposts.org"))
+         (index-filename (concat root-dir "index.org"))
+         (about-filename (concat root-dir "about.org"))
 
          (indent-str (make-string 2 ?\ ))
          (exclude-regexp (plist-get project-plist :exclude))
@@ -830,6 +843,8 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
           ; do not include sitemap itself, tags and recentposts
           (unless (or (equal (file-truename sitemap-filename) (file-truename file))
                       (equal (file-truename recent-posts-filename) (file-truename file))
+                      (equal (file-truename index-filename) (file-truename file))
+                      (equal (file-truename about-filename) (file-truename file))
                       (string-prefix-p (file-truename cat-dir) (file-truename file))
                       (string-prefix-p (file-truename tag-dir) (file-truename file)))
             (if (eq sitemap-style 'list)
