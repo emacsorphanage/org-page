@@ -179,6 +179,7 @@ uses http protocol"
        <li><a href=\"%c\" class=\"menu\">Categories</a></li>
        <li><a href=\"%t\" class=\"menu\">Tags</a></li>
        <li><a href=\"%r\" class=\"menu\">Recent Posts</a></li>
+       <li><a href=\"%a\" class=\"menu\">About</a></li>
      </ul>
    </nav>
    <nav id=\"sub-nav\" class=\"align-right\">
@@ -198,6 +199,7 @@ uses http protocol"
 %c: the relative path to category root html file
 %t: the relative path to tag root html file
 %r: the relative path to recent posts html file
+%a: the relative path to about html file
 %g: the github link (defined by `op/personal-github-link')
 %u: the url of current site, used for search (defined by `op/publish-site-url')")
 
@@ -474,15 +476,16 @@ TODO: improve the doc here"
 
     (dolist (info-plist org-file-info-list)
       (setq cat-name (plist-get info-plist :category))
-      (setq cat-subdir (file-name-as-directory (concat cat-dir (convert-string-to-path cat-name) "/")))
-      (setq relative-path (file-relative-name (plist-get info-plist :new-path) cat-subdir))
-      (unless (file-directory-p cat-subdir)
-        (make-directory cat-subdir t))
-      (setq cat-file-list (assoc cat-name cat-alist))
-      (unless cat-file-list
-        (setq cat-file-list (list cat-name))
-        (add-to-list 'cat-alist cat-file-list))
-      (nconc cat-file-list (list (cons relative-path (plist-get info-plist :title)))))
+      (unless (not cat-name)
+        (setq cat-subdir (file-name-as-directory (concat cat-dir (convert-string-to-path cat-name) "/")))
+        (setq relative-path (file-relative-name (plist-get info-plist :new-path) cat-subdir))
+        (unless (file-directory-p cat-subdir)
+          (make-directory cat-subdir t))
+        (setq cat-file-list (assoc cat-name cat-alist))
+        (unless cat-file-list
+          (setq cat-file-list (list cat-name))
+          (add-to-list 'cat-alist cat-file-list))
+        (nconc cat-file-list (list (cons relative-path (plist-get info-plist :title))))))
 
     ;; write single category file info
     (mapc '(lambda (cat-list)
@@ -668,7 +671,7 @@ filename: the whole name of file to publish"
                                   (concat (file-name-sans-extension (or op/tag-index-filename "index.org")) "." html-extension)))
           ; TODO the variable in the below line should could be customized
           (rp-file-path (concat (file-name-as-directory root-dir) (concat "recentposts." html-extension)))
-
+          (about-file-path (concat (file-name-as-directory root-dir) (concat "about" "." html-extension)))
           (sitemap-file-path (concat (file-name-as-directory root-dir) (concat (file-name-sans-extension (or (plist-get project-plist :sitemap-filename)
                                                                                                              "sitemap.org")) "." html-extension)))
 
@@ -677,6 +680,7 @@ filename: the whole name of file to publish"
                                                                  (?c . ,(get-valid-uri-path (file-relative-name cat-file-path (file-name-directory filename))))
                                                                  (?t . ,(get-valid-uri-path (file-relative-name tags-file-path (file-name-directory filename))))
                                                                  (?r . ,(get-valid-uri-path (file-relative-name rp-file-path (file-name-directory filename))))
+                                                                 (?a . ,(get-valid-uri-path (file-relative-name about-file-path (file-name-directory filename))))
                                                                  (?g . ,(or op/personal-github-link "https://github.com/kelvinh/org-page"))
                                                                  (?u . ,search-url)))))
      (setq org-export-html-preamble-format `(("en" ,header)))))
@@ -888,12 +892,12 @@ from `org-publish-org-sitemap' defined in `org-publish.el'."
     (file-relative-name org-html-file html-dir)))
 
 (defun op/read-file-info (filename base-directory)
-  "Read info of given org file (the `filename' should be full-path), include:
-1. path; 2. creation date; 3. modification date; 4. tags. The creation date
-info will be firstly read from #+DATE defined in the file, if no date info
-found, will be read from the file's last change date. However, it is recommended
-to use #+DATE to record creation date, since the file's last change date will
-change if its meta info changed."
+  "Read info of given org file (`filename' should be full-path), include:
+1. path; 2. creation date; 3. modification date; 4. tags; 5. category. The
+creation date info will be firstly read from #+DATE defined in the file, if no
+date info found, will be read from the file's last change date. However, it is
+recommended to use #+DATE to record creation date, since the file's last change
+date will change if its meta info changed."
   (if (or (not (file-exists-p filename))
           (file-directory-p filename))
       nil
@@ -937,6 +941,12 @@ change if its meta info changed."
                              ;; TODO the default category name should be customizable
                              "default"
                            (file-name-nondirectory (directory-file-name (file-name-directory filename)))))) ; read parent folder name
+        ;;; the following 4 files should have no category info, even the "default" category
+        (if (or (string= filename (concat (file-name-directory base-directory) "index.org"))
+                (string= filename (concat (file-name-directory base-directory) "about.org"))
+                (string= filename (concat (file-name-directory base-directory) "sitemap.org"))
+                (string= filename (concat (file-name-directory base-directory) "recentposts.org")))
+            (setq category nil))
         (plist-put attr-plist :category (or category nil))
         (or file-visiting (kill-buffer file-buffer)))
       attr-plist)))
@@ -969,10 +979,12 @@ strongly discouraged."
         (setq file-attrs (op/read-file-info file tmp-dir))
         (add-to-list 'file-attr-list file-attrs)
         (setq date-list (split-string (plist-get file-attrs :creation-date) "-"))
-        (if (string= file (concat tmp-dir "index.org"))
-            ;;; do not modify paths of index.org
-            ;;; TODO add other 3 files: about.org, sitemap.org and recentposts.org
-            (setq new-relative-path "index.org")
+        (if (or (string= file (concat tmp-dir "index.org"))
+                (string= file (concat tmp-dir "about.org"))
+                (string= file (concat tmp-dir "sitemap.org"))
+                (string= file (concat tmp-dir "recentposts.org")))
+            ;;; do not modify paths of index.org, about.org, sitemap.org, recentposts.org
+            (setq new-relative-path (file-name-nondirectory file))
           (setq new-relative-path (concat (file-name-as-directory
                                            (concat (convert-string-to-path (plist-get file-attrs :category)) "/"
                                                    (car date-list) "/"
