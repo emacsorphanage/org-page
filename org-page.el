@@ -533,7 +533,7 @@ TODO: improve the doc here"
       (insert (concat "#+TITLE: " cat-title "\n\n"))
       (mapc '(lambda (cat-list)
                (setq relative-path (concat (convert-string-to-path (car cat-list)) "/index.org"))
-               (insert (concat "** [[file:"
+               (insert (concat "+ [[file:"
                                (get-valid-uri-path relative-path)
                                "]["
                                (car cat-list)
@@ -602,7 +602,7 @@ TODO: improve the doc here"
       (insert (concat "#+TITLE: " tag-title "\n\n"))
       (mapc '(lambda (tag-list)
                (setq relative-path (concat (convert-string-to-path (car tag-list)) "/index.org"))
-               (insert (concat "** [[file:"
+               (insert (concat "+ [[file:"
                                (get-valid-uri-path relative-path)
                                "]["
                                (car tag-list)
