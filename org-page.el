@@ -364,6 +364,17 @@ directory `%s' first, usually it is <org-page directory>/themes/"
   ;;; do not include the javascript
   (setq org-export-html-style-include-scripts nil)
 
+  ;;; after publishing, the newline character between html tag <p> will be shown
+  ;;; as space, it is normal for languages like English, but for Chinese and
+  ;;; other DBCS languages, the extra spaces are really annoying, so, use the
+  ;;; following workaround:
+  ;;; change fill-column to a very large number, and then fill the whole buffer,
+  ;;; so one paragraph will be in one line, the extra spaces are avoid.
+  (setq org-export-first-hook '(lambda ()
+                                 (set-fill-column 9999)
+                                 (fill-region (point-min) (point-max))))
+
+
   (setq org-publish-project-alist `(("op-whole-project"
                                      :components ("op-html" "op-static" "op-src-html")
                                      :author ,user-full-name
