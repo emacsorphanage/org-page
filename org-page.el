@@ -249,12 +249,10 @@ please see `op/publish-html-postamble-template' for detailed information."
   <h1 class=\"title\">Comments</h1>
   <div id=\"disqus_thread\"></div>
   <script type=\"text/javascript\">
-    // TODO: change the following variables to proper value
-    var disqus_developer = 1;
-    //var disqus_title = \"testing\";
+    //var disqus_developer = 1;
     var disqus_identifier = \"%n\";
     var disqus_url = \"%u\";
-    var disqus_shortname = '%s'; // required: replace example with your forum shortname
+    var disqus_shortname = '%s';
 
     /* * * DON'T EDIT BELOW THIS LINE * * */
     (function() {
