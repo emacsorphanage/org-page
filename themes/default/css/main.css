@@ -147,6 +147,9 @@ hr {
     height: 0;
     margin: 30px 0;
 }
+strong, b {
+    font-weight: bold;
+}
 #content h2:before {
     border-bottom: 1px solid #FFFFFF;
     bottom: -2px;
