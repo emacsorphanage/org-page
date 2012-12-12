@@ -370,10 +370,12 @@ directory `%s' first, usually it is <org-page directory>/themes/"
   ;;; following workaround:
   ;;; change fill-column to a very large number, and then fill the whole buffer,
   ;;; so one paragraph will be in one line, the extra spaces are avoid.
+  ;;; and, do NOT fill #+begin_src/#+end_src sections, it will mess up the code.
   (setq org-export-first-hook '(lambda ()
                                  (set-fill-column 9999)
-                                 (fill-region (point-min) (point-max))))
-
+                                 (let ((regions (op/non-src-regions)))
+                                   (dolist (region regions)
+                                     (fill-region (car region) (cdr region))))))
 
   (setq org-publish-project-alist `(("op-whole-project"
                                      :components ("op-html" "op-static" "op-src-html")
@@ -1152,6 +1154,22 @@ Note: generating html file directly, not index.org"
         (insert (format "I was created by [[http://github.com/kelvinh][Kelvin Hu]], in his thought, I am pretty enough, but if you think there is something can be done to make me much more beautiful, please [[mailto:%s][contact him]] to improve me, many thanks. :-)" (confound-email "ini.kelvin@gmail.com")))
         (save-buffer)
         (or about-visiting (kill-buffer about-buffer))))))
+
+(defun op/non-src-regions ()
+  "According to the issue https://github.com/kelvinh/org-page/issues/20 reported
+on github, the content between #+begin_src and #+end_src will be formatted into
+a big mess before publishing. So before invocation of function `fill-region', we
+need to calculate the regions separated by the source code section firstly, and
+then do fill region operation on those regions.
+This is a utility function, returns a list, of which each element is a con cell
+stored the non-src section start position and end position, for current buffer."
+  (let (nonsrc-beginning section regions)
+    (goto-char (point-min))
+    (while (re-search-forward "\\(#\\+BEGIN_SRC\\)" nil t)
+      (setq section (cons (or nonsrc-beginning 0) (match-beginning 0)))
+      (add-to-list 'regions section t)
+      (setq nonsrc-beginning (re-search-forward "#\\+END_SRC" nil t)))
+    (add-to-list 'regions (cons (or nonsrc-beginning 0) (point-max)) t)))
 
 
 (provide 'org-page)
