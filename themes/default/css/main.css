@@ -21,7 +21,7 @@ body {
     height: 30px;
     line-height: 30px;
     padding: 30px 0;
-    width: 970px;
+    width: 800px;
     margin: 0 auto;
 }
 #preamble h1 {
@@ -37,7 +37,7 @@ body {
     position: relative;
     -moz-box-orient: vertical;
     display: inline-block;
-    margin-left: 30px;
+    margin-left: 15px;
     vertical-align: middle;
 }
 a {
@@ -116,7 +116,7 @@ a {
 }
 #content {
     margin: 0 auto;
-    width: 970px;
+    width: 800px;
     border-top: 1px solid #FFFFFF;
     border-bottom: 1px solid #DDDDDD;
     padding: 30px 0;
@@ -217,7 +217,7 @@ strong, b {
 #post-meta {
     border-top: 1px solid #FFFFFF;
     border-bottom: 1px solid #DDDDDD;
-    width: 970px;
+    width: 800px;
     margin: 0 auto;
     padding: 15px 0;
     overflow: hidden;
@@ -266,7 +266,7 @@ strong, b {
 #comment {
     border-top: 1px solid #FFFFFF;
     border-bottom: 1px solid #DDDDDD;
-    width: 970px;
+    width: 800px;
     margin: 0 auto;
     padding: 30px 0;
 }
@@ -281,7 +281,7 @@ strong, b {
 }
 #footer {
     border-top: 1px solid #FFFFFF;
-    width: 970px;
+    width: 800px;
     margin: 0 auto;
     font-size: 0.9em;
     text-align: center;
