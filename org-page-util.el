@@ -133,7 +133,7 @@ name@domain.com => name <at> domain <dot> com"
   "convert a string to legal URL path
 TODO: improve doc here
 TODO2: maybe DBCS strings should also be converted into ASCII URL path"
-  (replace-regexp-in-string "[ :/\\]+" "-" string))
+  (downcase (replace-regexp-in-string "[ :/\\]+" "-" string)))
 
 (defun get-valid-uri-path (path)
   "This function is used to remove the html file name from the path,
