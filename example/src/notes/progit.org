@@ -1,0 +1,652 @@
+#+TITLE:       Pro Git Reading Notes
+#+AUTHOR:      Kelvin Hu
+#+EMAIL:       ini.kelvin@gmail.com
+#+DATE:        2012-11-30 Fri
+#+KEYWORDS:    vcs, git
+#+CATEGORY:    notes
+#+TAGS:        :Git:
+#+LANGUAGE:    en
+#+OPTIONS:     H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
+#+DESCRIPTION: reading notes of book Pro Git
+
+这是我读《Pro Git》这本书写的一点笔记和心得。我略过了自己在读这本书之前已经弄懂的，或者作为一个
+git使用者不需要去关心的内容，而详细写了自己不懂的地方，比方说子模块，我会一点一点去做实验，然后
+写下自己的实验心得。
+
+* 起步
+
+  + 本地版本控制系统
+  + 集中化版本控制系统（e.g. Perforce）
+  + 分布式版本控制系统（e.g. Git）
+
+  普通版本控制系统记录文件内容的差异，而git记录整体的变化。
+
+** 文件的三种状态
+
+   - 已提交（committed）：文件已保存在数据库中
+   - 已修改（modified）：文件有修改，但尚未保存
+   - 已暂存（staged）：已经把修改的文件放在暂存区域，等待提交
+
+** 配置文件
+
+   git有三个level的配置文件：
+
+   - =/etc/gitconfig= ：针对系统所有的user， =git config= 的 =--system= 选项就是
+     用来配置这个文件
+   - =~/.gitconfig= ：用户目录的配置文件，对应于 =git config= 的 =--global= 选项
+   - =.git/config= ： 这里的配置仅仅对当前的project有效
+
+   三个文件的优先级依次从低到高。
+
+* 基础
+
+  .gitignore的规范：
+
+  - 空行或者#开头的行会被忽略
+  - 可使用glob模式匹配
+  - 匹配模式最后跟斜杠（/）代表目录
+  - 可以在模式前加感叹号（!）取反
+
+  glob模式：星号（*）匹配零个或多个字符；[abc]匹配任意一个在方括号内的字符（注意，只匹
+  配一个）；问号（?）匹配一个字符；[0-9]匹配在0到9范围内的所有字符。
+
+  .gitignore例子：
+
+  : # 此为注释 – 忽略
+  : *.a       # 忽略所有 .a 结尾的文件
+  : !lib.a    # 但 lib.a 不会被忽略
+  : /TODO     # 仅仅忽略项目根目录下的 TODO 文件，不包括 subdir/TODO
+  : build/    # 忽略 build/ 目录下的所有文件
+  : doc/*.txt # 会忽略 doc/notes.txt 但不包括 doc/server/arch.txt
+
+** 基本命令
+
+   - =git add= ：将未跟踪、已修改的文件添加到暂存区
+   - =git commit= ：提交已经添加到暂时区的文件
+   - =git rm= ：删除已提交的文件
+   - =git mv= ：文件重命名
+
+   - =git commit --amend= ：添加某些未提交的文件到暂存区，然后执行此命令，将会把这些文
+     件添加到上一次的提交；如果执行此命令时暂存区没有文件，就相当于修改最近一次提交的提交
+     信息
+   - =git reset HEAD <file>= ：将已暂存的文件取消暂存
+   - =git checkout -- <file>= ：取消对文件的修改（谨慎使用）
+
+   - =git remote -v= ：显示所有远程仓库的信息
+   - =git remote add <shortname> <url>= ：添加一个远程仓库
+   - =git fetch <shortname>= ：获取远程仓库<shortname>的所有内容到本地
+   - =git push <repo> <branch>= ：将分支<branch>推送到<repo>仓库
+   - =git pull= ：自动获取远程仓库的内容，并合并到本地，相当于fetch后再merge
+   - =git remote show <repo>= ：显示某个远程仓库的详细信息
+   - =git remote rename= ：仓库重命名
+   - =git remote rm= ：删除远程仓库
+
+* 分支
+
+  Git每一次提交，都是创建了一棵树，树的叶子是blob对象，代表各个目录的文件，记录着这一次
+  commit对于上一次commit的文件的改动。然后每个目录形成一个tree对象，记录着本目录中的文
+  件和子目录，于是这样就形成了一棵类似于文件系统的树，除了叶子结点为blob对象代表文件外，
+  其它结点为tree对象代表目录，最后的顶层结点代表project的根目录。最最后，有一个commit
+  对象，其tree属性指向这个代表根目录的tree对象，同时，commit的另一个属性parent指向了
+  上一次提交的commit对象。
+
+  于是，所有的commit对象串起来，就形成了所有的提交记录。并且，只要找到某个commit对象，就
+  可以轻松获取整个project在这次提交的所有文件内容状态。
+
+  分支创建：创建一个分支指针，指向某个commit。
+
+  分支切换：假设有两个分支：master和devel，如果当前工作分支位于master上，就会有一个叫
+  HEAD的特殊指针指向master的分支指针，要切换到devel分支，只需要把HEAD重新指向devel的分
+  支指针，并且把所有文件的内容和状态置为devel指向的commit对象对应的内容和状态即可。
+
+  远程分支只是一些在不与远程仓库交互的情况下，无法改变的指针，意味着不能提交内容到远程分支
+  上，而只能把本地分支推送到远程分支。如果想基于某远程分支进行开发，可以先checkout出一个
+  本地分支： =git checkout -b branch origin/branch= ，代表以远程仓库origin的branch
+  分支为基础建立一个本地的branch分支。然后，执行 =git push origin branch:branch= 将本
+  地分支branch的内容推送到远程分支branch。如果要删除远程分支，只需要把本地分支的名字留空
+  即可，代表“推送空内容到远程的某分支”，即删除远程分支。
+
+  rebase：在某个分支的基础上，将另一个分支的改变全部整全进来，形成一个新的提交，同时，被整
+  合进来的分支的所有提交被全部删除。如果将分支看作河流，那么merge就是将产生分叉的两条河流
+  的水汇合起来重新形成一条河流，而rebase则相当于是在分叉成两条的河流已经流了一段时间之后，
+  回到最初河流分叉处，直接将其中的一条分叉抹掉，并且将已经流入这条已经不存在的分叉中的水再舀
+  出来倒进另一条分叉中，最终结果看起来像是至始至终都只存在一条河流一样。
+
+* 搭建服务器
+
+  git访问的几种协议：
+
+  - 本地协议：所谓的远程仓库只是硬盘上挂载的一个目录，例如可以使用以下命令来克隆一个远程仓库
+    到本地： =git clone file:///opt/git/project.git=
+  - SSH协议：远程仓库放在一台可通过SSH访问的机器上： =git clone ssh://user@server:project.git=
+  - Git协议：是一个包含在git软件包中的一个守护进程，用来监听端口9418，该协议通常不会允许写
+    操作，如果允许该操作，那么任何一个可以访问项目URL的人都会有推送权限
+  - HTTP/S协议：可能通过HTTP/S访问项目，架设比较简单
+
+  *鉴于目前没有搭建Git服务器的需求（github已经够用了），所以略过本章其它内容。*
+
+* 分布式
+
+  *本章讲如何进行多人同时协调工作，略。*
+
+* 工具
+
+** 修订版本（revision）选择
+
+   所谓的修订版本，就代指一次commit。git有各种各样强大的命令来选择某一个revision，或者某一
+   个范围的revision。然后，就可以使用 =git log= 或者 =git show= 命令来显示这个revision
+   或者这个范围的revision的信息。
+
+   - SHA-1：每次commit都有一个SHA-1值，可以用这个值来代表这次提交。在不会导致混乱的情况下，
+     可以使用短值（最短至少是五位）。如一个project只有两次提交：
+     : 734713bc047d87bf7eac9674765ae793478c50d3
+     : d921970aadf03b3cf0e71becdaab3147ba71cdef
+     那么d9219，d921970，d921970aadf03b3cf0e71becdaab3147ba71cdef都可以代表第二次提交。
+
+   - 分支引用：所谓分支引用，就是指向某个commit的分支指针，如master分支指针。分支引用和它
+     指向的这个commit是等价的。
+
+   - 引用日志：引用日志就是git保存的一份记录HEAD指针和分支引用指针最近一段时间位置的日志。
+     可以使用 =git reflog= 查看。如 =git reflog HEAD= 表示要查看 =HEAD= 指针最近的位置
+     信息， =git reflog master= 用来查询 =master= 指针最近的位置。于是，就可以使用输出里
+     的简称来指代某次提交，如 =HEAD@{3}= 或者 =master@{3}= ，甚至可以使用比较tricky的语
+     法： =master@{yesterday}= ， =HEAD@{2.months.ago}= 。但是引用日志只存在于本地，
+     只是用来记录对本地仓库的操作。
+
+   - 祖先引用：主要是 =^= 和 =~= ， =HEAD~1= ， =HEAD^1= ， =HEAD~= ， =HEAD^= 这四个
+     引用是等价的，都代表HEAD的父提交（即1是可以省略的）。但是 =HEAD^2= 和 =HEAD~2= 的意
+     义是不一样的：前者代表第二父提交（即广度搜索）；后者代表父提交的父提交（即深度搜索）。
+
+   - 提交范围：上述选择方式都是指定某一次提交，而git可以通过以下语法来选择一定的提交范围：
+     + 双点语法： =A..D= ，A和D代表提交，意思是可以从D获取而不能从A获取的提交，例如下面的示
+       例提交：
+       : A <= B <= C <= D
+       那么B和C就是可以从D获取而不能从A获取的，即 =A..D= 将会返回B和C。
+     + 多点语法：例如想找出refA和refB能获取，而refC不能获取的提交范围，可以使用以下命令：
+       : git log refA refB ^refC
+       : git log refA refB --not refC
+       这两条命令是等价的。
+     + 三点语法： =A...D= ，代表可以从A或者D获取，但是不能同时从两者获取的提交。还可以加一
+       个 =--left-right= 参数来标明输出的提交是属于哪一个分支：
+       : git log --left-right master...devel
+
+** 交互式暂存
+
+   命令 =git add -i= 可以进行交互式暂存，包括以下操作：
+   : 1. status    2. update    3. revert    4. add untracked
+   : 5. patch     6. diff      7. quit      8. help
+   其中2用来添加更新到暂存，3用来撤回已暂存的文件，4用来添加新加的文件到暂存，6用来显示已暂
+   存文件的差异。
+
+   命令5是比较有用的，比方说某个文件新加了三行，但是只想把前两行添加到暂存，新加的第三行打算
+   下一次再添加到暂存提交，那么就可以用patch命令来实现该操作。当然，如果不用交互模式，也可以
+   使用命令 =git add -p= 或者 =git add --patch= 实现。
+
+** 储藏（Stashing）
+
+   所谓的储藏，就是在工作了一段时间——修改或者添加了一些文件，并且已经暂存了部分文件之后，
+   需要切换到其它分支，但是又不想提交这些还没完成的工作，那么就可以把这些工作先储藏起来，切换
+   到其它分支工作，然后在需要的时候把储藏的工作再拿出来。
+
+   - 命令 =git stash= 可以储藏当前的工作到储藏栈，然后工作目录会被恢复成最后一次提交时的样子。
+
+   - 命令 =git stash list= 可以查看当前储藏栈上的所有储藏。
+
+   - 命令 =git stash apply stash@{0}= 用来应用储藏 =stash@{0}= ，如果不加储藏的简称，那
+     么就默认应用栈最顶端的储藏，即 =stash@{0}= 。
+
+   - 命令 =git stash apply [stash name] --index= 可以在应用储藏的同时，将储藏中已经暂存
+     的文件也暂存起来，也就是说，不加 =--index= 参数的时候，储藏中已暂存的文件是不会进入暂存
+     的，但 =--index= 参数会在应用储藏的同时，暂存储藏中已暂存的文件。
+
+   - =apply= 命令只是应用储藏，储藏内容还是在栈上，命令 =git stash drop= 可以删除储藏，或者
+     运行 =git stash pop= 来在应用储藏的同时，从栈上删除储藏。
+
+   - 在应用了储藏后，又进行了一些别的工作，这时又想取消刚刚已应用的储藏，可以使用下面的命令：
+     : git stash show -p stash@{0} | git apply -R
+     管道前的命令用来将储藏 =stash@{0}= 以git的patch形式显示在标准输出上；管道后的命令是用来
+     反应用某个patch，整个命令的意思就是：取得某个储藏的patch形式，并且反应用之，即取消储藏。
+
+   - 从储藏中创建分支：如果储藏了一个储藏，然后又进行了一些其它工作，这时应用这个储藏可能会有
+     冲突，于是，就可以使用 =git stash branch <branch name>= 从储藏时所处的提交来创建一个
+     新的分支，应用储藏和后面的工作，如果应用没有问题，就删除储藏。
+
+** 修改提交历史
+
+   *注意，这部分涉及的命令基本都是rebase操作，也就是“破坏性”的，如果操作的提交已经push到服
+   务器，建议不要执行这些操作。*
+
+   在前面的笔记中有涉及到修改最后一次提交的提交说明的内容，即执行以下命令：
+
+   : git commit --amend -m "new commit message"
+
+   但是想修改多个提交的提交说明，甚至是提交本身的内容的时候，就需要更加有用的命令：
+
+   : git rebase -i HEAD~3
+
+   这个命令会进行交互式的rebase操作，涉及最近3次的提交。执行这个命令后，会打开一个编辑器，编
+   辑器中大致会是以下内容：
+
+   : pick 930d211 this is a rebased commit: add my name
+   : pick fa337d2 this is a rebased commit: add another anonymous person
+   : pick c110578 remove extra 'dot'
+   :
+   : # Rebase 6bbf412..c110578 onto 6bbf412
+   : #
+   : # Commands:
+   : #  p, pick = use commit
+   : #  r, reword = use commit, but edit the commit message
+   : #  e, edit = use commit, but stop for amending
+   : #  s, squash = use commit, but meld into previous commit
+   : #  f, fixup = like "squash", but discard this commit's log message
+   : #  x, exec = run command (the rest of the line) using shell
+   : #
+   : # These lines can be re-ordered; they are executed from top to bottom.
+   : #
+   : # If you remove a line here THAT COMMIT WILL BE LOST.
+   : # However, if you remove everything, the rebase will be aborted.
+   : #
+   : # Note that empty commits are commented out
+
+   可以看到，前面三行是最近三个提交，但顺序和 =git log= 的输出是相反的。如果要对某个提交做
+   动作，只需要更改它那行的第一个单词为想要做的操作即可。后面的注释中对于可以做的操作有比较
+   详细的说明：
+   - pick：对这个提交不做什么事
+   - reword：对这个提交本身不做什么事，但是修改它的提交说明
+   - edit：编辑这个提交，可能涉及提交本身的内容
+   - squash：“压制”这个提交，即将这个提交和前一个提交合并为一个，之后会打开一个编辑器来编
+     辑合并之后的提交信息
+   - fixup：同样是“压制”，不过这个提交的提交信息被忽略
+   - exec：这个命令我自己没有试，不知道有什么效果，不过从说明来看，应该是会在shell中执行这
+     个单词之后的内容
+
+   *需要注意的是，如果某行被删除了，那这个提交就会彻底没有了，所以不要随便乱删。*
+
+   那么，可以进行的操作有（主要的操作，其它的我没有试）：
+
+   1. 更改提交顺序：
+      : pick c110578 remove extra 'dot'
+      : pick 930d211 this is a rebased commit: add my name
+      : pick fa337d2 this is a rebased commit: add another anonymous person
+
+   2. 改变某两次提交的提交说明：
+      : reword 930d211 this is a rebased commit: add my name
+      : reword fa337d2 this is a rebased commit: add another anonymous person
+      : pick c110578 remove extra 'dot'
+
+   3. 把两次提交合并成一次：
+      : pick 930d211 this is a rebased commit: add my name
+      : squash fa337d2 this is a rebased commit: add another anonymous person
+      : pick c110578 remove extra 'dot'
+
+   4. 编辑某次提交（或者多次提交也可以）：
+      : pick 930d211 this is a rebased commit: add my name
+      : pick fa337d2 this is a rebased commit: add another anonymous person
+      : edit c110578 remove extra 'dot'
+
+   然后，保存内容，退出编辑器，git会根据你的要求进行接下来的操作，对于前三种操作，后续的操作
+   都比较简单，这里说一下第四种操作——编辑提交。
+
+   编辑提交的内容就多了，比方说重新修改某些文件，加入新文件等等。这里以把上面例子中的那一次提
+   交 =c110578= 给拆分成两次为例：
+
+   : # 注意，这里的HEAD不再是当前分支的最顶端的commit，而是指向你正执行edit操作的commit
+   : git reset HEAD^                                 # 把HEAD指针给reset到上次提交
+   : git add AUTHOR                                  # 添加AUTHOR文件到暂存区
+   : git commit -m "remove extra 'dot' from AUTHOR"  # 提交AUTHOR文件
+   : git add README                                  # 再添加README文件到暂存区
+   : git commit -m "remove extra 'dot' from README"  # 提交README文件
+
+   好了，原来的一次提交 =c110578= 已经变成两次提交了，但是，因为edit操作必须要停下来等待用
+   户完成对提交的编辑，并且git也无法知道什么时候编辑会完成，所以，在编辑完了之后，一定不要忘
+   了执行 =git rebase --continue= 来告诉git继续进行整个交互式的rebase操作。
+
+*** 核弹级选项：filter-branch
+
+    pro git直接把filter-branch命令为“核弹级选项”，应该是跟这个命令强大的力量有关，它能按
+    照某些规则，一次操作大量的commit，如果使用得好，会产生很好的效果；如果使用不好，就会真的
+    是“核弹”，会产生毁灭性的效果。这个命令的使用方法比较多，具体可以参考[[http://www.kernel.org/pub/software/scm/git/docs/git-filter-branch.html][git man page]]，而
+    且平时用到的可能性比较小，所以我也不打算一个一个选项地试了，但大概可以有以下用处：
+
+    - 从所有提交中删除某个文件：比方说叫password.txt文件：
+      : git filter-branch --tree-filter 'rm -f password.txt' HEAD
+
+    - 全局更新电子邮件地址：
+      : git filter-branch --commit-filter '
+      :     if [ "$GIT_AUTHOR_EMAIL" = "old_email@domain.com" ]; then
+      :         GIT_AUTHOR_EMAIL="ini.kelvin at gmail"
+      :     fi
+      :     git commit-tree "$@"
+      : ' HEAD
+
+** 调试
+
+   主要是两个命令：
+
+   1. =git blame <file name>= ：查看文件的每一行，是在哪次提交修改的。还可加上 =-L= 参
+      数来指定具体的行数，如 =git blame -L 50,60 README= 。
+
+   2. =git bisect= ：用来对提交历史进行二分查找，以最终确定引入问题或者bug的那个提交。比
+      如在1.0版本时某个bug还是没有的，但在当前commit出现了，就可以执行以下命令：
+      : git bisect start
+      : git bisect bad HEAD
+      : git bisect good v1.0
+      上述命令相当于开始二分搜索，并设定上限和下限，然后git会输出下面的信息：
+      : Bisecting: 650 revisions left to test after this (roughly 9 steps)
+      : [8da35c00dd750fc9a9d64847ccde1fedc6818593] Merge commit '4a472d5fc317186adc8300355dcf6ce5bdd73762'
+      然后需要检查project当前状态是否有bug，然后执行下面命令：
+      : git bisect good/bad # 无bug时执行good，有bug时执行bad
+      上面的命令是在告诉git，当前的这个commit是“好”的还是“坏”的，然后git会决定继续搜索
+      的范围。如此递归，就能最终确定引入bug的那个commit。
+
+      *由于执行二分搜索时HEAD指针的位置发生了变化，所以在二分搜索结束后，需要手动地执行命令
+      git bisect reset将HEAD指针重置回执行二分搜索前的位置。*
+
+      如果有一个脚本是用来检测这个bug的，并且会在正常时返回0，错误返回非0的话，就可以用这个
+      脚本来自动地执行搜索：
+      : git bisect start HEAD v1.0
+      : git bisect run detect-bug.sh
+
+** 子模块
+
+   所谓子模块，就是把某个git的project，作为当前项目一个子模块，即形成了树关系。
+
+   *添加一个子模块：*
+
+   : git submodule add /path/to/module.git [submodule path]
+
+   执行完这个操作之后，project根目录中会多出存放这个子模块的目录，同时还会有多出一个
+   .gitmodules文件（如果这是第一次添加子模块的话），同时， =.git/config= 中会多出一个保存
+   这个子模块信息的section，而 =.git/modules= 目录中会多出保存这个子模块的仓库。
+
+   接着，如果执行 =git status= ，会看到有新的change已经暂存，需要commit。执行commit操作
+   即可。需要注意的是，子模块虽然是一个目录，但在提交时git并不是像对待其它目录那样对待子模块，
+   git会以一个特殊的模式160000记录子模块，如果运行 =git diff HEAD^..= ，会发现其中有类似
+   下面这样的几行记录：
+   : +++ b/lib
+   : @@ -0,0 +1 @@
+   : +Subproject commit c8db25ca81ba7e840a06b7a03d08e00c72d59897
+   实际这个所谓的"patch"就记录了子模块的添加（可以看到，其实只记录了子模块最新提交的SHA-1
+   值）。于是，一个子模块就算添加进来了。
+
+   *克隆一个带子模块的仓库：*
+
+   : git clone /repo/with/submodule.git [repo path]
+
+   但是，拷贝下来的仓库中的子模块是没有的，需要做额外的操作：
+
+   : git submodule init
+
+   上述操作将子模块写入 =.git/config= 文件（在这之前子模块在这个关键文件中是没有信息的）。
+   但这时子模块还是没有内容的，需要执行以下命令：
+
+   : git submodule update
+
+   这一步才是真正将子模块给down下来。但需要注意的是，此时在子模块目录中执行 =git status= 会
+   显示 =Not on any branch= ，即不在任何分支上，如果在project根目录中执行（记得替换路径）：
+   : cat .git/modules/<submodule name>/HEAD
+   会看到如下输出：
+   : c8db25ca81ba7e840a06b7a03d08e00c72d59897
+   这个SHA-1值就是上面提交时记录的子模块的最新提交的SHA-1值，这说明，子模块的update操作只是
+   按照project的commit记录down下来了子模块对应这个SHA-1值的commit，并没有帮我们处理HEAD指
+   针，所以会显示不在任何分支上，但实际这个commit和master分支指向的commit是一样的：
+   : cat .git/modules/<submodule name>/refs/heads/master
+   会输出一模一样的SHA-1值（当然，这取决于你子模块最后提交所处的分支，如果不是master分支而
+   是其它分支，如source，那么就是和source指针的值是一样的）。这时，如果需要对子模块做一些更
+   新，一定记得先checkout某个分支。如果没有checkout而是直接更新并commit，那么HEAD指针会成
+   为唯一一个指向这个新的commit的指针，如果然后再checkout某个分支，那么由于HEAD指针被改变
+   指向了这个checkout的分支，于是之前的那个commit就没有任何的指针指向它了——也就是说，它丢
+   失了。
+
+   *合并更新:*
+
+   假设有两个developer A和B，B更新了子模块，并push到公共仓库，然后，A执行了merge操作，在运
+   行 =git status= 时会发现，有东西需要提交。这是因为，A执行merge之后，project的提交内容
+   被更新，这代表提交中保存的子模块的SHA-1值会被更新，但子模块本身不会自动更新，所以还是旧值，
+   于是查询status就会发现当前子模块的SHA-1值和merge进来的提交中的SHA-1值不符合，于是，git
+   就判断工作目录中的子模块有更新需要提交。这时如果执行commit的话，得到的效果会恰恰相反：因
+   为子模块的SHA-1值是旧值，所以这个旧值（其实也就是旧的commit）会覆盖从公共仓库中merge进来
+   的比较新的commit。这时，正确的操作是执行 =git submodule update= ，在update子模块之后，
+   再查询status会发现一切正常，因为子模块的SHA-1值和最新提交中保存的子模块的SHA-1值match了。
+
+   但问题又来了：虽然子模块是更新了，但是子模块的master指针却依旧指向旧值（前面说过，update
+   操作只是按SHA-1值来更新，并不理会分支），所以，这个时候如果checkout master，HEAD指向的
+   内容就又丢失了。。于是，只能执行以下操作：
+   : git branch new-update
+   : git checkout master
+   : git merge new-update
+   : git branch -d new-update
+   先建一个新分支以防checkout操作导致HEAD指针移动而造成commit丢失，然后checkout master再
+   merge这个新建的分支，再删除这个多余的分支。于是。。终于让master更新到最新了。。
+
+   还有问题：如果两个project A和B都依赖某个模块lib，那么B更新了lib并push到公共仓库，A怎么
+   办呢？其实这时候，A在项目根目录如何fetch或者pull都是没办法感知lib这个子模块的更新的，原
+   因很明显：A执行fetch或者pull操作只是获得A的最新的commit，并不是lib的最新的commit，而
+   A的commit中显然是不会包含B的commit中所包含的子模块的更新信息的，所以，无论如何fetch或者
+   pull，都是无用功，这时候，只能到子模块目录中，checkout到master（记得要保证master指针是
+   指向最新的commit，不然HEAD所指向的commit会丢失），然后执行pull操作，更新子模块，这样A自
+   然也是更新了，所以还需要到A的根目录执行commit操作。
+
+   最后一个问题：如果，A和B都在develop某project，然后B更新了子模块，但并没有将子模块push到
+   公共仓库；但是B将这个project的更新push到公共仓库了。然后A从这个project的公共仓库pull了
+   最新的更新，这个更新会告诉他，子模块有更新。于是，A执行 =git submodule update= ，这时候
+   会发生什么呢？这个就好玩了，因为B没有push子模块，所以子模块的公共仓库自然是没有这个更新的，
+   所以，git会报一个fatal的error，报怨找不到这个commit，大概内容如下：
+   : fatal: reference is not a tree: e98cd5b2c9ec262255856fad4dde124e74f1ee08
+   : Unable to checkout 'e98cd5b2c9ec262255856fad4dde124e74f1ee08' in submodule path 'lib'
+   所以，如果要搞破坏，就push更新到project的公共仓库，不push子模块的更新，等着别人来搞你吧。。
+
+   还有最后一个问题。。如何删除一个子模块？ =git submodule rm= ？不，git没有提供这样的命令，
+   真的不知道Linus怎么想的，没有这个命令，真的好蛋疼啊。。于是，需要执行以下操作（以子模块名
+   字叫lib为例）：
+   : git rm --cached lib
+   : rm -rf lib
+   : git config -f .gitmodules --remove-section submodule.lib
+   : git config -f .git/config --remove-section submodule.lib
+   : rm -rf .git/modules/lib
+   : git add .gitmodules
+   : git commit -m "delete submodule 'lib'"
+
+   关于git子模块的两个不错的参考(不过两篇都有点老，其中有些内容和最新版git的表现不太一样)：
+   1. [[https://git.wiki.kernel.org/index.php/GitSubmoduleTutorial]]
+   2. [[http://www.kafeitu.me/git/2012/03/27/git-submodule.html]]
+
+* 自定义
+
+** 配置
+
+   git的配置存在于三个地方，/etc/gitconfig，~/.gitconfig，.git/config，优先级依次变高。
+
+   一些比较常用的配置项：
+
+   : # configure name and email
+   : git config --global user.name "Anonymous"
+   : git config --global user.email "anonymous@domain.com"
+   : 
+   : # configure editor and colorized output
+   : git config --global core.editor emacs/vim/nano
+   : git config --global color.ui true/always/false
+   :
+   : # configure whitespace processing and line ending formatting
+   : git config --global core.autocrlf true/input/false
+   : git config --global core.whitespace ...
+
+   git关于diff和merge的操作有四个命令：
+
+   : git diff ...
+   : git difftool ...
+   : git merge ...
+   : git mergetool ...  
+
+   因此，关于diff和merge的配置，要稍复杂一点：
+   - merge.tool：此配置对应于 =git mergetool=
+   - diff.external：此配置对应于 =git diff=
+   - diff.tool：此配置对应于 =git difftool= ，另外，这个配置会覆盖merge.tool
+
+   另外，git内置了对一些常见的merge/diff tool的支持，所以在配置这些工具时，只需要指明名字即
+   可（如meld）：
+   : git config --global diff.tool meld
+   运行 =git difftool= ，就会使用meld来进行diff了。需要注意的是，此时运行 =git diff= 仍然
+   会在stdout输出类似patch的diff信息，因为我们并没设置diff.external。
+
+   对于git没有内置支持的diff/merge tool，需要自己写脚本来包装处理git传过来的参数，git会传送
+   7个参数给diff tool：
+   : path old-file old-hex old-mode new-file new-hex new-mode
+   通常需要diff第2个和第5个参数，所以，需要自己写一个wrapper：
+   : #!/bin/sh
+   : [ $# -eq 7 ] && /path/to/your/diff/tool "$2" "$5"
+   给这个脚本加上可执行属性，然后，再执行以下设置：
+   : git config --global diff.tool diff_wrapper
+   : git config --global diff.diff_wrapper.cmd \
+   : 'diff_wrapper "$BASE" "$LOCAL" "$REMOTE" "$MERGED"'
+   注意，第二个设置是必须的，因为git要求对于没有内置支持的diff tool设置这个属性。
+
+** 属性
+
+   git的属性配置在文件 =.gitattrubites= 中，个人感觉git属性的用处主要是下面几个：
+
+   1. 特定文件的比较工具设定： =.gitconfig= 中可以设定文件的比较工具，但没办法针对特定文件设
+      定特定的工具，这可以用属性来完成，执行以下命令：
+      : echo '*.png diff=exif' >> .gitattributes
+      : git config diff.exif.textconv exiftool
+      于是在执行 =git diff= 比较png图片的时候，就会使用 =exiftool= 来比较。
+
+   2. 文件内容扩展和过滤：需要定义一个filter，filter会有两个操作，在commit的时候执行clean，
+      在checkout的时候执行smudge。clean和smudge可以是自定义脚本，输入和输出分别是stdin和
+      stdout。如果需要在文件commit的时候添加一些特定注释，如文件开头的Lincese信息，然后在
+      checkout的时候去掉这些烦人的注释，这样的操作就可以使用这个功能实现。但由于这个功能已经
+      是太过自定义化了，所以个人不太建议使用。
+
+** 钩子（hook）
+
+   钩子保存在 =.git/hooks= 目录中。可以是一些shell或者python脚本。用来在git的工作流程中做
+   一些事情。
+
+   *估计用到的可能性不大，略之。*
+
+* 其它VCS
+
+  *基本是不会用到的，略之。*
+
+* 内部原理
+
+  在执行 =git init= 之后，会在.git目录中生成以下目录和文件：
+
+  : branches      # 貌似现在这个目录已经obsolete
+  : description   # 貌似木有什么用
+  : hooks         # 保存钩子脚本，不过初始化的都带有sample后缀，所以默认是没有启用的
+  : objects       # 用来保存将来生成的一些对象，blob/tree/commit等等
+  : config        # 用来保存关于git的一些配置的文件
+  : HEAD          # HEAD指针
+  : info          # 这个目录不太清楚干嘛的，不过和.gitignore貌似有点关系
+  : refs          # 存放一些引用指针，像分支引用，tag引用等，还包括远程仓库分支引用
+
+  在执行初次提交后，还会生成以下文件及目录（不重要的目录及文件已经略去）：
+
+  : logs          # 存储对仓库操作的引用日志
+  : index         # 暂存区文件
+
+** 对象
+
+   git对象是存储在 =.git/objects/= 中的，在初次提交后执行 =find .git/objects -type f= 命
+   令，可以会有下面类似的输入（我用来测试的内容是提交了一个只写有一句"version 2"的test.txt文
+   件）：
+
+   : .git/objects/2f/39845a4a2c3ad86adebb00b1ddabd959c131c4
+   : .git/objects/1f/7a7a472abf3dd9643fd615f6da379c4acb3e3a
+   : .git/objects/57/0db6f309fb733c6b043da219a33204f5a393a6
+
+   如果再执行 =git cat-file -t <sha-1>= ，会发现，这三个对象，一个是blob，一个是tree，还有
+   一个是commit，使用命令 =git cat-file -p <sha-1>= 来查看输出，内容如下：
+
+   : > git cat-file -p 1f7a
+   :   version 2
+   : > git cat-file -p 2f39
+   :   100644 blob 1f7a7a472abf3dd9643fd615f6da379c4acb3e3a    test.txt
+   : > git cat-file -p 570d
+   :   tree 2f39845a4a2c3ad86adebb00b1ddabd959c131c4
+   :   author Kelvin Hu <ini.kelvin@gmail.com> 1355040112 +0800
+   :   committer Kelvin Hu <ini.kelvin@gmail.com> 1355040112 +0800
+   :
+   :   initial commit
+   : >
+
+   可以看到，第一个blob输出的是文件内容，第二个tree输出的是指向的blob的sha-1，以及它的文件名
+   等，第三个commit对象输出的是指的tree的sha-1，以及提交作者，邮件，提交消息等。
+
+   可以使用 =git write-tree= ， =git commit-tree= 等底命令直接创建tree和commit对象，而实
+   际上 =git add= ， =git commit= 等上层命令就是在调用这些底层命令进行工作：保存修改了的文件
+   的blob，更新暂存区index文件，创建tree对象指向blob，再创建commit对象指向tree，再更新相关的
+   分支引用，以及HEAD指针。
+
+** 对象存储
+
+   先解出一个对象看看里面的内容，以上面的blob——test.txt文件为例，用以下python脚本去解：
+
+   : >>> import zlib
+   : >>> import hashlib
+   : >>> f = open('.git/objects/1f/7a7a472abf3dd9643fd615f6da379c4acb3e3a')
+   : >>> t = f.read()
+   : 'x\x01K\xca\xc9OR04`(K-*\xce\xcc\xcfS0\xe2\x02\x007R\x05\x83'
+   : >>> f.close()
+   : >>> zlib.decompress(t)
+   : 'blob 10\x00version 2\n'
+   : >>> sha = hashlib.sha1()
+   : >>> sha.update(zlib.decompress(t))
+   : >>> sha.hexdigest()
+   : '1f7a7a472abf3dd9643fd615f6da379c4acb3e3a'
+   : >>>
+
+   上述脚本很简单：打开那个blob对象，读取内容，再用zlib解之，并计算解出内容的sha-1值。通过解析
+   过程以及最后解出的结果可以看到git对象的生成过程：
+   1. 先构造一个文件头：对象类型 + 空格 + 内容长度 + 空字节
+   2. 和文件内容拼接起来
+   3. 计算其sha-1值，作为这个对象的sha-1
+   4. 用zlib压缩之
+   5. 将压缩后的内容写入文件，文件保存的位置是：.git/objects/<sha-1头两位>/<sha-1剩下的值>
+
+** 分支引用、标签
+
+   分支引用就是指向某一个commit的指针，存储在目录 =.git/refs/heads= 中，而标签也是指向commit
+   的指针，只不过标签是不变的，永远指向某个commit，标签存储在 =.git/refs/tags= 目录中。
+
+   分支引用和标签的内容相似，比如master分支：
+   : > cat .git/refs/heads/master
+   :   570db6f309fb733c6b043da219a33204f5a393a6
+
+   HEAD指针是一个特殊的指针，它指向一个分支引用：
+   : > cat .git/HEAD
+   :   ref: refs/heads/master
+
+   远程分支引用保存位置是： =.git/refs/remotes/<repo name>/<branch name>= 。其内容和本地
+   分支引用是一样的，只不过它们不能被checkout。
+
+   *虽然可以手工修改这些引用指针，但不是建议这么做，因为手工修改不会产生引用日志。*
+
+** 仓库压缩
+
+   假设有一个大文件，大概20KB，在添加了一行之后，再进行commit，git仍然保存了整个修改过的文件，
+   而不是这个文件和前一个文件diff之后的那一行的内容。所以，在上一个commit，这个blob对象可能大
+   概占用12KB空间，而这次添加了一行之后，它依然会生成一个占用12KB空间的blob对象，虽然其实只是
+   添加了一行内容。
+
+   可以运行 =git gc= 来让git打包存储这些个对象。运行这一条命令后，git会将 =.git/objects= 中
+   的对象进行打包，存储在 =.git/objects/pack/= 目录中，同时删除 =.git/objects= 中已被打包
+   保存的对象以节省空间。在打包过程中，git会比较文件不同提交之间的差异，所以，上述情况的第二次
+   commit就会只保存差异，而不是整个文件内容了。
+
+** refspec
+
+   所谓refspec，就是远程仓库分支到本地分支的映射，保存在 =.git/config= 的 =[remote]= 区。包
+   括fetch和push，可能看起来像这样：
+   : [remote "origin"]
+   :     url = git@github.com:kelvinh/org-page.git
+   :     fetch = +refs/heads/*:refs/remotes/origin/*
+   :     push = refs/heads/master:refs/heads/rd/master
+   其中+代表在不能fast-forward的情况下，强制更新。+后的格式是<src>:<dst>。
+   - 对于fetch，<src>代表远程仓库的分支，<dst>代表映射的本地分支。
+   - 对于push，<src>代表本地分支，<dst>代表要推送的远程仓库的分支。
+
+** 传输协议
+
+   *这应该是Linus才需要关心的内容，作为一个使用者，就不关心这种太过底层的东西了，略之。*

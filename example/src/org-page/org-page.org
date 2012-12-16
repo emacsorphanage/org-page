@@ -1,0 +1,65 @@
+#+TITLE:       The Growth Process of Org-page
+#+AUTHOR:      Kelvin Hu
+#+EMAIL:       ini.kelvin@gmail.com
+#+DATE:        2012-11-27 Tue
+#+KEYWORDS:    org-page
+#+CATEGORY:    org-page
+#+TAGS:        :Org-page:Non-tech:
+#+LANGUAGE:    en
+#+OPTIONS:     H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
+#+DESCRIPTION: my diary about org-page, written in Chinese
+
+
+org-page的诞生，还是要感谢自己当时的头脑一热。当时自己刚从vim转投到emacs的阵营，
+而且刚刚对org mode有所了解。而那时候，我正在折腾github的pages（不明真相的童鞋请到
+[[http://pages.github.com][这里]]围观），而且[[http://octopress.org][octopress]]这个静态站点生成器也很流行，于是我就试了一下，感觉很不错
+的说，只是要用markdown来写东西这点让我比较不爽。
+
+我当时不懂markdown，当然，学会markdown的语法估计也不过半天的事，但是写程序的人有
+时候是很偏执的：既然我刚弄懂org mode，为什么不能用org mode来写东西呢？遂去Google
+了一番，发现了[[https://github.com/renard/o-blog][o-blog]]这么个东东，大喜过望，一试，发现除了他给的example能正常生成
+html之外，我自己写的org文件一个都不能生成，在运行的时候不是这里
+报 =wrong-type-of-argument= 错误，就是那里报 =wrong-number-of-arguments= 错
+误，而且我看他提供的example里面，除了org mode本身提供的一些语法规定之外，还多了很
+多自定义的东西，比方说 =#+begin_o_blog_row= 这样的东东，然而这些额外的语法又没有
+特别详细的说明。于是，“为什么不自己写一个以org文件作为源的静态站点生成器呢？”这个
+想法就这样形成了。
+
+程序开写三把火，说写就写，但关键是我当时基本是没有 =Elisp= 或者任何 =lisp= 方言方
+面的知识的，于是，开始看[[http://www.gnu.org/software/emacs/manual/html_mono/elisp.html][GNU Emacs Lisp Reference Manual]]，啃英文，愣是看到了
+Macros那一章（后面没有继续看，因为我觉得前十二章的内容对当前的我来说已经够用了），
+然后，就开始写了，名字就叫做org-page。
+
+写了一点之后，我发现就算是写一个org to html的解析器都不是一件容易事，同时也发现了
+原来org mode已经内置了publish html的功能，但是默认功能太过简单，于是，我就去
+看 =org-publish.el= 和 =org-html.el= 两个文件，希望实现一些hack，然后我发现org
+publish的自定义功能还是相当强大的，于是，我就开始了基于org publish的自定义。
+
+很快，org-page的0.1版本出来了，实现了一些基本的feature，比方说page header、
+footer以及样式的自定义。这个过程我写得相当吃力，因为基本上任何一个函数我都需要
+用 =C-h f= 去查的。
+
+悲剧的是，0.1版本出来后，项目开始忙了，而且因为大规模的同事离职（到最后我们team只
+剩两个开发人员，一个我，还有一个，是team leader，大家都懂的），我一个人扛了比较多
+的任务，基本上白天时间都是在跟人交流，什么Email，电话，OC，远程桌面什么的，只有等
+晚上大家都下班后，我才有时间coding。于是，org-page,我就只能给放那儿了。
+
+就这么过了几个月，忙完了，我又开始闲了，而且是闲得蛋疼，一天基本收不到一封需要我
+仔细读，然后去处理的mail，也没人给我打电话。在看了几天书后，发现了躺在硬盘某个角
+落里的——org-page。
+
+其实那时，我最初头脑一热的念头早就散尽（如果要我那时再去看Emacs Lisp Manual，我是
+万万不会愿意的），但是想，闲着也是闲着，而且蛋还疼，看书也没意思，还是找点事做吧，
+于是，就重新捡起了org-page。
+
+到阁下现在看到的这里，org-page的0.2版本已经出来了。至于为什么不直接叫1.0版本，是
+因为还有一个在规划当中的RSS订阅的feature没有实现，我觉得对于我来说，目前最重要的，
+是将以前写的一些org文件先整理好给发出来，围观的人不多，RSS功能实现了也没什么用。
+所以，虽然还有一个feature没实现，我还是义无反顾地执行了 =git tag v0.2= 。
+
+那么，以上就是org-page到现在为止的整个历史，作为一个demo site（至少目前只是
+demo），本打算随便写些test之类的内容就算了，后来想想，既然是给别人demo，还是写点
+正规的东东吧，于是就打算写点org-page的使用方法之类的，但没想到的是，作为一个文艺青
+年:-D，写着写着，就写成了《org-page成长史》。 :-P
+
+那么，就到这里吧。

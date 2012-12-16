@@ -1,0 +1,39 @@
+#+TITLE:       首页
+#+AUTHOR:      Kelvin Hu
+#+EMAIL:       ini.kelvin@gmail.com
+#+DATE:        2012-11-27 Tue
+#+KEYWORDS:    home page, personal site
+#+LANGUAGE:    en
+#+OPTIONS:     H:3 num:nil toc:nil \n:nil @:t ::t |:t ^:nil -:t f:t *:t <:t
+#+DESCRIPTION: This is the home page of http://kelvinh.github.com/
+
+This is the home page of site [[http://kelvinh.github.com]], currently I have little
+idea about what to write on this page, I may improve it later.
+
+* Description
+
+  This is the personal site of Kelvin Hu, and it is also a demo site for
+  [[https://github.com/kelvinh/org-page][org-page]], a static site generator for Emacs and org mode, written by
+  =Elisp=. There are many popular static site generators, such as [[https://github.com/mojombo/jekyll][jekyll]],
+  [[http://octopress.org][octopress]], etc. Most of them support =markdown=, but seems none of them
+  supports written in org mode, so, org-page is born for those who use both
+  Emacs and org mode, and also want to publish their achievements to a site
+  which holds static pages, such as [[http://pages.github.com][github pages]].
+
+Since there is almost nothing on home page, please have a look at [[file:./sitemap.org][sitemap]], I
+think it is much better than this page.
+
+--------------------------------------------------------------------------------
+
+这是我的网站[[http://kelvinh.github.com]]的主页，目前我还不太清楚该在主页上放些什么内容，等
+我想到该放什么了，我再更新吧。
+
+* 说明
+
+  这是Kelvin Hu的个人网站，同时也是[[https://github.com/kelvinh/org-page][org-page]]的一个示例站点。org-page是一个用 =Elisp= 写
+  的，为Emacs和org mode准备的静态站点生成器。现在有很多流行的静态站点生成器，像[[https://github.com/mojombo/jekyll][jekyll]]，
+  [[http://octopress.org][octopress]]等等，它们大多数支持使用 =markdown= 来写作，但是似乎没有能支持org mode写作
+  的，于是，org-page就这样诞生了，如果你是Emacs和org mode的使用者，并且想把你写的作品发
+  布到一个支持静态页面的站点，例如[[http://pages.github.com][github pages]]，那么，你就可能是org-page的潜在用户。
+
+鉴于首页什么都没有，我建议你去[[file:./sitemap.org][sitemap]]看看吧，我想那里应该比这里要好一点。
