@@ -377,6 +377,11 @@ directory `%s' first, usually it is <org-page directory>/themes/"
                                    (dolist (region regions)
                                      (fill-region (car region) (cdr region))))))
 
+  ;;; fix bug: if the org file is encoded with iso-8859-1, but the title set
+  ;;; manually is not iso-8859-1, the title will show as garbage characters
+  ;;; solution: set the coding-system to utf-8
+  (setq org-export-html-coding-system 'utf-8)
+
   (setq org-publish-project-alist `(("op-whole-project"
                                      :components ("op-html" "op-static" "op-src-html")
                                      :author ,user-full-name
