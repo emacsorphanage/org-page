@@ -191,7 +191,7 @@ uses http protocol"
   :type 'string)
 
 ; TODO remove "TODO" in below string after rss feature implemented
-(defconst op/publish-html-header-template
+(defcustom op/publish-html-header-template
   "<h1><a href=\"%p\">%h</a></h1>
    <nav id=\"main-nav\">
      <ul id=\"nav-list-main\">
