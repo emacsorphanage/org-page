@@ -505,12 +505,20 @@ directory `%s' first, usually it is <org-page directory>/themes/"
   (let* ((project-plist (cdr project))
          (root-dir (file-name-as-directory
                     (plist-get project-plist :base-directory)))
-         (theme-dir (file-name-as-directory (concat (file-name-as-directory op/theme-directory) (symbol-name op/theme)))))
+         (theme-dir (file-name-as-directory (concat (file-name-as-directory op/theme-directory) (symbol-name op/theme))))
+         ;; TODO may need to be customized here
+         (html-template (concat (if op/load-file-name
+                                    (file-name-directory op/load-file-name)
+                                  (file-name-directory (directory-file-name op/theme-directory)))
+                                "templates/html/theme-" (symbol-name op/theme) ".el")))
 
     (unless (file-directory-p theme-dir)
       (message "org-page does not have a theme named %s, will use the `default' theme instead" (symbol-name op/theme))
       (setq op/theme 'default)
       (setq theme-dir (file-name-as-directory (concat (file-name-as-directory op/theme-directory) (symbol-name op/theme)))))
+
+    (if (file-exists-p html-template)
+        (load-file html-template))
 
     (copy-directory theme-dir
                     (concat root-dir "media/")
