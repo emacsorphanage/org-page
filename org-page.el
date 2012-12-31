@@ -190,6 +190,26 @@ uses http protocol"
   :group 'org-page
   :type 'string)
 
+(defcustom op/publish-html-index-template
+  "<!DOCTYPE html><html><head><title>%t</title>
+<meta charset=\"UTF-8\">%c</head><body>
+<script type=\"text/javascript\">
+    var ie = /(msie) ([\\w.]+)/.exec(navigator.userAgent.toLowerCase());
+    var div = document.createElement('div');
+    div.className = ie ? 'fucking-ie' : 'loading-center';
+    div.innerHTML = ie ? 'Sorry, this site does not support the fucking IE.' : 'Loading...';
+    document.getElementsByTagName('body')[0].appendChild(div);
+    ie || setTimeout(function() { window.location.replace('%p');}, 1000);
+</script></body></html>"
+  "the template used to construct index page of entire site, our real site is
+generated in a subfolder named 'blog/', so the index page is needed to act
+as a bridge, taking visitor to the real index. below parameters can be used:
+%t: the site title
+%c: css links, be aware that here the links are already wrapped by tag <link>
+%p: the path to real index page"
+  :group 'org-page
+  :type 'string)
+
 ; TODO remove "TODO" in below string after rss feature implemented
 (defcustom op/publish-html-header-template
   "<h1><a href=\"%p\">%h</a></h1>
@@ -1093,18 +1113,9 @@ Note: generating html file directly, not index.org"
 
     (with-current-buffer (setq index-buffer (or index-visiting (find-file index-file)))
       (erase-buffer)
-      (insert (format-spec "<!DOCTYPE html><html><head><title>%t</title>
-<meta charset=\"UTF-8\">%c</head><body>
-<script type=\"text/javascript\">
-    var ie = /(msie) ([\\w.]+)/.exec(navigator.userAgent.toLowerCase());
-    var div = document.createElement('div');
-    div.className = ie ? 'fucking-ie' : 'loading-center';
-    div.innerHTML = ie ? 'Sorry, this site does not support the fucking IE.' : 'Loading...';
-    document.getElementsByTagName('body')[0].appendChild(div);
-    ie || setTimeout(function() { window.location.replace('%p');}, 1000);
-</script></body></html>" `((?t . ,(or op/publish-site-title "org-page"))
-                           (?c . ,css-links)
-                           (?p . ,(get-valid-uri-path index-relative-path)))))
+      (insert (format-spec op/publish-html-index-template `((?t . ,(or op/publish-site-title "org-page"))
+                                                            (?c . ,css-links)
+                                                            (?p . ,(get-valid-uri-path index-relative-path)))))
       (save-buffer)
       (or index-visiting (kill-buffer index-buffer)))))
 
