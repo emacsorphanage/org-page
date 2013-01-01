@@ -75,7 +75,7 @@
   <span title=\"last modification date\" class=\"update-info\">%m</span>
   <span title=\"category\" class=\"category\">%g</span>
   <span title=\"tags\" class=\"tags\">%t</span>
-  <span ntitle=\"author\" class=\"author\">%a</span>
+  <span title=\"author\" class=\"author\">%a</span>
   <span title=\"htmlized org source file\" class=\"org-source\"><a href=\"%l\">htmlized org source</a></span>
 </div>")
 
@@ -89,7 +89,7 @@
   <script type=\"text/javascript\">
     //var disqus_developer = 1;
     var disqus_identifier = \"%n\";
-    var disqus_url = \"%u\";p
+    var disqus_url = \"%u\";
     var disqus_shortname = '%s';
 
     /* * * DON'T EDIT BELOW THIS LINE * * */
