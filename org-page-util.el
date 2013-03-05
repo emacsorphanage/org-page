@@ -129,6 +129,16 @@ name@domain.com => name <at> domain <dot> com"
                             (replace-regexp-in-string "@" " <at> "
                                                       (replace-regexp-in-string "\\." " <dot> " email))))
 
+(defun string-suffix-p (str1 str2 &optional ignore-case)
+  "Return non-nil if STR1 is a suffix of STR2.
+If IGNORE-CASE is non-nil, the comparison is done without paying attention
+to case differences."
+  (let ((pos (- (length str2) (length str1))))
+    (if (< pos 0)
+        nil
+      (eq t (compare-strings str1 nil nil
+                             str2 pos nil ignore-case)))))
+
 (defun convert-string-to-path (string)
   "convert a string to legal URL path
 TODO: improve doc here
