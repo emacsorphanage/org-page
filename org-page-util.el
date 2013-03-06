@@ -139,6 +139,25 @@ to case differences."
       (eq t (compare-strings str1 nil nil
                              str2 pos nil ignore-case)))))
 
+(defun trim-string-left (str)
+  "Remove whitespace at the beginning of STR."
+  (if (string-match "\\`[ \t\n\r]+" str)
+      (replace-match "" t t str)
+    str))
+
+(defun trim-string-right (str)
+  "Remove whitespace at the end of STR."
+  (if (string-match "[ \t\n\r]+\\'" str)
+      (replace-match "" t t str)
+    str))
+
+(defun trim-string (str)
+  "Remove whitespace at the beginning and end of STR.
+The function is copied from https://github.com/magnars/s.el, because I do not
+want to make org-page depend on other libraries, so I copied the function here,
+so do `trim-string-left' and `trim-string-right'."
+  (trim-string-left (trim-string-right str)))
+
 (defun convert-string-to-path (string)
   "convert a string to legal URL path
 TODO: improve doc here
