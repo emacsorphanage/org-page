@@ -3,6 +3,11 @@
 (defconst op/temp-buffer-name "*Org Page Output*"
   "Name of the temporary buffer used by org-page")
 
+(defcustom op/repository-directory nil
+  "The directory where org files stored, should be a git repository"
+  :group 'org-page
+  :type 'string)
+
 (defun op/git-files-changed (repo-dir base-commit)
   "This function can get modified/deleted org files from a git repository, other
 files will be ignored. The return value is a list, each element is a con cell,
