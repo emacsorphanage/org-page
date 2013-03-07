@@ -1,7 +1,12 @@
 (require 'org-page-util)
 
-(defun op/handle-changes (status-list, pub-root-dir)
-  "TODO: doc"
+(defun op/publish-changes (status-list, pub-root-dir)
+  "This function is for two purposes:
+1. publish changed org files to html
+2. delete html files which are relevant to deleted org files.
+STATUS-LIST is a list, each element is a con cell, car is full path to org file,
+while cdr is a symbol 'update or 'delete, standing for the org file is updated
+or deleted."
   (if status-list
       (mapc (lambda (cell)
               (if (eq (cdr cell) 'update)
