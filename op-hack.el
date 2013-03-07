@@ -86,7 +86,9 @@ PUB-DIR is set, use this as the publishing directory."
                         (or (and subtree-p
                                  (org-entry-get (region-beginning)
                                                 "EXPORT_FILE_NAME" t))
-                            (file-name-nondirectory buffer-file-name)))
+                            ;; HACK: do not use org file name, always use "index" instead
+                            ;(file-name-nondirectory buffer-file-name)
+                            "index"))
                        "." html-extension)
                       (file-name-as-directory
                        (or pub-dir (org-export-directory :html opt-plist))))))
