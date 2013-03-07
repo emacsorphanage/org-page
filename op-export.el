@@ -10,7 +10,7 @@ or deleted."
   (if status-list
       (mapc (lambda (cell)
               (if (eq (cdr cell) 'update)
-                  (op/handle-modified-file (car cell) pub-root-dir) ; update
+                  (op/publish-modified-file (car cell) pub-root-dir) ; update
                 (op/handle-deleted-file (car cell))))  ; deletion
             status-list)))
 
@@ -97,7 +97,7 @@ recommended to use #+DATE."
                                 (plist-get attr-plist :title)
                                 (plist-get attr-plist :type))))) ; TODO customization
 
-(defun op/handle-modified-file (org-file-path pub-base-dir)
+(defun op/publish-modified-file (org-file-path pub-base-dir)
   "TODO: doc"
 
   (let* ((visiting (find-buffer-visiting org-file-path))
