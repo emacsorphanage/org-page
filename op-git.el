@@ -49,28 +49,20 @@ BASE-COMMIT: the commit that diff operation will be based on
 <TODO>: robust enhance, branch check, etc.
 "
   (let ((org-file-ext ".org")
-        output ret-list kv mod-flag file-path)
+        output kv)
     (op/verify-git-repository repo-dir)
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
       (setq default-directory (file-name-as-directory repo-dir))
-      (shell-command (concat "git diff --name-status"
-                             " "
-                             base-commit
-                             " "
-                             "HEAD") t nil)
+      (shell-command (concat "git diff --name-status "
+                             base-commit " HEAD") t nil)
       (setq output (buffer-string)))
-    (mapc
-     (lambda (line)
-       (setq kv (split-string line "\t"))
-       (setq mod-flag (if (member (car kv) '("M" "A"))
-                          'update
-                        'delete))
-       (setq file-path (concat (file-name-as-directory repo-dir)
-                               (cadr kv)))
-       (if (string-suffix-p org-file-ext file-path t)
-           (if (not ret-list)
-               (setq ret-list (list (cons file-path mod-flag)))
-             (add-to-list 'ret-list (cons file-path mod-flag)))))
-     (split-string output "\n"))
-    ret-list))
+    (delq nil (mapcar
+               '(lambda (line)
+                  (if (string-suffix-p org-file-ext line t)
+                      (progn
+                        (setq kv (split-string line "\t"))
+                        (cons
+                         (concat (file-name-as-directory repo-dir) (cadr kv))
+                         (if (member (car kv) '("M" "A")) 'update 'delete)))))
+               (split-string output "\n")))))
