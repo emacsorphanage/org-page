@@ -1,6 +1,6 @@
 (require 'org-page-util)
 
-(defun op/publish-changes (status-list, pub-root-dir)
+(defun op/publish-changes (status-list pub-root-dir)
   "This function is for two purposes:
 1. publish changed org files to html
 2. delete html files which are relevant to deleted org files.
