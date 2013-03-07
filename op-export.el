@@ -64,7 +64,7 @@ recommended to use #+DATE."
     (setq opt-plist (org-infile-export-plist))
     (setq cdate (plist-get opt-plist :date))
     (if (and cdate (not (string-match "%" cdate)))
-        (plist-put attr-plist :creation-date cdate))
+        (plist-put attr-plist :creation-date (fix-timestamp-string cdate)))
     (plist-put attr-plist :title (or (plist-get opt-plist :title)
                                      (file-name-sans-extension
                                       (file-name-nondirectory filename))))
