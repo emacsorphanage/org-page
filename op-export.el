@@ -25,6 +25,23 @@ will return \"this is title\" if OPTION is \"TITLE\""
       (if (re-search-forward match-regexp nil t)
           (match-string-no-properties 2 nil)))))
 
+(defun op/generate-uri (creation-date title)
+  "Generate URI of org file opened in current buffer. It will be firstly read
+from #+URI property, if it is not presented, will be created by CREATION-DATE
+and TITLE, like: /blog/2013/03/07/this-is-post-title.
+The #+URI property can be defined containing following parameters:
+%y: year of creation date
+%m: month of creation date
+%d: day of creation date"
+
+  (let* ((date-list (split-string creation-date "-"))
+         uri)
+    (setq uri (or (op/read-org-option "URI")
+                  (concat "/blog/%y/%m/%d/" (convert-string-to-path title))))
+    (format-spec uri `((?y . ,(car date-list))
+                       (?m . ,(cadr date-list))
+                       (?d . ,(caddr date-list))))))
+
 (defun op/read-file-info ()
   "Read info of org file opened in current buffer, include:
 <TODO>: seems other values are not used except tags and uri
@@ -42,16 +59,12 @@ recommended to use #+DATE."
          (fcdate (format-time-string "%Y-%m-%d" (nth 6 file-attrs)))
          (mdate (format-time-string "%Y-%m-%d" (nth 5 file-attrs)))
          (attr-plist `(:creation-date ,fcdate :mod-date ,mdate :tags nil))
-         (date-list (split-string fcdate "-"))
-         opt-plist tags cdate uri)
+         opt-plist tags cdate)
 
     (setq opt-plist (org-infile-export-plist))
     (setq cdate (plist-get opt-plist :date))
     (if (and cdate (not (string-match "%" cdate)))
-        (progn
-          (setq cdate (fix-timestamp-string cdate))
-          (plist-put attr-plist :creation-date cdate)
-          (setq date-list (split-string cdate "-"))))
+        (plist-put attr-plist :creation-date cdate))
     (plist-put attr-plist :title (or (plist-get opt-plist :title)
                                      (file-name-sans-extension
                                       (file-name-nondirectory filename))))
@@ -60,15 +73,9 @@ recommended to use #+DATE."
         (plist-put
          attr-plist :tags (delete "" (mapcar 'trim-string
                                              (split-string tags ":" t))))) ;; TODO customization
-    (setq uri (op/read-org-option "URI"))
-    (unless uri
-      (setq uri (concat "/%Y/%m/%d/"
-                        (convert-string-to-path
-                         (plist-get attr-plist :title)))))
-    (setq uri (format-spec uri `((?Y . ,(car date-list))
-                                 (?m . ,(cadr date-list))
-                                 (?d . ,(caddr date-list)))))
-    (plist-put attr-plist :uri uri))) ; TODO customization
+    (plist-put attr-plist :uri (op/generate-uri
+                                (plist-get attr-plist :creation-date)
+                                (plist-get attr-plist :title))))) ; TODO customization
 
 (defun op/handle-modified-file (org-file-path pub-base-dir)
   "TODO: doc"
