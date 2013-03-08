@@ -27,3 +27,14 @@
                                            (?a . "/about/")
                                            (?g . op/personal-github-link)
                                            (?u . ,search-url)))))
+
+(defun op/generate-style ()
+  "Generate css style links."
+  (let* ((template "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\" />")
+         (css-list op/css-list)
+         css-links)
+    (unless css-list
+      (setq css-list '("main.css")))
+    (mapconcat '(lambda (css)
+                  (format template (concat "/media/css/" css))) ;; TODO customization
+               css-list "\n")))

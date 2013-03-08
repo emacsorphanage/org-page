@@ -52,3 +52,8 @@ http:// or https://, http will be considered if not assigned"
 (defcustom op/theme 'default
   "The theme used for page generation"
   :group 'org-page :type 'symbol)
+
+(defcustom op/css-list '("main.css")
+  "CSS style file name list, will using uri \"/media/css/<name>\""
+  :group 'org-page
+  :type 'list)
