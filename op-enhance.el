@@ -58,8 +58,8 @@
     (when attr-plist
       (setq uri (plist-get attr-plist :uri))
       (setq cdate (plist-get attr-plist :creation-date))
-      (setq mdate (plist-get file-info :mod-date))
-      (setq tag-list (plist-get file-info :tags)))
+      (setq mdate (plist-get attr-plist :mod-date))
+      (setq tag-list (plist-get attr-plist :tags)))
     (when tag-list
       (setq tag-links
             (mapconcat
@@ -68,7 +68,7 @@
                              `((?l . ,(op/generate-tag-uri tag-name))
                                (?n . ,tag-name))))
              tag-list ", ")))
-    (format-spec op/footer-template
+    (format-spec footer-template
                  `((?a . "%a") (?c . "%c") (?d . "%d") (?e . "%e") (?v . "%v")
                    (?i . ,(org-html-expand email))
                    (?h . ,(or cdate "N/A"))
