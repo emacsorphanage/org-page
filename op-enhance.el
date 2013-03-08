@@ -39,7 +39,7 @@
                   (format template (concat "/media/css/" css))) ;; TODO customization
                css-list "\n")))
 
-(defun op/generate-footer (uri attr-plist hidden-extra)
+(defun op/generate-footer (uri attr-plist hidden-meta-info hidden-comment)
   "Generate page footer, based on the template defined by
 `op/html-postamble-template', please see its description for more detail."
   (let* ((footer-template op/html-postamble-template)
@@ -49,9 +49,12 @@
          (disqus-shortname op/personal-disqus-shortname)
          (email (confound-email op/email))
          cdate mdate tags-list tag-links)
-    (when hidden-extra
-      ;; meta info and comment will be hidden
-      (setq footer-template op/footer))
+    (unless (or hidden-meta-info hidden-comment)
+      (setq footer-template op/footer)
+      (unless hidden-comment
+        (setq footer-template (concat op/comment footer-template)))
+      (unless hidden-meta-info
+        (setq footer-template (concat op/meta-info footer-template))))
     (when attr-plist
       (setq uri (plist-get attr-plist :uri))
       (setq cdate (plist-get attr-plist :creation-date))
