@@ -27,7 +27,8 @@ deleted. PUB-ROOT-DIR is the root publication directory."
               (or visiting (kill-buffer file-buffer)))
            all-list)
           (op/generate-index file-attr-list 'blog pub-root-dir)
-          (op/generate-index file-attr-list 'wiki pub-root-dir)))))
+          (op/generate-index file-attr-list 'wiki pub-root-dir)
+          (op/generate-tags file-attr-list pub-root-dir)))))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
@@ -153,3 +154,49 @@ publication directory."
                        (plist-get attr-plist :title) "@</a>" "\n"))
             filtered-list)
       (op/export-as-html nil nil nil nil nil pub-dir))))
+
+(defun op/generate-tags (file-attr-list pub-base-dir)
+  "TODO: doc"
+  (let ((tag-base-dir (concat (file-name-as-directory pub-base-dir) "tags/"))
+        (tag-base-uri "/tags/")
+        tag-alist tag-list tag-dir)
+    (mapc
+     '(lambda (attr-plist)
+        (mapc
+         '(lambda (tag-name)
+            (setq tag-list (assoc tag-name tag-alist))
+            (unless tag-list
+              (add-to-list 'tag-alist (setq tag-list `(,tag-name))))
+            (nconc tag-list (list attr-plist)))
+         (plist-get attr-plist :tags)))
+     file-attr-list)
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (insert "#+TITLE: Tag Index" "\n\n")
+      (mapc '(lambda (tag-list)
+               (insert " - ")
+               (insert "@<a href=\""
+                       tag-base-uri (convert-string-to-path (car tag-list))
+                       "\">" (car tag-list)
+                       " (" (number-to-string (length (cdr tag-list))) ")"
+                       "@</a>" "\n"))
+            tag-alist)
+      (unless (file-directory-p tag-base-dir)
+        (mkdir tag-base-dir t))
+      (op/export-as-html nil nil nil nil nil tag-base-dir))
+    (mapc
+     '(lambda (tag-list)
+        (with-current-buffer (get-buffer-create op/temp-buffer-name)
+          (erase-buffer)
+          (insert "#+TITLE: Tag " (car tag-list) "\n\n")
+          (mapc '(lambda (attr-plist)
+                   (insert " - ")
+                   (insert "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                           (plist-get attr-plist :title) "@</a>" "\n"))
+                (cdr tag-list))
+          (setq tag-dir (concat tag-base-dir
+                                (convert-string-to-path (car tag-list))))
+          (unless (file-directory-p tag-dir)
+            (mkdir tag-dir t))
+          (op/export-as-html nil nil nil nil nil tag-dir)))
+     tag-alist)))
