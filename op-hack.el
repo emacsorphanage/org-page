@@ -22,7 +22,9 @@ PUB-DIR is set, use this as the publishing directory."
 
   ;; Make sure we have a file name when we need it.
   (when (and (not (or to-buffer body-only))
-             (not buffer-file-name))
+             (not buffer-file-name)
+             ;; HACK: ignore the error when the buffer is temp buffer
+             (not (string-equal (buffer-name) op/temp-buffer-name)))
     (if (buffer-base-buffer)
         (org-set-local 'buffer-file-name
                        (with-current-buffer (buffer-base-buffer)
