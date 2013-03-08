@@ -155,12 +155,15 @@ publication directory."
             filtered-list)
       (op/export-as-html nil nil nil nil nil pub-dir))))
 
+(defun op/generate-tag-uri (tag-name)
+  "Generate tag uri based on TAG-NAME."
+  (concat "/tags/" (convert-string-to-path tag-name) "/"))
+
 (defun op/generate-tags (file-attr-list pub-base-dir)
   "Generate tag pages. FILE-ATTR-LIST is the list of all file attribute property
 lists. PUB-BASE-DIR is the root publication directory.
 TODO: improve this function."
   (let ((tag-base-dir (concat (file-name-as-directory pub-base-dir) "tags/"))
-        (tag-base-uri "/tags/")
         tag-alist tag-list tag-dir)
     (mapc
      '(lambda (attr-plist)
@@ -178,7 +181,7 @@ TODO: improve this function."
       (mapc '(lambda (tag-list)
                (insert " - ")
                (insert "@<a href=\""
-                       tag-base-uri (convert-string-to-path (car tag-list))
+                       (op/generate-tag-uri (car tag-list))
                        "\">" (car tag-list)
                        " (" (number-to-string (length (cdr tag-list))) ")"
                        "@</a>" "\n"))
