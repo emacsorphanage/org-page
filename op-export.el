@@ -120,13 +120,16 @@ recommended to use #+DATE."
 (defun op/publish-modified-file (attr-plist pub-base-dir ext-plist)
   "Publish org file opened in current buffer. ATTR-PLIST is the attribute
 property list of current file. PUB-BASE-DIR is the root publication directory."
-  (let* (title tags uri pub-dir)
+  (let* (title tags uri hidden-comment pub-dir)
     (setq uri (plist-get attr-plist :uri))
+    (setq hidden-comment (if (eq (plist-get attr-plist :type) 'wiki) t nil))
     (setq pub-dir (file-name-as-directory
                    (concat (file-name-as-directory pub-base-dir)
                            (replace-regexp-in-string "\\`/" "" uri))))
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
+    (plist-put ext-plist :html-postamble
+               (op/generate-footer uri attr-plist nil hidden-comment))
     (op/export-as-html nil nil ext-plist nil nil pub-dir)))
 
 (defun op/handle-deleted-file (org-file-path)
@@ -157,6 +160,8 @@ publication directory."
                        "@<a href=\"" (plist-get attr-plist :uri) "\">"
                        (plist-get attr-plist :title) "@</a>" "\n"))
             filtered-list)
+      (plist-put ext-plist :html-postamble
+                 (op/generate-footer (concat "/" (symbol-name type) "/") nil t t))
       (op/export-as-html nil nil ext-plist nil nil pub-dir))))
 
 (defun op/generate-tag-uri (tag-name)
@@ -192,6 +197,8 @@ TODO: improve this function."
             tag-alist)
       (unless (file-directory-p tag-base-dir)
         (mkdir tag-base-dir t))
+      (plist-put ext-plist :html-postamble
+                 (op/generate-footer "/tags/" nil t t)) ;; TODO customization
       (op/export-as-html nil nil ext-plist nil nil tag-base-dir))
     (mapc
      '(lambda (tag-list)
@@ -207,5 +214,8 @@ TODO: improve this function."
                                 (convert-string-to-path (car tag-list))))
           (unless (file-directory-p tag-dir)
             (mkdir tag-dir t))
+          (plist-put ext-plist :html-postamble
+                     (op/generate-footer (op/generate-tag-uri (car tag-list))
+                                         nil t t))
           (op/export-as-html nil nil ext-plist nil nil tag-dir)))
      tag-alist)))
