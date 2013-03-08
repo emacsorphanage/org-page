@@ -45,7 +45,8 @@ http:// or https://, http will be considered if not assigned."
   :group 'org-page :type 'string)
 
 (defcustom op/theme-directory
-  (concat (file-name-directory load-file-name) "themes/")
+  (concat (file-name-directory (or load-file-name
+                                   (buffer-file-name))) "themes/")
   "The directory stores org-page styles/scripts/images."
   :group 'org-page :type 'string)
 
