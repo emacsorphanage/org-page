@@ -1,24 +1,33 @@
 (require 'org-page-util)
 
-(defun op/publish-changes (status-list pub-root-dir)
+(defun op/publish-changes (all-list change-plist pub-root-dir)
   "This function is for two purposes:
 1. publish changed org files to html
 2. delete html files which are relevant to deleted org files.
-STATUS-LIST is a list, each element is a con cell, car is full path to org file,
-while cdr is a symbol 'update or 'delete, standing for the org file is updated
-or deleted."
-  (if status-list
-      (progn
-        (with-current-buffer (get-buffer-create op/temp-buffer-name)
-          (erase-buffer)
-          (insert (concat "#+TITLE: " "Kelvin's Personal Site" "\n\n")))
-        (mapc (lambda (cell)
-                (if (eq (cdr cell) 'update)
-                    (op/publish-modified-file (car cell) pub-root-dir) ; update
-                  (op/handle-deleted-file (car cell))))  ; deletion
-              status-list)
-        (with-current-buffer (get-buffer-create op/temp-buffer-name)
-          (op/export-as-html nil nil nil nil nil pub-root-dir)))))
+ALL-LIST contains paths of all org files, CHANGE-PLIST contains two properties,
+one is :update for files to be updated, another is :delete for files to be
+deleted. PUB-ROOT-DIR is the root publication directory."
+  (let ((upd-list (plist-get change-plist :update))
+        (del-list (plist-get change-plist :delete))
+        visiting file-buffer file-attr-list)
+    (if (or upd-list del-list)
+        (progn
+          (mapc
+           '(lambda (org-file)
+              (setq visiting (find-buffer-visiting org-file))
+              (with-current-buffer (setq file-buffer
+                                         (or visiting (find-file org-file)))
+                (setq file-attr-list (cons (op/read-file-info) file-attr-list))
+                (if (member org-file upd-list)
+                    (op/publish-modified-file (car file-attr-list)
+                                              pub-root-dir))
+                (if (member org-file del-list)
+                    (op/handle-deleted-file org-file))
+                )
+              (or visiting (kill-buffer file-buffer)))
+           all-list)
+          (op/generate-index file-attr-list 'blog pub-root-dir)
+          (op/generate-index file-attr-list 'wiki pub-root-dir)))))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
@@ -103,29 +112,44 @@ recommended to use #+DATE."
                                 (plist-get attr-plist :title)
                                 (plist-get attr-plist :type))))) ; TODO customization
 
-(defun op/publish-modified-file (org-file-path pub-base-dir)
-  "TODO: doc"
-
-  (let* ((visiting (find-buffer-visiting org-file-path))
-         file-buffer attr-plist pub-dir title tags uri pub-dir)
-
-    (with-current-buffer (setq file-buffer
-                               (or visiting (find-file org-file-path)))
-      (setq attr-plist (op/read-file-info))
-      (setq uri (plist-get attr-plist :uri))
-      (setq pub-dir (file-name-as-directory
-                     (concat (file-name-as-directory pub-base-dir)
-                             (replace-regexp-in-string "\\`/" "" uri))))
-      (unless (file-directory-p pub-dir)
-        (mkdir pub-dir t))
-      (op/export-as-html nil nil nil nil nil pub-dir))
-    (or visiting (kill-buffer file-buffer))
-
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (insert " - ")
-      (insert "@<a href=\"" (plist-get attr-plist :uri) "\">"
-              (plist-get attr-plist :title) "@</a>" "\n"))))
+(defun op/publish-modified-file (attr-plist pub-base-dir)
+  "Publish org file opened in current buffer. ATTR-PLIST is the attribute
+property list of current file. PUB-BASE-DIR is the root publication directory."
+  (let* (title tags uri pub-dir)
+    (setq uri (plist-get attr-plist :uri))
+    (setq pub-dir (file-name-as-directory
+                   (concat (file-name-as-directory pub-base-dir)
+                           (replace-regexp-in-string "\\`/" "" uri))))
+    (unless (file-directory-p pub-dir)
+      (mkdir pub-dir t))
+    (op/export-as-html nil nil nil nil nil pub-dir)))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."
   )
+
+(defun op/generate-index (file-attr-list type pub-base-dir)
+  "Generate index page of both blog and wiki, FILE-ATTR-LIST is the list of all
+file attribute property lists. TYPE is 'blog or 'wiki, PUB-BASE-DIR is the root
+publication directory."
+  (let ((pub-dir (file-name-as-directory
+                  (concat (file-name-as-directory pub-base-dir)
+                          (symbol-name type))))
+        (filtered-list (remove-if
+                        '(lambda (attr-plist)
+                           (not (eq type (plist-get attr-plist :type))))
+                        file-attr-list)))
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (insert "#+TITLE: Index Page of "
+              (capitalize (symbol-name type))
+              " Subsystem" "\n\n")
+      (mapc '(lambda (attr-plist)
+               (insert " - ")
+               (insert (plist-get attr-plist (if (eq type 'wiki)
+                                                 :mod-date :creation-date))
+                       "\\nbsp\\nbsp\\nbsp"
+                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                       (plist-get attr-plist :title) "@</a>" "\n"))
+            filtered-list)
+      (op/export-as-html nil nil nil nil nil pub-dir))))
