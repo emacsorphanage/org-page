@@ -134,3 +134,11 @@ automatically."
 (defcustom op/email user-mail-address
   "Email address will be presented at the footer."
   :group 'org-page :type 'string)
+
+(defcustom op/personal-github-link "https://github.com/kelvinh/org-page"
+  "the personal github link"
+  :group 'org-page :type 'string)
+
+(defcustom op/personal-disqus-shortname nil
+  "the personal disqus shortname"
+  :group 'org-page :type 'string)
