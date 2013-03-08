@@ -34,35 +34,29 @@ instead of pointer HEAD."
                       (split-string output "\n")))))
 
 (defun op/git-files-changed (repo-dir base-commit)
-  "This function can get modified/deleted org files from a git repository, other
-files will be ignored. The return value is a list, each element is a con cell,
-whose car is the complete file path, cdr is status: publish, or delete.
-
+  "This function can get modified/deleted org files from git repository
+presented by REPO-DIR, diff based on BASE-COMMIT. The return value is a
+property list, property :update maps a list of updated/added files, property
+:delete maps a list of deleted files.
 For git, there are three types: Added, Modified, Deleted, but for org-page,
 only two types will work well: need to publish or need to delete.
-
-Function will raise error if repo-dir is invalid, but cannot verify base-commit,
-so be careful with the second parameter.
-
-REPO-DIR: git repository directory
-BASE-COMMIT: the commit that diff operation will be based on
-<TODO>: robust enhance, branch check, etc.
-"
+<TODO>: robust enhance, branch check, etc."
   (let ((org-file-ext ".org")
-        output kv)
+        (repo-dir (file-name-as-directory repo-dir))
+        output upd-list del-list)
     (op/verify-git-repository repo-dir)
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
-      (setq default-directory (file-name-as-directory repo-dir))
+      (setq default-directory repo-dir)
       (shell-command (concat "git diff --name-status "
                              base-commit " HEAD") t nil)
       (setq output (buffer-string)))
-    (delq nil (mapcar
-               '(lambda (line)
-                  (if (string-suffix-p org-file-ext line t)
-                      (progn
-                        (setq kv (split-string line "\t"))
-                        (cons
-                         (concat (file-name-as-directory repo-dir) (cadr kv))
-                         (if (member (car kv) '("M" "A")) 'update 'delete)))))
-               (split-string output "\n")))))
+    (mapc '(lambda (line)
+             (if (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" line)
+                 (setq upd-list (cons (concat repo-dir (match-string 1 line))
+                                      upd-list)))
+             (if (string-match "\\`D\t\\(.*\.org\\)\\'" line)
+                 (setq del-list (cons (concat repo-dir (match-string 1 line))
+                                      del-list))))
+          (split-string output "\n"))
+    (list :update upd-list :delete del-list)))
