@@ -21,11 +21,11 @@
   (let* ((search-url op/site-url))
     (when (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'" op/site-url)
       (setq search-url (match-string 1 op/site-url)))
-    (format-spec op/html-header-template `((?m . op/site-main-title)
-                                           (?s . op/site-sub-title)
+    (format-spec op/html-header-template `((?m . ,op/site-main-title)
+                                           (?s . ,op/site-sub-title)
                                            (?t . "/tags/") ; TODO customization
                                            (?a . "/about/")
-                                           (?g . op/personal-github-link)
+                                           (?g . ,op/personal-github-link)
                                            (?u . ,search-url)))))
 
 (defun op/generate-style ()
