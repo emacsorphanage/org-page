@@ -8,11 +8,17 @@ STATUS-LIST is a list, each element is a con cell, car is full path to org file,
 while cdr is a symbol 'update or 'delete, standing for the org file is updated
 or deleted."
   (if status-list
-      (mapc (lambda (cell)
-              (if (eq (cdr cell) 'update)
-                  (op/publish-modified-file (car cell) pub-root-dir) ; update
-                (op/handle-deleted-file (car cell))))  ; deletion
-            status-list)))
+      (progn
+        (with-current-buffer (get-buffer-create op/temp-buffer-name)
+          (erase-buffer)
+          (insert (concat "#+TITLE: " "Kelvin's Personal Site" "\n\n")))
+        (mapc (lambda (cell)
+                (if (eq (cdr cell) 'update)
+                    (op/publish-modified-file (car cell) pub-root-dir) ; update
+                  (op/handle-deleted-file (car cell))))  ; deletion
+              status-list)
+        (with-current-buffer (get-buffer-create op/temp-buffer-name)
+          (op/export-as-html nil nil nil nil nil pub-root-dir)))))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
@@ -113,7 +119,12 @@ recommended to use #+DATE."
       (unless (file-directory-p pub-dir)
         (mkdir pub-dir t))
       (op/export-as-html nil nil nil nil nil pub-dir))
-    (or visiting (kill-buffer file-buffer))))
+    (or visiting (kill-buffer file-buffer))
+
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (insert " - ")
+      (insert "@<a href=\"" (plist-get attr-plist :uri) "\">"
+              (plist-get attr-plist :title) "@</a>" "\n"))))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."
