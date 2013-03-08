@@ -1,16 +1,16 @@
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
-  (let* ((theme-name (symbol-name op/theme))
-         (pub-theme-dir (concat (file-name-as-directory pub-root-dir)
+  (let* ((pub-theme-dir (concat (file-name-as-directory pub-root-dir)
                                 "media/"))
-         theme-dir)
+         (theme-dir (file-name-as-directory
+                     (concat (file-name-as-directory op/theme-directory)
+                             (symbol-name op/theme)))))
     (unless (file-directory-p theme-dir)
       (message "Theme %s not found, use `default' theme instead."
                (symbol-name op/theme))
-      (setq theme-name (symbol-name 'default)))
-    (setq theme-dir (file-name-as-directory
-                     (concat (file-name-as-directory op/theme-directory)
-                             theme-name)))
+      (setq theme-dir (file-name-as-directory
+                       (concat (file-name-as-directory op/theme-directory)
+                               (symbol-name 'default)))))
     (when (file-directory-p pub-theme-dir)
       (delete-directory pub-theme-dir t))
     (copy-directory theme-dir pub-theme-dir t t t)))
