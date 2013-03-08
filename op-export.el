@@ -7,9 +7,12 @@
 ALL-LIST contains paths of all org files, CHANGE-PLIST contains two properties,
 one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
-  (let ((upd-list (plist-get change-plist :update))
-        (del-list (plist-get change-plist :delete))
-        visiting file-buffer file-attr-list)
+  (let* ((upd-list (plist-get change-plist :update))
+         (del-list (plist-get change-plist :delete))
+         (header (op/generate-page-header))
+         (style (op/generate-style))
+         (ext-plist `(:style ,style :html-preamble ,header))
+         visiting file-buffer file-attr-list)
     (if (or upd-list del-list)
         (progn
           (mapc
@@ -20,15 +23,16 @@ deleted. PUB-ROOT-DIR is the root publication directory."
                 (setq file-attr-list (cons (op/read-file-info) file-attr-list))
                 (if (member org-file upd-list)
                     (op/publish-modified-file (car file-attr-list)
-                                              pub-root-dir))
+                                              pub-root-dir
+                                              ext-plist))
                 (if (member org-file del-list)
                     (op/handle-deleted-file org-file))
                 )
               (or visiting (kill-buffer file-buffer)))
            all-list)
-          (op/generate-index file-attr-list 'blog pub-root-dir)
-          (op/generate-index file-attr-list 'wiki pub-root-dir)
-          (op/generate-tags file-attr-list pub-root-dir)))))
+          (op/generate-index file-attr-list 'blog pub-root-dir ext-plist)
+          (op/generate-index file-attr-list 'wiki pub-root-dir ext-plist)
+          (op/generate-tags file-attr-list pub-root-dir ext-plist)))))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
@@ -113,7 +117,7 @@ recommended to use #+DATE."
                                 (plist-get attr-plist :title)
                                 (plist-get attr-plist :type))))) ; TODO customization
 
-(defun op/publish-modified-file (attr-plist pub-base-dir)
+(defun op/publish-modified-file (attr-plist pub-base-dir ext-plist)
   "Publish org file opened in current buffer. ATTR-PLIST is the attribute
 property list of current file. PUB-BASE-DIR is the root publication directory."
   (let* (title tags uri pub-dir)
@@ -123,13 +127,13 @@ property list of current file. PUB-BASE-DIR is the root publication directory."
                            (replace-regexp-in-string "\\`/" "" uri))))
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
-    (op/export-as-html nil nil nil nil nil pub-dir)))
+    (op/export-as-html nil nil ext-plist nil nil pub-dir)))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."
   )
 
-(defun op/generate-index (file-attr-list type pub-base-dir)
+(defun op/generate-index (file-attr-list type pub-base-dir ext-plist)
   "Generate index page of both blog and wiki, FILE-ATTR-LIST is the list of all
 file attribute property lists. TYPE is 'blog or 'wiki, PUB-BASE-DIR is the root
 publication directory."
@@ -153,13 +157,13 @@ publication directory."
                        "@<a href=\"" (plist-get attr-plist :uri) "\">"
                        (plist-get attr-plist :title) "@</a>" "\n"))
             filtered-list)
-      (op/export-as-html nil nil nil nil nil pub-dir))))
+      (op/export-as-html nil nil ext-plist nil nil pub-dir))))
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
   (concat "/tags/" (convert-string-to-path tag-name) "/"))
 
-(defun op/generate-tags (file-attr-list pub-base-dir)
+(defun op/generate-tags (file-attr-list pub-base-dir ext-plist)
   "Generate tag pages. FILE-ATTR-LIST is the list of all file attribute property
 lists. PUB-BASE-DIR is the root publication directory.
 TODO: improve this function."
@@ -188,7 +192,7 @@ TODO: improve this function."
             tag-alist)
       (unless (file-directory-p tag-base-dir)
         (mkdir tag-base-dir t))
-      (op/export-as-html nil nil nil nil nil tag-base-dir))
+      (op/export-as-html nil nil ext-plist nil nil tag-base-dir))
     (mapc
      '(lambda (tag-list)
         (with-current-buffer (get-buffer-create op/temp-buffer-name)
@@ -203,5 +207,5 @@ TODO: improve this function."
                                 (convert-string-to-path (car tag-list))))
           (unless (file-directory-p tag-dir)
             (mkdir tag-dir t))
-          (op/export-as-html nil nil nil nil nil tag-dir)))
+          (op/export-as-html nil nil ext-plist nil nil tag-dir)))
      tag-alist)))
