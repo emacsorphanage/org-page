@@ -1,3 +1,6 @@
+(defgroup org-page nil
+  "Options for generating static pages using org-page."
+  :tag "Org static page generator" :group 'org)
 
 (defcustom op/site-url nil
   "The domain name of entire site, it is recommended to assign with prefix
