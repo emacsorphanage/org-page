@@ -4,15 +4,15 @@
 
 (defcustom op/site-url nil
   "The domain name of entire site, it is recommended to assign with prefix
-http:// or https://, http will be considered if not assigned"
+http:// or https://, http will be considered if not assigned."
   :group 'org-page :type 'string)
 
 (defcustom op/site-main-title "org-page"
-  "The main title of entire site"
+  "The main title of entire site."
   :group 'org-page :type 'string)
 
 (defcustom op/site-sub-title "static site generator"
-  "The subtitle of entire site"
+  "The subtitle of entire site."
   :group 'org-page :type 'string)
 
 ; TODO remove "TODO" in below string after rss feature implemented
@@ -46,14 +46,13 @@ http:// or https://, http will be considered if not assigned"
 
 (defcustom op/theme-directory
   (concat (file-name-directory load-file-name) "themes/")
-  "The directory stores org-page styles/scripts/images"
+  "The directory stores org-page styles/scripts/images."
   :group 'org-page :type 'string)
 
 (defcustom op/theme 'default
-  "The theme used for page generation"
+  "The theme used for page generation."
   :group 'org-page :type 'symbol)
 
 (defcustom op/css-list '("main.css")
-  "CSS style file name list, will using uri \"/media/css/<name>\""
-  :group 'org-page
-  :type 'list)
+  "CSS style file name list, will using uri \"/media/css/<name>\"."
+  :group 'org-page :type 'list)
