@@ -156,7 +156,9 @@ publication directory."
       (op/export-as-html nil nil nil nil nil pub-dir))))
 
 (defun op/generate-tags (file-attr-list pub-base-dir)
-  "TODO: doc"
+  "Generate tag pages. FILE-ATTR-LIST is the list of all file attribute property
+lists. PUB-BASE-DIR is the root publication directory.
+TODO: improve this function."
   (let ((tag-base-dir (concat (file-name-as-directory pub-base-dir) "tags/"))
         (tag-base-uri "/tags/")
         tag-alist tag-list tag-dir)
