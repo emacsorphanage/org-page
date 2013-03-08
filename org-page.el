@@ -109,23 +109,6 @@ it has higher priority than `op/exclude-filename-regexp'."
   :group 'org-page
   :type 'string)
 
-(defconst op/load-file-name load-file-name
-  "the filename that org-page.el was originally loaded from")
-
-(defcustom op/theme-directory (cond
-                               (op/load-file-name (concat (file-name-directory op/load-file-name) "themes/"))
-                               ((symbol-file 'op/publish-pages) (concat (file-name-directory (symbol-file 'op/publish-pages)) "themes/"))
-                               ((equal (file-name-nondirectory buffer-file-name) "org-page.el") (concat (file-name-directory buffer-file-name) "themes/"))
-                               (t nil))
-  "the directory stores org-page styles/scripts/images"
-  :group 'org-page
-  :type 'string)
-
-(defcustom op/theme 'default
-  "the theme used for page generation"
-  :group 'org-page
-  :type 'symbol)
-
 (defcustom op/tag-directory "tags/"
   "the directory used to store generated tags"
   :group 'org-page
