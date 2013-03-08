@@ -43,3 +43,12 @@ http:// or https://, http will be considered if not assigned"
 %g: the github link (defined by `op/personal-github-link')
 %u: the url of current site, used for search (defined by `op/site-url')"
   :group 'org-page :type 'string)
+
+(defcustom op/theme-directory
+  (concat (file-name-directory load-file-name) "themes/")
+  "The directory stores org-page styles/scripts/images"
+  :group 'org-page :type 'string)
+
+(defcustom op/theme 'default
+  "The theme used for page generation"
+  :group 'org-page :type 'symbol)
