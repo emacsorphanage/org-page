@@ -48,8 +48,8 @@
                              disqus-identifier))
          (disqus-shortname op/personal-disqus-shortname)
          (email (confound-email op/email))
-         cdate mdate tags-list tag-links)
-    (unless (or hidden-meta-info hidden-comment)
+         cdate mdate tag-list tag-links)
+    (when (or hidden-meta-info hidden-comment)
       (setq footer-template op/footer)
       (unless hidden-comment
         (setq footer-template (concat op/comment footer-template)))
