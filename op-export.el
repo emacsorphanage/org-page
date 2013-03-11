@@ -47,19 +47,18 @@ will return \"this is title\" if OPTION is \"TITLE\""
   "Generate URI of org file opened in current buffer. It will be firstly read
 from #+URI property, if it is not presented, will be created by CREATION-DATE,
 TITLE and FILE-TYPE, if FILE-TYPE is 'blog, the uri will be like:
-/blog/2013/03/07/this-is-post-title, if FILE-TYPE is 'wiki, the uri will be
-like: /wiki/compare-and-swap
+/blog/2013/03/07/this-is-post-title/, if FILE-TYPE is 'wiki, the uri will be
+like: /wiki/compare-and-swap/
 The #+URI property can be defined containing following parameters:
 %y: year of creation date
 %m: month of creation date
 %d: day of creation date"
-
-  (let* ((date-list (split-string creation-date "-"))
-         uri)
-    (setq uri (or (op/read-org-option "URI")
-                  (if (eq file-type 'blog)
-                      (concat "/blog/%y/%m/%d/" (convert-string-to-path title))
-                    (concat "/wiki/" (convert-string-to-path title))))) ; TODO customization
+  (let* ((date-list (split-string creation-date "-")) uri)
+    (setq uri (or
+               (op/read-org-option "URI")
+               (if (eq file-type 'blog)
+                   (concat "/blog/%y/%m/%d/" (convert-string-to-path title) "/")
+                 (concat "/wiki/" (convert-string-to-path title) "/")))) ; TODO customization
     (format-spec uri `((?y . ,(car date-list))
                        (?m . ,(cadr date-list))
                        (?d . ,(caddr date-list))))))
