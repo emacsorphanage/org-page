@@ -13,26 +13,23 @@ deleted. PUB-ROOT-DIR is the root publication directory."
          (style (op/generate-style))
          (ext-plist `(:style ,style :html-preamble ,header))
          visiting file-buffer file-attr-list)
-    (if (or upd-list del-list)
-        (progn
-          (mapc
-           '(lambda (org-file)
-              (setq visiting (find-buffer-visiting org-file))
-              (with-current-buffer (setq file-buffer
-                                         (or visiting (find-file org-file)))
-                (setq file-attr-list (cons (op/read-file-info) file-attr-list))
-                (if (member org-file upd-list)
-                    (op/publish-modified-file (car file-attr-list)
-                                              pub-root-dir
-                                              ext-plist))
-                (if (member org-file del-list)
-                    (op/handle-deleted-file org-file))
-                )
-              (or visiting (kill-buffer file-buffer)))
-           all-list)
-          (op/generate-index file-attr-list 'blog pub-root-dir ext-plist)
-          (op/generate-index file-attr-list 'wiki pub-root-dir ext-plist)
-          (op/generate-tags file-attr-list pub-root-dir ext-plist)))))
+    (when (or upd-list del-list)
+      (mapc
+       '(lambda (org-file)
+          (setq visiting (find-buffer-visiting org-file))
+          (with-current-buffer (setq file-buffer
+                                     (or visiting (find-file org-file)))
+            (setq file-attr-list (cons (op/read-file-info) file-attr-list))
+            (when (member org-file upd-list)
+              (op/publish-modified-file
+               (car file-attr-list) pub-root-dir ext-plist))
+            (when (member org-file del-list)
+              (op/handle-deleted-file org-file)))
+          (or visiting (kill-buffer file-buffer)))
+       all-list)
+      (op/generate-index file-attr-list 'blog pub-root-dir ext-plist)
+      (op/generate-index file-attr-list 'wiki pub-root-dir ext-plist)
+      (op/generate-tags file-attr-list pub-root-dir ext-plist))))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
@@ -42,8 +39,8 @@ will return \"this is title\" if OPTION is \"TITLE\""
   (let ((match-regexp (org-make-options-regexp `(,option))))
     (save-excursion
       (goto-char (point-min))
-      (if (re-search-forward match-regexp nil t)
-          (match-string-no-properties 2 nil)))))
+      (when (re-search-forward match-regexp nil t)
+        (match-string-no-properties 2 nil)))))
 
 (defun op/generate-uri (creation-date title file-type)
   "Generate URI of org file opened in current buffer. It will be firstly read
@@ -101,16 +98,16 @@ recommended to use #+DATE."
 
     (setq opt-plist (org-infile-export-plist))
     (setq cdate (plist-get opt-plist :date))
-    (if (and cdate (not (string-match "%" cdate)))
-        (plist-put attr-plist :creation-date (fix-timestamp-string cdate)))
+    (when (and cdate (not (string-match "%" cdate)))
+      (plist-put attr-plist :creation-date (fix-timestamp-string cdate)))
     (plist-put attr-plist :title (or (plist-get opt-plist :title)
                                      (file-name-sans-extension
                                       (file-name-nondirectory filename))))
     (setq tags (op/read-org-option "TAGS")) ; TODO customization
-    (if tags
-        (plist-put
-         attr-plist :tags (delete "" (mapcar 'trim-string
-                                             (split-string tags ":" t))))) ;; TODO customization
+    (when tags
+      (plist-put
+       attr-plist :tags (delete "" (mapcar 'trim-string
+                                           (split-string tags ":" t))))) ;; TODO customization
     (plist-put attr-plist :type (op/get-file-type filename))
     (plist-put attr-plist :uri (op/generate-uri
                                 (plist-get attr-plist :creation-date)
@@ -233,5 +230,5 @@ TODO: improve this function."
   (when (and (bufferp export-buf-or-file)
              (buffer-live-p export-buf-or-file))
     (set-buffer export-buf-or-file)
-    (if (buffer-modified-p) (save-buffer))
+    (when (buffer-modified-p) (save-buffer))
     (kill-buffer export-buf-or-file)))
