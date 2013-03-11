@@ -27,8 +27,7 @@ deleted. PUB-ROOT-DIR is the root publication directory."
               (op/handle-deleted-file org-file)))
           (or visiting (kill-buffer file-buffer)))
        all-list)
-      (op/generate-index file-attr-list 'blog pub-root-dir ext-plist)
-      (op/generate-index file-attr-list 'wiki pub-root-dir ext-plist)
+      (op/generate-index file-attr-list pub-root-dir ext-plist)
       (op/generate-tags file-attr-list pub-root-dir ext-plist))))
 
 (defun op/read-org-option (option)
@@ -134,35 +133,53 @@ property list of current file. PUB-BASE-DIR is the root publication directory."
   "TODO: add logic for this function, maybe a little complex."
   )
 
-(defun op/generate-index (file-attr-list type pub-base-dir ext-plist)
-  "Generate index page of both blog and wiki, FILE-ATTR-LIST is the list of all
-file attribute property lists. TYPE is 'blog or 'wiki, PUB-BASE-DIR is the root
-publication directory."
-  (let ((pub-dir (file-name-as-directory
-                  (concat (file-name-as-directory pub-base-dir)
-                          (symbol-name type))))
-        (filtered-list (remove-if
-                        '(lambda (attr-plist)
-                           (not (eq type (plist-get attr-plist :type))))
-                        file-attr-list)))
+(defun op/generate-index (file-attr-list pub-base-dir ext-plist)
+  "Generate index page, FILE-ATTR-LIST is the list of all file attribute
+property lists. PUB-BASE-DIR is the root publication directory. EXT-PLIST is the
+property list will be passed to `op/export-as-html'."
+  (let ((blog-list (remove-if-not
+                    '(lambda (attr-plist)
+                       (eq 'blog (plist-get attr-plist :type)))
+                    file-attr-list))
+        (wiki-list (remove-if-not
+                    '(lambda (attr-plist)
+                       (eq 'wiki (plist-get attr-plist :type)))
+                    file-attr-list))
+        (other-list (remove-if
+                     '(lambda (attr-plist)
+                        (memq (plist-get attr-plist :type) '(wiki blog)))
+                     file-attr-list)))
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
-      (insert "#+TITLE: Index Page of "
-              (capitalize (symbol-name type))
-              " Subsystem" "\n")
+      (insert "#+TITLE: Index" "\n")
       (insert "#+OPTIONS: *:nil" "\n\n")
+      (insert " - blog" "\n")
       (mapc '(lambda (attr-plist)
-               (insert " - ")
-               (insert (plist-get attr-plist (if (eq type 'wiki)
-                                                 :mod-date :creation-date))
+               (insert "   - ")
+               (insert (plist-get attr-plist :creation-date)
                        "\\nbsp\\nbsp\\nbsp"
                        "@<a href=\"" (plist-get attr-plist :uri) "\">"
                        (plist-get attr-plist :title) "@</a>" "\n"))
-            filtered-list)
+            blog-list)
+      (insert " - wiki" "\n")
+      (mapc '(lambda (attr-plist)
+               (insert "   - ")
+               (insert (plist-get attr-plist :mod-date)
+                       "\\nbsp\\nbsp\\nbsp"
+                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                       (plist-get attr-plist :title) "@</a>" "\n"))
+            wiki-list)
+      (mapc '(lambda (attr-plist)
+               (insert " - ")
+               (insert (plist-get attr-plist :creation-date)
+                       "\\nbsp\\nbsp\\nbsp"
+                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                       (plist-get attr-plist :title) "@</a>" "\n"))
+            other-list)
       (plist-put ext-plist :html-postamble
-                 (op/generate-footer (concat "/" (symbol-name type) "/") nil t t))
+                 (op/generate-footer "/" nil t t))
       (op/kill-exported-buffer
-       (op/export-as-html nil nil ext-plist nil nil pub-dir)))))
+       (op/export-as-html nil nil ext-plist nil nil pub-base-dir)))))
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
