@@ -1,9 +1,11 @@
 (require 'org-page-util)
 
 (defun op/publish-changes (all-list change-plist pub-root-dir)
-  "This function is for two purposes:
+  "This function is for:
 1. publish changed org files to html
-2. delete html files which are relevant to deleted org files.
+2. delete html files which are relevant to deleted org files
+3. update index page
+4. regenerate tag pages.
 ALL-LIST contains paths of all org files, CHANGE-PLIST contains two properties,
 one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
@@ -76,7 +78,6 @@ TODO: This function may be improved to have a better type determination system."
 
 (defun op/read-file-info ()
   "Read info of org file opened in current buffer, include:
-<TODO>: seems other values are not used except tags and uri
 1. creation date
 2. modification date
 3. tags (read from #+TAGS property)
@@ -87,7 +88,6 @@ TODO: This function may be improved to have a better type determination system."
 Creation date will be firstly read from #+DATE defined in the file, if no date
 info found, will be read from the file's last change date. However, it is
 recommended to use #+DATE."
-
   (let* ((filename (buffer-file-name))
          (file-attrs (file-attributes filename))
          (fcdate (format-time-string "%Y-%m-%d" (nth 6 file-attrs)))
@@ -115,7 +115,8 @@ recommended to use #+DATE."
 
 (defun op/publish-modified-file (attr-plist pub-base-dir ext-plist)
   "Publish org file opened in current buffer. ATTR-PLIST is the attribute
-property list of current file. PUB-BASE-DIR is the root publication directory."
+property list of current file. PUB-BASE-DIR is the root publication directory.
+EXT-PLIST is the property list will be passed to `op/export-as-html'."
   (let* (title tags uri hidden-comment pub-dir)
     (setq uri (plist-get attr-plist :uri))
     (setq hidden-comment (if (eq (plist-get attr-plist :type) 'wiki) t nil))
@@ -187,7 +188,8 @@ property list will be passed to `op/export-as-html'."
 
 (defun op/generate-tags (file-attr-list pub-base-dir ext-plist)
   "Generate tag pages. FILE-ATTR-LIST is the list of all file attribute property
-lists. PUB-BASE-DIR is the root publication directory.
+lists. PUB-BASE-DIR is the root publication directory. EXT-PLIST is the property
+list will be passed to `op/export-as-html'.
 TODO: improve this function."
   (let ((tag-base-dir (concat (file-name-as-directory pub-base-dir) "tags/"))
         tag-alist tag-list tag-dir)
