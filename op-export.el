@@ -151,7 +151,8 @@ publication directory."
       (erase-buffer)
       (insert "#+TITLE: Index Page of "
               (capitalize (symbol-name type))
-              " Subsystem" "\n\n")
+              " Subsystem" "\n")
+      (insert "#+OPTIONS: *:nil" "\n\n")
       (mapc '(lambda (attr-plist)
                (insert " - ")
                (insert (plist-get attr-plist (if (eq type 'wiki)
@@ -186,7 +187,8 @@ TODO: improve this function."
      file-attr-list)
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
-      (insert "#+TITLE: Tag Index" "\n\n")
+      (insert "#+TITLE: Tag Index" "\n")
+      (insert "#+OPTIONS: *:nil" "\n\n")
       (mapc '(lambda (tag-list)
                (insert " - ")
                (insert "@<a href=\""
@@ -204,7 +206,8 @@ TODO: improve this function."
      '(lambda (tag-list)
         (with-current-buffer (get-buffer-create op/temp-buffer-name)
           (erase-buffer)
-          (insert "#+TITLE: Tag " (car tag-list) "\n\n")
+          (insert "#+TITLE: Tag " (car tag-list) "\n")
+          (insert "#+OPTIONS: *:nil" "\n\n")
           (mapc '(lambda (attr-plist)
                    (insert " - ")
                    (insert "@<a href=\"" (plist-get attr-plist :uri) "\">"
