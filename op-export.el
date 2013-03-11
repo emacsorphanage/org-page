@@ -130,7 +130,8 @@ property list of current file. PUB-BASE-DIR is the root publication directory."
       (mkdir pub-dir t))
     (plist-put ext-plist :html-postamble
                (op/generate-footer uri attr-plist nil hidden-comment))
-    (op/export-as-html nil nil ext-plist nil nil pub-dir)))
+    (op/kill-exported-buffer
+     (op/export-as-html nil nil ext-plist nil nil pub-dir))))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."
@@ -163,7 +164,8 @@ publication directory."
             filtered-list)
       (plist-put ext-plist :html-postamble
                  (op/generate-footer (concat "/" (symbol-name type) "/") nil t t))
-      (op/export-as-html nil nil ext-plist nil nil pub-dir))))
+      (op/kill-exported-buffer
+       (op/export-as-html nil nil ext-plist nil nil pub-dir)))))
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
@@ -201,7 +203,8 @@ TODO: improve this function."
         (mkdir tag-base-dir t))
       (plist-put ext-plist :html-postamble
                  (op/generate-footer "/tags/" nil t t)) ;; TODO customization
-      (op/export-as-html nil nil ext-plist nil nil tag-base-dir))
+      (op/kill-exported-buffer
+       (op/export-as-html nil nil ext-plist nil nil tag-base-dir)))
     (mapc
      '(lambda (tag-list)
         (with-current-buffer (get-buffer-create op/temp-buffer-name)
@@ -220,5 +223,15 @@ TODO: improve this function."
           (plist-put ext-plist :html-postamble
                      (op/generate-footer (op/generate-tag-uri (car tag-list))
                                          nil t t))
-          (op/export-as-html nil nil ext-plist nil nil tag-dir)))
+          (op/kill-exported-buffer
+           (op/export-as-html nil nil ext-plist nil nil tag-dir))))
      tag-alist)))
+
+(defun op/kill-exported-buffer (export-buf-or-file)
+  "Kill the exported buffer. This function is a snippet copied from
+`org-publish-org-to'."
+  (when (and (bufferp export-buf-or-file)
+             (buffer-live-p export-buf-or-file))
+    (set-buffer export-buf-or-file)
+    (if (buffer-modified-p) (save-buffer))
+    (kill-buffer export-buf-or-file)))
