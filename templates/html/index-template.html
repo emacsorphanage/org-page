@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>%t</title>
+    <meta charset=\"UTF-8\">%c
+  </head>
+  <body>
+    <script type=\"text/javascript\">
+      var ie = /(msie) ([\\w.]+)/.exec(navigator.userAgent.toLowerCase());
+      var div = document.createElement('div');
+      div.className = ie ? 'fucking-ie' : 'loading-center';
+      div.innerHTML = ie ? 'Sorry, this site does not support the fucking IE.' : 'Loading...';
+      document.getElementsByTagName('body')[0].appendChild(div);
+      ie || setTimeout(function() { window.location.replace('%p');}, 1000);
+    </script>
+  </body>
+</html>
