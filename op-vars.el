@@ -1,3 +1,5 @@
+;;; TODO: add some description here
+
 (defgroup org-page nil
   "Options for generating static pages using org-page."
   :tag "Org static page generator" :group 'org)
@@ -150,3 +152,7 @@ automatically."
 (defcustom op/personal-disqus-shortname nil
   "the personal disqus shortname"
   :group 'org-page :type 'string)
+
+(provide 'op-vars)
+
+;;; op-vars.el ends here

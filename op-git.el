@@ -1,3 +1,4 @@
+(require 'op-vars)
 (require 'org-page-util)
 
 (defun op/verify-git-repository (repo-dir)
