@@ -1,13 +1,5 @@
 (require 'org-page-util)
 
-(defconst op/temp-buffer-name "*Org Page Output*"
-  "Name of the temporary buffer used by org-page")
-
-(defcustom op/repository-directory nil
-  "The directory where org files stored, should be a git repository"
-  :group 'org-page
-  :type 'string)
-
 (defun op/verify-git-repository (repo-dir)
   "This function will verify whether REPO-DIR is a valid git repository.
 TODO: may add branch/commit verification later."

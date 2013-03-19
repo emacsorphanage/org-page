@@ -2,6 +2,14 @@
   "Options for generating static pages using org-page."
   :tag "Org static page generator" :group 'org)
 
+(defconst op/temp-buffer-name "*Org Page Output*"
+  "Name of the temporary buffer used by org-page")
+
+(defcustom op/repository-directory nil
+  "The directory where org files stored, should be a git repository"
+  :group 'org-page
+  :type 'string)
+
 (defcustom op/site-url nil
   "The domain name of entire site, it is recommended to assign with prefix
 http:// or https://, http will be considered if not assigned."
