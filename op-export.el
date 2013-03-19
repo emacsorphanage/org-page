@@ -118,7 +118,7 @@ property list of current file. PUB-BASE-DIR is the root publication directory.
 EXT-PLIST is the property list will be passed to `op/export-as-html'."
   (let* (title tags uri hidden-comment pub-dir)
     (setq uri (plist-get attr-plist :uri))
-    (setq hidden-comment (if (eq (plist-get attr-plist :type) 'wiki) t nil))
+    (setq hidden-comment (eq (plist-get attr-plist :type) 'wiki))
     (setq pub-dir (file-name-as-directory
                    (concat (file-name-as-directory pub-base-dir)
                            (replace-regexp-in-string "\\`/" "" uri))))
