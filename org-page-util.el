@@ -151,6 +151,11 @@ e.g. path '../blog/index.org' will be converted into '../blog/', since
       (file-name-directory path))
      (t path))))
 
+(defun file-to-string (file)
+  "Read the file contents and return it as a string"
+  (with-temp-buffer
+    (insert-file-contents file)
+    (buffer-string)))
 
 (provide 'org-page-util)
 
