@@ -25,7 +25,9 @@
       (setq search-url (match-string 1 op/site-url)))
     (format-spec op/html-header-template `((?m . ,op/site-main-title)
                                            (?s . ,op/site-sub-title)
-                                           (?t . "/tags/") ; TODO customization
+                                           (?b . "/blog/") ; TODO customization
+                                           (?w . "/wiki/")
+                                           (?t . "/tags/")
                                            (?a . "/about/")
                                            (?g . ,op/personal-github-link)
                                            (?u . ,search-url)))))
