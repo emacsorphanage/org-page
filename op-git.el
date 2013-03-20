@@ -60,7 +60,7 @@ REPO-DIR, MESSAGE is the commit message."
       (erase-buffer)
       (shell-command (format "git commit -m \"%s\"" message) t nil)
       (setq output (buffer-string)))
-    (when (not (string-match "\\`\\[.* .*\\]" output))
+    (when (not (string-match "\\[.* .*\\]" output))
       (error "Failed to commit changes on current branch of repository '%s'."
              repo-dir))))
 
