@@ -173,7 +173,7 @@ CATEGORY. CATEGORY can only be 'blog or 'wiki, others will be considered as
           '(lambda (plist1 plist2)
              (<= (compare-standard-date
                   (plist-get plist1 (cdr (assq cat sort-alist)))
-                  (plist-get plist1 (cdr (assq cat sort-alist))))
+                  (plist-get plist2 (cdr (assq cat sort-alist))))
                  0)))))
 
 (defun op/update-category-index (file-attr-list pub-base-dir ext-plist category)
