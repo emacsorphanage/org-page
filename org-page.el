@@ -103,24 +103,33 @@
 (require 'op-hack)
 
 
-(defun op/do-publication (&optional base-git-commit auto-commit)
-  "The main entrance of org-page, BASE-GIT-COMMIT is the commit that the
-publication will base on, if omitted, will use previous commit instead.
-Published html files will be stored on branch `op/repository-html-branch' of
-repository `op/repository-directory'.
-If AUTO-COMMIT is non-nil, the changes will be automatically committed. Be
-careful, this feature is NOT recommended."
+(defun op/do-publication (&optional base-git-commit pub-base-dir auto-commit)
+  "The main entrance of org-page. The entire procedure is:
+1) verify configuration
+2) read changed files on branch `op/repository-org-branch' of repository
+`op/repository-directory', based on BASE-GIT-COMMIT, if it is omitted, will use
+previous commit as the base commit.
+3) publish org files to html, if PUB-BASE-DIR is specified, use that directory
+to store the generated html files, otherwise html files will be stored on branch
+`op/repository-html-branch' of repository `op/repository-directory'
+4) if PUB-BASE-DIR is nil, and auto-commit is non-nil, then the changes stored
+on branch `op/repository-html-branch' will be automatically committed, but be
+careful, this feature is NOT recommended, and a manual commit is much better"
   (op/verify-configuration)
-  (let ((orig-branch (op/git-branch-name op/repository-directory))
-        all-list change-plist)
+  (let* ((orig-branch (op/git-branch-name op/repository-directory))
+        (to-repo (not (stringp pub-base-dir)))
+        (store-dir (if to-repo "~/.op-tmp/" pub-base-dir))) ; TODO customization
     (op/git-change-branch op/repository-directory op/repository-org-branch)
-    (setq all-list (op/git-all-files op/repository-directory))
-    (setq change-plist (op/git-files-changed
-                        op/repository-directory (or base-git-commit "HEAD^1")))
-    (op/git-change-branch op/repository-directory op/repository-html-branch)
-    (op/prepare-theme op/repository-directory)
-    (op/publish-changes all-list change-plist op/repository-directory)
-    (when auto-commit
+    (op/prepare-theme store-dir)
+    (op/publish-changes (op/git-all-files op/repository-directory)
+                        (op/git-files-changed
+                         op/repository-directory (or base-git-commit "HEAD^1"))
+                        store-dir)
+    (when to-repo
+      (op/git-change-branch op/repository-directory op/repository-html-branch)
+      (copy-directory store-dir op/repository-directory t t t)
+      (delete-directory store-dir t))
+    (when (and to-repo auto-commit)
       (op/git-commit-changes op/repository-directory "Update published html \
 files, committed by org-page.")
       (op/git-change-branch op/repository-directory orig-branch))
