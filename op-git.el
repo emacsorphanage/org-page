@@ -1,6 +1,3 @@
-(require 'op-vars)
-(require 'op-util)
-
 (defun op/verify-git-repository (repo-dir)
   "This function will verify whether REPO-DIR is a valid git repository.
 TODO: may add branch/commit verification later."
@@ -25,6 +22,47 @@ instead of pointer HEAD."
                          (if (string-suffix-p org-file-ext line t)
                              (concat (file-name-as-directory repo-dir) line)))
                       (split-string output "\n")))))
+
+(defun op/git-branch-name (repo-dir)
+  "Return name of current branch of git repository presented by REPO-DIR."
+  (let ((repo-dir (file-name-as-directory repo-dir)) output)
+    (op/verify-git-repository repo-dir)
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (setq default-directory repo-dir)
+      (shell-command "git rev-parse --abbrev-ref HEAD" t nil)
+      (setq output (buffer-string)))
+    (replace-regexp-in-string "[\n\r]" "" output)))
+
+(defun op/git-change-branch (repo-dir branch-name)
+  "This function will change branch to BRANCH-NAME of git repository presented
+by REPO-DIR. Do nothing if it is current branch."
+  (let ((repo-dir (file-name-as-directory repo-dir)) output)
+    (op/verify-git-repository repo-dir)
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (setq default-directory repo-dir)
+      (shell-command (concat "git checkout " branch-name) t nil)
+      (setq output (buffer-string)))
+    (when (string-match "\\`error" output)
+      (error "Failed to change branch to '%s' of repository '%s'."
+             branch-name repo-dir))))
+
+(defun op/git-commit-changes (repo-dir message)
+  "This function will commit uncommitted changes to git repository presented by
+REPO-DIR, MESSAGE is the commit message."
+  (let ((repo-dir (file-name-as-directory repo-dir)) output)
+    (op/verify-git-repository repo-dir)
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (setq default-directory repo-dir)
+      (erase-buffer)
+      (shell-command "git add ." t nil)
+      (erase-buffer)
+      (shell-command (format "git commit -m \"%s\"" message) t nil)
+      (setq output (buffer-string)))
+    (when (not (string-match "\\`\\[.* .*\\]" output))
+      (error "Failed to commit changes on current branch of repository '%s'."
+             repo-dir))))
 
 (defun op/git-files-changed (repo-dir base-commit)
   "This function can get modified/deleted org files from git repository
@@ -53,3 +91,8 @@ only two types will work well: need to publish or need to delete.
                                       del-list))))
           (split-string output "\n"))
     (list :update upd-list :delete del-list)))
+
+
+(provide 'op-git)
+
+;;; op-git.el ends here

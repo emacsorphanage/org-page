@@ -27,6 +27,16 @@ http:// or https://, http will be considered if not assigned."
   "The subtitle of entire site."
   :group 'org-page :type 'string)
 
+(defcustom op/repository-org-branch "source"
+  "The branch where org files stored on, it is within repository presented by
+`op/repository-directory'."
+  :group 'org-page :type 'string)
+
+(defcustom op/repository-html-branch "master"
+  "The branch where generated html files stored on, it is within repository
+presented by `op/repository-directory'."
+  :group 'org-page :type 'string)
+
 ; TODO remove "TODO" in below string after rss feature implemented
 (defcustom op/html-header-template
   "<h1><a href=\"/\">%m</a><a href=\"\">%s</a></h1>
@@ -158,6 +168,7 @@ automatically."
 (defcustom op/personal-disqus-shortname nil
   "the personal disqus shortname"
   :group 'org-page :type 'string)
+
 
 (provide 'op-vars)
 
