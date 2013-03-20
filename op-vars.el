@@ -8,7 +8,9 @@
   "Name of the temporary buffer used by org-page")
 
 (defcustom op/repository-directory nil
-  "The directory where org files stored, should be a git repository"
+  "The git repository directory, where org files stored on branch
+`op/repository-org-branch', and generated html files stored on branch
+`op/repository-html-branch'."
   :group 'org-page
   :type 'string)
 
