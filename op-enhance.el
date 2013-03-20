@@ -16,7 +16,7 @@
     (copy-directory theme-dir pub-theme-dir t t t)))
 
 (defun op/generate-page-header ()
-  "Generate page header, based on the templated defined by
+  "Generate page header, based on the template defined by
 `op/html-header-template', please see its description for more detail."
   (let* ((search-url op/site-url))
     (when (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'" op/site-url)
