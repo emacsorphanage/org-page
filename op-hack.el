@@ -841,3 +841,8 @@ PUB-DIR is set, use this as the publishing directory."
           (prog1 (buffer-substring (point-min) (point-max))
             (kill-buffer (current-buffer)))
         (current-buffer)))))
+
+
+(provide 'op-hack)
+
+;;; op-hack.el ends here

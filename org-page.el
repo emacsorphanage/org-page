@@ -95,7 +95,13 @@
 
 ;;; Code:
 
+(require 'op-vars)
 (require 'op-util)
+(require 'op-git)
+(require 'op-enhance)
+(require 'op-export)
+(require 'op-hack)
+
 
 (defun op/do-publication (pub-base-dir &optional base-git-commit)
   "The main entrance of org-page, PUB-BASE-DIR is the directory where published
@@ -142,6 +148,7 @@ help configure it manually, usually it should be <org-page directory>/themes/."
     (setq op/site-url (concat "http://" op/site-url)))
   (unless op/theme
     (setq op/theme 'default)))
+
 
 (provide 'org-page)
 

@@ -1,5 +1,3 @@
-(require 'op-util)
-
 (defun op/publish-changes (all-list change-plist pub-root-dir)
   "This function is for:
 1. publish changed org files to html
@@ -325,3 +323,8 @@ TODO: improve this function."
     (set-buffer export-buf-or-file)
     (when (buffer-modified-p) (save-buffer))
     (kill-buffer export-buf-or-file)))
+
+
+(provide 'op-export)
+
+;;; op-export.el ends here

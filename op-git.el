@@ -1,6 +1,3 @@
-(require 'op-vars)
-(require 'op-util)
-
 (defun op/verify-git-repository (repo-dir)
   "This function will verify whether REPO-DIR is a valid git repository.
 TODO: may add branch/commit verification later."
@@ -53,3 +50,8 @@ only two types will work well: need to publish or need to delete.
                                       del-list))))
           (split-string output "\n"))
     (list :update upd-list :delete del-list)))
+
+
+(provide 'op-git)
+
+;;; op-git.el ends here

@@ -157,6 +157,7 @@ automatically."
   "the personal disqus shortname"
   :group 'org-page :type 'string)
 
+
 (provide 'op-vars)
 
 ;;; op-vars.el ends here
