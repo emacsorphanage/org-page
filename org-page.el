@@ -133,6 +133,8 @@ files, committed by org-page.")
 `op/theme-directory': <required> (but do not need user to configure)
 `op/site-url': <required>
 `op/personal-disqus-shortname': <required>
+`op/repository-org-branch': [optional] (but customization recommended)
+`op/repository-html-branch': [optional] (but customization recommended)
 `op/site-main-title': [optional] (but customization recommanded)
 `op/site-sub-title': [optional] (but customization recommanded)
 `op/email': [optional] (but customization recommanded)
