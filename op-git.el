@@ -23,6 +23,17 @@ instead of pointer HEAD."
                              (concat (file-name-as-directory repo-dir) line)))
                       (split-string output "\n")))))
 
+(defun op/git-branch-name (repo-dir)
+  "Return name of current branch of git repository presented by REPO-DIR."
+  (let ((repo-dir (file-name-as-directory repo-dir)) output)
+    (op/verify-git-repository repo-dir)
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (setq default-directory repo-dir)
+      (shell-command "git rev-parse --abbrev-ref HEAD" t nil)
+      (setq output (buffer-string)))
+    (replace-regexp-in-string "[\n\r]" "" output)))
+
 (defun op/git-change-branch (repo-dir branch-name)
   "This function will change branch to BRANCH-NAME of git repository presented
 by REPO-DIR. Do nothing if it is current branch."
