@@ -193,7 +193,7 @@ CATEGORY is 'blog or 'wiki, 'blog if nil."
       (insert "#+OPTIONS: *:nil" "\n\n")
       (mapc '(lambda (attr-plist)
                (insert " - " (plist-get attr-plist (cdr (assq cat sort-alist)))
-                       "\\nbsp\\nbsp\\nbsp"
+                       "\\nbsp\\nbsp»\\nbsp\\nbsp"
                        "@<a href=\"" (plist-get attr-plist :uri) "\">"
                        (plist-get attr-plist :title) "@</a>" "\n"))
             cat-list)
@@ -223,7 +223,7 @@ publication directory. EXT-PLIST is the property list will be passed to
           (insert " - " category "\n")
           (mapc '(lambda (attr-plist)
                    (insert "   - " (plist-get attr-plist plist-key)
-                           "\\nbsp\\nbsp\\nbsp"
+                           "\\nbsp\\nbsp»\\nbsp\\nbsp"
                            "@<a href=\"" (plist-get attr-plist :uri) "\">"
                            (plist-get attr-plist :title) "@</a>" "\n"))
                 (cdr cell)))
