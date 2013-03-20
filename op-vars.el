@@ -30,6 +30,8 @@ http:// or https://, http will be considered if not assigned."
   "<h1><a href=\"/\">%m</a><a href=\"\">%s</a></h1>
    <nav id=\"main-nav\">
      <ul id=\"nav-list-main\">
+       <li><a href=\"%b\" class=\"menu\">Blog</a></li>
+       <li><a href=\"%w\" class=\"menu\">Wiki</a></li>
        <li><a href=\"%t\" class=\"menu\">Tags</a></li>
        <li><a href=\"%a\" class=\"menu\">About</a></li>
      </ul>
@@ -48,6 +50,8 @@ http:// or https://, http will be considered if not assigned."
   "The template used to construct page header, below parameters can be used:
 %m: the main title of entire site (defined by `op/site-main-title')
 %s: the subtitle of entire site (defined by `op/site-sub-title')
+%b: the path to blog index
+%w: the path to wiki index
 %t: the path to root tag
 %a: the path to about
 %g: the github link (defined by `op/personal-github-link')

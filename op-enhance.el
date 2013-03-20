@@ -1,3 +1,5 @@
+;;; TODO: add some description here
+
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
   (let* ((pub-theme-dir (concat (file-name-as-directory pub-root-dir)
@@ -16,14 +18,16 @@
     (copy-directory theme-dir pub-theme-dir t t t)))
 
 (defun op/generate-page-header ()
-  "Generate page header, based on the templated defined by
+  "Generate page header, based on the template defined by
 `op/html-header-template', please see its description for more detail."
   (let* ((search-url op/site-url))
     (when (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'" op/site-url)
       (setq search-url (match-string 1 op/site-url)))
     (format-spec op/html-header-template `((?m . ,op/site-main-title)
                                            (?s . ,op/site-sub-title)
-                                           (?t . "/tags/") ; TODO customization
+                                           (?b . "/blog/") ; TODO customization
+                                           (?w . "/wiki/")
+                                           (?t . "/tags/")
                                            (?a . "/about/")
                                            (?g . ,op/personal-github-link)
                                            (?u . ,search-url)))))
@@ -39,7 +43,7 @@
                   (format template (concat "/media/css/" css))) ;; TODO customization
                css-list "\n")))
 
-(defun op/generate-footer (uri attr-plist hidden-meta-info hidden-comment)
+(defun op/generate-footer (uri attr-plist hide-meta-info hide-comment)
   "Generate page footer, based on the template defined by
 `op/html-postamble-template', please see its description for more detail."
   (let* ((footer-template op/html-postamble-template)
@@ -49,11 +53,11 @@
          (disqus-shortname op/personal-disqus-shortname)
          (email (confound-email op/email))
          cdate mdate tag-list tag-links)
-    (when (or hidden-meta-info hidden-comment)
+    (when (or hide-meta-info hide-comment)
       (setq footer-template op/footer)
-      (unless hidden-comment
+      (unless hide-comment
         (setq footer-template (concat op/comment footer-template)))
-      (unless hidden-meta-info
+      (unless hide-meta-info
         (setq footer-template (concat op/meta-info footer-template))))
     (when attr-plist
       (setq uri (plist-get attr-plist :uri))
@@ -77,3 +81,7 @@
                    (?n . ,disqus-identifier)
                    (?u . ,disqus-url)
                    (?s . ,disqus-shortname)))))
+
+(provide 'op-enhance)
+
+;;; op-enhance.el ends here

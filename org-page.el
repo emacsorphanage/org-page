@@ -95,381 +95,53 @@
 
 ;;; Code:
 
-(require 'org-page-util)
+(require 'op-util)
 
-(defcustom op/exclude-filename-regexp nil
-  "regular expression, filename matches this expression will not be published.
-please also see `op/include-filename-regexp'."
-  :group 'org-page
-  :type 'string)
+(defun op/do-publication (pub-base-dir &optional base-git-commit)
+  "The main entrance of org-page, PUB-BASE-DIR is the directory where published
+files will be stored, BASE-GIT-COMMIT is the commit that the publication will
+base on, if omitted, will use previous commit instead."
+  (op/verify-configuration)
+  (op/prepare-theme pub-base-dir)
+  (op/publish-changes
+   (op/git-all-files op/repository-directory)
+   (op/git-files-changed op/repository-directory (or base-git-commit "HEAD^1"))
+   pub-base-dir)
+  (message "Org-page publication finished."))
 
-(defcustom op/include-filename-regexp nil
-  "regular expression, filename matches this expression will always be published.
-it has higher priority than `op/exclude-filename-regexp'."
-  :group 'org-page
-  :type 'string)
-
-(defcustom op/tag-directory "tags/"
-  "the directory used to store generated tags"
-  :group 'org-page
-  :type 'string)
-
-(defcustom op/publish-html-index-template
-  "<!DOCTYPE html><html><head><title>%t</title>
-<meta charset=\"UTF-8\">%c</head><body>
-<script type=\"text/javascript\">
-    var ie = /(msie) ([\\w.]+)/.exec(navigator.userAgent.toLowerCase());
-    var div = document.createElement('div');
-    div.className = ie ? 'fucking-ie' : 'loading-center';
-    div.innerHTML = ie ? 'Sorry, this site does not support the fucking IE.' : 'Loading...';
-    document.getElementsByTagName('body')[0].appendChild(div);
-    ie || setTimeout(function() { window.location.replace('%p');}, 1000);
-</script></body></html>"
-  "the template used to construct index page of entire site, our real site is
-generated in a subfolder named 'blog/', so the index page is needed to act
-as a bridge, taking visitor to the real index. below parameters can be used:
-%t: the site title
-%c: css links, be aware that here the links are already wrapped by tag <link>
-%p: the path to real index page"
-  :group 'org-page
-  :type 'string)
-
-
-(defvar op/org-file-info-list nil
-  "the list stores info of org files, each item is a plist, includes following keywords:
-:path            old path before project structure reorganization
-:new-path        current path after project structure reorganization
-:creation-date   creation date of the file
-:mod-date        last modification date of the file
-:title           title of the file
-:tags            tags of the file
-:category        category of the file")
-
-;-----------------------------------------------------------------------
-(defun op/project-initialize ()
-  "initialize the whole project"
-  (unless op/root-directory
-    (error "Please set the project root directory `%s' first before we can continue."
-           (symbol-name 'op/root-directory)))
-
-  (unless op/theme-directory
-    (error "Well, org-page cannot detect where the theme is installed, please set the theme
-directory `%s' first, usually it is <org-page directory>/themes/"
+(defun op/verify-configuration ()
+  "Ensure all required configuration fields are properly configured, include:
+`op/repository-directory': <required>
+`op/theme-directory': <required> (but do not need user to configure)
+`op/site-url': <required>
+`op/personal-disqus-shortname': <required>
+`op/site-main-title': [optional] (but customization recommanded)
+`op/site-sub-title': [optional] (but customization recommanded)
+`op/email': [optional] (but customization recommanded)
+`op/personal-github-link': [optional] (but customization recommanded)
+`op/theme': [optional]
+`op/css-list': [optional]"
+  (unless (and op/repository-directory
+               (file-directory-p op/repository-directory))
+    (error "Directory `%s' is not properly configured."
+           (symbol-name 'op/repository-directory)))
+  (unless (and op/theme-directory
+               (file-directory-p op/theme-directory))
+    (error "Org-page cannot detect theme directory `%s' automatically, please \
+help configure it manually, usually it should be <org-page directory>/themes/."
            (symbol-name 'op/theme-directory)))
-
-  (unless op/publish-site-url
-    (error "Please specify the URL(`%s'), which will be used for searching and commenting."
-           (symbol-name 'op/publish-site-url)))
-  (unless (or (string-prefix-p "http://" op/publish-site-url)
-              (string-prefix-p "https://" op/publish-site-url))
-    (setq op/publish-site-url (concat "http://" op/publish-site-url)))
-
+  (unless op/site-url
+    (error "Site url `%s' is not properly configured."
+           (symbol-name 'op/site-url)))
   (unless op/personal-disqus-shortname
-    (error "Please specify your personal disqus shortname(`%s'), which will be used for commenting."
+    (error "Disqus shortname `%s' is not properly configured."
            (symbol-name 'op/personal-disqus-shortname)))
 
+  (unless (or (string-prefix-p "http://" op/site-url)
+              (string-prefix-p "https://" op/site-url))
+    (setq op/site-url (concat "http://" op/site-url)))
   (unless op/theme
-    (setq op/theme 'default))
-
-  ;;; expand the root-directory path, to avoid path looks like ~/xxx
-  (setq op/root-directory (expand-file-name op/root-directory))
-
-  ; TODO the variables below may also should could be customized
-  (setq op/src-root-directory (concat op/root-directory "src/"))
-  (setq op/src-temp-directory (concat op/root-directory "tmp/"))
-  (setq op/pub-root-directory (concat op/root-directory "pub/"))
-  (setq op/pub-html-directory (concat op/pub-root-directory "blog/"))
-  (setq op/pub-org-directory (concat op/pub-root-directory "org/"))
-
-  ;;; do not use the default style
-  (setq org-export-html-style-include-default nil)
-  ;;; do not include the javascript
-  (setq org-export-html-style-include-scripts nil)
-
-  ;;; after publishing, the newline character between html tag <p> will be shown
-  ;;; as space, it is normal for languages like English, but for Chinese and
-  ;;; other DBCS languages, the extra spaces are really annoying, so, use the
-  ;;; following workaround:
-  ;;; change fill-column to a very large number, and then fill the whole buffer,
-  ;;; so one paragraph will be in one line, the extra spaces are avoid.
-  ;;; and, do NOT fill #+begin_src/#+end_src sections, it will mess up the code.
-  (setq org-export-first-hook '(lambda ()
-                                 (set-fill-column 9999)
-                                 (let ((regions (op/non-src-regions)))
-                                   (dolist (region regions)
-                                     (fill-region (car region) (cdr region))))))
-
-  ;;; fix bug: if the org file is encoded with iso-8859-1, but the title set
-  ;;; manually is not iso-8859-1, the title will show as garbage characters
-  ;;; solution: set the coding-system to utf-8
-  (setq org-export-html-coding-system 'utf-8)
-
-  (setq org-publish-project-alist `(("op-whole-project"
-                                     :components ("op-html" "op-static" "op-src-html")
-                                     :author ,user-full-name
-                                     :email ,(confound-email user-mail-address))
-                                    ("op-html"
-                                     :base-directory ,op/src-root-directory
-                                     :publishing-directory ,op/pub-html-directory
-                                     :preparation-function op/publish-preparation
-                                     ;; move the completion function to op-src-html
-                                     ;;:completion-function op/publish-completion
-                                     :base-extension "org"
-                                     :exclude ,op/exclude-filename-regexp
-                                     :include ,op/include-filename-regexp
-                                     :recursive t
-                                     :publishing-function (op/publish-customize-style op/publish-customize-header op/publish-customize-footer org-publish-org-to-html)
-                                     :html-preamble t
-                                     :html-postamble t
-                                     :auto-sitemap t
-                                     :sitemap-function op/publish-sitemap
-                                     :sitemap-title ,(concat "Sitemap of " user-full-name "'s Personal Site")
-                                     :sitemap-style list
-                                     :table-of-contents nil
-                                     :section-numbers nil
-                                     :preserve-breaks nil
-                                     :tags 'not-in-toc
-                                     :author ,user-full-name
-                                     :email ,(confound-email user-mail-address))
-                                    ("op-static"
-                                     :base-directory ,op/src-root-directory
-                                     :publishing-directory ,op/pub-html-directory
-                                     :recursive t
-                                     ; TODO add full definition here
-                                     :base-extension "css\\|js\\|png\\|jpg\\|gif\\|eot\\|svg\\|ttf\\|woff\\|el"
-                                     :publishing-function org-publish-attachment
-                                     :author ,user-full-name
-                                     :email ,(confound-email user-mail-address))
-                                    ("op-src-html"
-                                     :base-directory ,op/src-root-directory
-                                     :publishing-directory ,op/pub-org-directory
-                                     :base-extension "org"
-                                     :html-extension "org.html"
-                                     :exclude ,op/exclude-filename-regexp
-                                     :include ,op/include-filename-regexp
-                                     :recursive t
-                                     :htmlized-source t
-                                     :publishing-function org-publish-org-to-org
-                                     :completion-function op/publish-completion
-                                     :author ,user-full-name
-                                     :email ,(confound-email user-mail-address)))))
-
-(defun op/publish-pages (&optional force)
-  "the main entry of whole project publishing process"
-  (interactive)
-  (op/project-initialize)
-  (if force
-      (org-publish "op-whole-project" t)
-    (org-publish "op-whole-project")))
-
-(defun op/publish-preparation ()
-  "the preparation-function hook of org publishing process"
-  (let* ((current-project project)
-        (project-plist (cdr current-project))
-        (exclude-regexp (plist-get project-plist :exclude)))
-
-    (setq op/org-file-info-list (op/reorganize-project-structure current-project))
-
-    (op/prepare-theme current-project)
-
-    (op/publish-generate-tags current-project op/org-file-info-list)
-
-    (op/publish-generate-categories current-project op/org-file-info-list)
-
-    ; TODO the count number in below line should could be customized
-    (op/publish-generate-recent-posts 30 current-project op/org-file-info-list)
-
-    (op/publish-generate-index current-project)
-
-    (op/publish-generate-about current-project)
-
-    ; update the org file list
-    ; "files" is defined in the "let" scope of function org-publish-projects
-    (setq files (org-publish-get-base-files current-project exclude-regexp))))
-
-(defun op/publish-completion ()
-  "the completion-function hook of org publish process"
-  ; TODO clear the customized `org-export-html-preamble-format' to original value
-
-  (op/generate-site-index-html)
-
-  ;; clear the variable
-  (setq op/org-file-info-list nil)
-
-  (let ((current-project project))
-    (op/restore-project-structure current-project))
-
-  (message "finished"))
-;----------------------------------------------------------------------
-
-
-(defun op/publish-sitemap (project &optional sitemap-filename)
-  "Create a sitemap of project, this function is copied and customized
-from `org-publish-org-sitemap' defined in `org-publish.el'."
-  (let* ((project-plist (cdr project))
-         (root-dir (file-name-as-directory
-                    (plist-get project-plist :base-directory)))
-         (localdir (file-name-directory root-dir))
-         (cat-dir (file-name-as-directory (concat root-dir (or op/category-directory "categories/"))))
-         (tag-dir (file-name-as-directory (concat root-dir (or op/tag-directory "tags/"))))
-         ; TODO here should could be customized
-         (recent-posts-filename (concat root-dir "recentposts.org"))
-         (index-filename (concat root-dir "index.org"))
-         (about-filename (concat root-dir "about.org"))
-
-         (indent-str (make-string 2 ?\ ))
-         (exclude-regexp (plist-get project-plist :exclude))
-         (files (nreverse (org-publish-get-base-files project exclude-regexp)))
-         (sitemap-filename (concat root-dir (or sitemap-filename "sitemap.org")))
-         (sitemap-title (or (plist-get project-plist :sitemap-title)
-                            (concat "Sitemap for project " (car project))))
-         (sitemap-style (or (plist-get project-plist :sitemap-style)
-                            'tree))
-         (sitemap-sans-extension (plist-get project-plist :sitemap-sans-extension))
-         (visiting (find-buffer-visiting sitemap-filename))
-         (ifn (file-name-nondirectory sitemap-filename))
-         file sitemap-buffer)
-    (with-current-buffer (setq sitemap-buffer
-                               (or visiting (find-file sitemap-filename)))
-      (erase-buffer)
-      (insert (concat "#+TITLE: " sitemap-title "\n\n"))
-      (while (setq file (pop files))
-        (let ((fn (file-name-nondirectory file))
-              (link (file-relative-name file root-dir))
-              (oldlocal localdir))
-          (when sitemap-sans-extension
-            (setq link (file-name-sans-extension link)))
-          ; do not include sitemap itself, tags and recentposts
-          (unless (or (equal (file-truename sitemap-filename) (file-truename file))
-                      (equal (file-truename recent-posts-filename) (file-truename file))
-                      (equal (file-truename index-filename) (file-truename file))
-                      (equal (file-truename about-filename) (file-truename file))
-                      (string-prefix-p (file-truename cat-dir) (file-truename file))
-                      (string-prefix-p (file-truename tag-dir) (file-truename file)))
-            (if (eq sitemap-style 'list)
-                (message "Generating list-style sitemap for %s" sitemap-title)
-              (message "Generating tree-style sitemap for %s" sitemap-title)
-              (setq localdir (concat (file-name-as-directory root-dir)
-                                     (file-name-directory link)))
-              (unless (string= localdir oldlocal)
-                (if (string= localdir root-dir)
-                    (setq indent-str (make-string 2 ?\ ))
-                  (let ((subdirs
-                         (split-string
-                          (directory-file-name
-                           (file-name-directory
-                            (file-relative-name localdir root-dir))) "/"))
-                        (subdir "")
-                        (old-subdirs (split-string
-                                      (file-relative-name oldlocal root-dir) "/")))
-                    (setq indent-str (make-string 2 ?\ ))
-                    (while (string= (car old-subdirs) (car subdirs))
-                      (setq indent-str (concat indent-str (make-string 2 ?\ )))
-                      (pop old-subdirs)
-                      (pop subdirs))
-                    (dolist (d subdirs)
-                      (setq subdir (concat subdir d "/"))
-                      (insert (concat indent-str " + " d "\n"))
-                      (setq indent-str (make-string
-                                        (+ (length indent-str) 2) ?\ )))))))
-            ;; This is common to 'flat and 'tree
-            (let ((entry
-                   (org-publish-format-file-entry org-sitemap-file-entry-format
-                                                  file project-plist))
-                  (regexp "\\(.*\\)\\[\\([^][]+\\)\\]\\(.*\\)"))
-              (cond ((string-match-p regexp entry)
-                     (string-match regexp entry)
-                     (insert (concat indent-str " + " (match-string 1 entry)
-                                     "[[file:" (get-valid-uri-path link) "]["
-                                     (match-string 2 entry)
-                                     "]]" (match-string 3 entry) "\n")))
-                    (t
-                     (insert (concat indent-str " + [[file:" (get-valid-uri-path link) "]["
-                                     entry
-                                     "]]\n"))))))))
-      (save-buffer))
-    (or visiting (kill-buffer sitemap-buffer))))
-
-(defun op/generate-site-index-html ()
-  "This function is used to generate the index.html for current site.
-Note: generating html file directly, not index.org"
-  (let* ((index-file (concat (or op/pub-root-directory (concat op/root-directory "pub/")) "index.html"))
-         (index-visiting (find-buffer-visiting index-file))
-         (index-relative-path (file-relative-name (concat (or op/pub-html-directory
-                                                              (concat op/root-directory "pub/blog/"))
-                                                          "index.html")
-                                                  (file-name-directory index-file)))
-         (css-folder (concat (or op/pub-html-directory (concat op/root-directory "pub/blog/")) "media/css/"))
-         (css-template "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\" />")
-         css-links index-buffer)
-
-    (unless op/publish-html-style-list
-      (setq op/publish-html-style-list '("main.css")))
-
-    (dolist (css op/publish-html-style-list)
-      (setq css-links (concat css-links "\n"
-                              (format css-template (file-relative-name (concat css-folder css)
-                                                                       (file-name-directory index-file))))))
-
-    (with-current-buffer (setq index-buffer (or index-visiting (find-file index-file)))
-      (erase-buffer)
-      (insert (format-spec op/publish-html-index-template `((?t . ,(or op/publish-site-title "org-page"))
-                                                            (?c . ,css-links)
-                                                            (?p . ,(get-valid-uri-path index-relative-path)))))
-      (save-buffer)
-      (or index-visiting (kill-buffer index-buffer)))))
-
-(defun op/publish-generate-index (project)
-  "The index file generation function, be careful with `op/generate-site-index-html'"
-  (let* ((project-plist (cdr project))
-         (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
-         (index-file (concat root-dir "index.org"))
-         (sitemap-file (concat root-dir (or (plist-get project-plist :sitemap-filename) "sitemap.org")))
-         (index-visiting (find-buffer-visiting index-file))
-         index-buffer
-         )
-
-    (unless (file-exists-p index-file)
-      (with-current-buffer (setq index-buffer (or index-visiting (find-file index-file)))
-        (erase-buffer)
-        (insert "#+TITLE: The index page")
-        (insert "\n\n")
-        (insert (format "You are visiting %s's personal site, generated by [[http://github.com/kelvinh/org-page][org-page]]." user-full-name))
-        (insert "\n\n")
-        (insert (format "This page is automatically generated by org-page, since the site's author %s did not provide a customized index page." user-full-name))
-        (insert "\n\n")
-        (insert "It is recommanded to provide a customzied index page if you are the site's owner.")
-        (insert "\n\n")
-        (insert "Or, you may prefer to visit the [[file:./sitemap.org][sitemap]], it will provide more info than this page.")
-        (save-buffer)
-        (or index-visiting (kill-buffer index-buffer))))))
-
-(defun op/publish-generate-about (project)
-  "The about file generation function"
-  (let* ((project-plist (cdr project))
-         (root-dir (file-name-as-directory (plist-get project-plist :base-directory)))
-         (about-file (concat root-dir "about.org"))
-         (about-visiting (find-buffer-visiting about-file))
-         about-buffer)
-
-    (unless (file-exists-p about-file)
-      (with-current-buffer (setq about-buffer (or about-visiting (find-file about-file)))
-        (erase-buffer)
-        (insert "#+TITLE: About")
-        (insert "\n\n")
-        (insert (format "* About %s" user-full-name))
-        (insert "\n\n")
-        (insert (format "I am org-page, [[http://github.com/kelvinh/org-page][here]] is my home, this site is generated by %s, and I provided a little help." user-full-name))
-        (insert "\n\n")
-        (insert (format "Since %s is a little lazy, he/she did not provide an about page, so I generated this page myself." user-full-name))
-        (insert "\n\n")
-        (insert (format "As a result, I did not know much about %s, I just know his/her [[mailto:%s][email]], you may contact him/her, and please tell him/her to improve this page." user-full-name (or (plist-get project-plist :email) (confound-email user-mail-address))))
-        (insert "\n\n")
-        (insert "* About me(org-page)")
-        (insert "\n\n")
-        (insert (format "I was created by [[http://github.com/kelvinh][Kelvin Hu]], in his thought, I am pretty enough, but if you think there is something can be done to make me much more beautiful, please [[mailto:%s][contact him]] to improve me, many thanks. :-)" (confound-email "ini.kelvin@gmail.com")))
-        (save-buffer)
-        (or about-visiting (kill-buffer about-buffer))))))
+    (setq op/theme 'default)))
 
 (provide 'org-page)
 

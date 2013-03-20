@@ -1,5 +1,5 @@
 (require 'op-vars)
-(require 'org-page-util)
+(require 'op-util)
 
 (defun op/verify-git-repository (repo-dir)
   "This function will verify whether REPO-DIR is a valid git repository.
