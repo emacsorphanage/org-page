@@ -23,6 +23,20 @@ instead of pointer HEAD."
                              (concat (file-name-as-directory repo-dir) line)))
                       (split-string output "\n")))))
 
+(defun op/git-change-branch (repo-dir branch-name)
+  "This function will change branch to BRANCH-NAME of git repository presented
+by REPO-DIR. Do nothing if it is current branch."
+  (let ((repo-dir (file-name-as-directory repo-dir)) output)
+    (op/verify-git-repository repo-dir)
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (setq default-directory repo-dir)
+      (shell-command (concat "git checkout " branch-name) t nil)
+      (setq output (buffer-string)))
+    (when (string-match "\\`error" output)
+      (error "Failed to change branch to '%s' of repository '%s'."
+             branch-name repo-dir))))
+
 (defun op/git-files-changed (repo-dir base-commit)
   "This function can get modified/deleted org files from git repository
 presented by REPO-DIR, diff based on BASE-COMMIT. The return value is a
