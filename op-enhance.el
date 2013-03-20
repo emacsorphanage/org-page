@@ -1,3 +1,5 @@
+;;; TODO: add some description here
+
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
   (let* ((pub-theme-dir (concat (file-name-as-directory pub-root-dir)
@@ -77,3 +79,7 @@
                    (?n . ,disqus-identifier)
                    (?u . ,disqus-url)
                    (?s . ,disqus-shortname)))))
+
+(provide 'op-enhance)
+
+;;; op-enhance.el ends here
