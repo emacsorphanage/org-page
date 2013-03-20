@@ -29,8 +29,19 @@ deleted. PUB-ROOT-DIR is the root publication directory."
               (op/handle-deleted-file org-file)))
           (or visiting (kill-buffer file-buffer)))
        all-list)
-      (op/generate-index file-attr-list pub-root-dir ext-plist)
-      (op/generate-tags file-attr-list pub-root-dir ext-plist))))
+      (unless (member
+               (concat (file-name-as-directory op/repository-directory)
+                       "index.org") ; TODO customization
+               all-list)
+        (op/generate-default-index file-attr-list pub-root-dir ext-plist))
+      (unless (member
+               (concat (file-name-as-directory op/repository-directory)
+                       "about.org") ; TODO customization
+               all-list)
+        (op/generate-default-about pub-root-dir ext-plist))
+      (op/update-category-index file-attr-list pub-root-dir ext-plist 'blog)
+      (op/update-category-index file-attr-list pub-root-dir ext-plist 'wiki)
+      (op/update-tags file-attr-list pub-root-dir ext-plist))))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
@@ -149,60 +160,110 @@ EXT-PLIST is the property list will be passed to `op/export-as-html'."
   "TODO: add logic for this function, maybe a little complex."
   )
 
-(defun op/generate-index (file-attr-list pub-base-dir ext-plist)
-  "Generate index page, FILE-ATTR-LIST is the list of all file attribute
-property lists. PUB-BASE-DIR is the root publication directory. EXT-PLIST is the
-property list will be passed to `op/export-as-html'."
-  (let ((blog-list (remove-if-not
-                    '(lambda (attr-plist)
-                       (eq 'blog (plist-get attr-plist :category)))
-                    file-attr-list))
-        (wiki-list (remove-if-not
-                    '(lambda (attr-plist)
-                       (eq 'wiki (plist-get attr-plist :category)))
-                    file-attr-list))
-        (other-list (remove-if
-                     '(lambda (attr-plist)
-                        (memq (plist-get attr-plist :category) '(wiki blog)))
-                     file-attr-list)))
+(defun op/filter-category-sorted (file-attr-list category)
+  "Filter and sort attribute property lists from FILE-ATTR-LIST specified by
+CATEGORY. CATEGORY can only be 'blog or 'wiki, others will be considered as
+'blog. Category 'blog will make the filtered list sorted by creation date, while
+'wiki makes it sorted by last modification date. Later lies headmost for both."
+  (let ((cat (if (memq category '(blog wiki)) category 'blog))
+        (sort-alist '((blog . :creation-date) (wiki . :mod-date))))
+    (sort (remove-if-not '(lambda (attr-plist)
+                            (eq cat (plist-get attr-plist :category)))
+                         file-attr-list)
+          '(lambda (plist1 plist2)
+             (<= (compare-standard-date
+                  (plist-get plist1 (cdr (assq cat sort-alist)))
+                  (plist-get plist1 (cdr (assq cat sort-alist))))
+                 0)))))
+
+(defun op/update-category-index (file-attr-list pub-base-dir ext-plist category)
+  "Update index page of category 'blog or 'wiki. FILE-ATTR-LIST is the list of
+all file attribute property lists. PUB-BASE-DIR is the root publication
+directory. EXT-PLIST is the property list will be passed to `op/export-as-html'.
+CATEGORY is 'blog or 'wiki, 'blog if nil."
+  (let* ((cat (if (memq category '(blog wiki)) category 'blog))
+         (sort-alist '((blog . :creation-date) (wiki . :mod-date)))
+         (cat-list (op/filter-category-sorted file-attr-list cat))
+         (pub-dir (file-name-as-directory
+                   (concat (file-name-as-directory pub-base-dir)
+                           (symbol-name cat)))))
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (insert "#+TITLE: Index of " (capitalize (symbol-name cat)) "\n")
+      (insert "#+OPTIONS: *:nil" "\n\n")
+      (mapc '(lambda (attr-plist)
+               (insert " - " (plist-get attr-plist (cdr (assq cat sort-alist)))
+                       "\\nbsp\\nbsp\\nbsp"
+                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                       (plist-get attr-plist :title) "@</a>" "\n"))
+            cat-list)
+      (plist-put ext-plist :html-postamble
+                 (op/generate-footer (format "/%s/" (symbol-name cat)) nil t t))
+      (op/kill-exported-buffer
+       (op/export-as-html nil nil ext-plist nil nil pub-dir)))))
+
+(defun op/generate-default-index (file-attr-list pub-base-dir ext-plist)
+  "Generate default index page, only if index.org does not exist. FILE-ATTR-LIST
+is the list of all file attribute property lists. PUB-BASE-DIR is the root
+publication directory. EXT-PLIST is the property list will be passed to
+`op/export-as-html'."
+  (let* ((blog-list (op/filter-category-sorted file-attr-list 'blog))
+        (wiki-list (op/filter-category-sorted file-attr-list 'wiki))
+        (cat-alist `((blog . ,blog-list) (wiki . ,wiki-list)))
+        category plist-key)
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
       (insert "#+TITLE: Index" "\n")
       (insert "#+OPTIONS: *:nil" "\n\n")
-      (insert " - blog" "\n")
-      (mapc '(lambda (attr-plist)
-               (insert "   - ")
-               (insert (plist-get attr-plist :creation-date)
-                       "\\nbsp\\nbsp\\nbsp"
-                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
-                       (plist-get attr-plist :title) "@</a>" "\n"))
-            blog-list)
-      (insert " - wiki" "\n")
-      (mapc '(lambda (attr-plist)
-               (insert "   - ")
-               (insert (plist-get attr-plist :mod-date)
-                       "\\nbsp\\nbsp\\nbsp"
-                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
-                       (plist-get attr-plist :title) "@</a>" "\n"))
-            wiki-list)
-      (mapc '(lambda (attr-plist)
-               (insert " - ")
-               (insert (plist-get attr-plist :creation-date)
-                       "\\nbsp\\nbsp\\nbsp"
-                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
-                       (plist-get attr-plist :title) "@</a>" "\n"))
-            other-list)
+      (mapc
+       '(lambda (cell)
+          (setq category (symbol-name (car cell)))
+          (setq plist-key
+                (if (string= category "wiki") :mod-date :creation-date))
+          (insert " - " category "\n")
+          (mapc '(lambda (attr-plist)
+                   (insert "   - " (plist-get attr-plist plist-key)
+                           "\\nbsp\\nbsp\\nbsp"
+                           "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                           (plist-get attr-plist :title) "@</a>" "\n"))
+                (cdr cell)))
+       cat-alist)
       (plist-put ext-plist :html-postamble
                  (op/generate-footer "/" nil t t))
       (op/kill-exported-buffer
        (op/export-as-html nil nil ext-plist nil nil pub-base-dir)))))
 
+(defun op/generate-default-about (pub-base-dir ext-plist)
+  "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
+is the root publication directory. EXT-PLIST is the property list will be passed
+to `op/export-as-html'."
+  (let* ((author-name (or user-full-name "[author]"))
+         (pub-dir (concat (file-name-as-directory pub-base-dir) "about/")))
+    (with-current-buffer (get-buffer-create op/temp-buffer-name)
+      (erase-buffer)
+      (insert "#+TITLE: About" "\n\n")
+      (insert (format "* About %s" author-name) "\n\n")
+      (insert (format "I am [[https://github.com/kelvinh/org-page][org-page]], \
+this site is generated by %s, and I provided a little help." author-name))
+      (insert "\n\n")
+      (insert (format "Since %s is a little lazy, he/she did not provide an \
+about page, so I generated this page myself." author-name))
+      (insert "\n\n")
+      (insert "* About me(org-page)" "\n\n")
+      (insert (format "[[https://github.com/kelvinh][Kelvin Hu]] is my \
+creator, please [[mailto:%s][contact him]] if you find there is something need \
+to improve, many thanks. :-)" (confound-email "ini.kelvin@gmail.com")))
+      (plist-put ext-plist :html-postamble
+                 (op/generate-footer "/about/" nil t t))
+      (op/kill-exported-buffer
+       (op/export-as-html nil nil ext-plist nil nil pub-dir)))))
+
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
   (concat "/tags/" (convert-string-to-path tag-name) "/"))
 
-(defun op/generate-tags (file-attr-list pub-base-dir ext-plist)
-  "Generate tag pages. FILE-ATTR-LIST is the list of all file attribute property
+(defun op/update-tags (file-attr-list pub-base-dir ext-plist)
+  "Update tag pages. FILE-ATTR-LIST is the list of all file attribute property
 lists. PUB-BASE-DIR is the root publication directory. EXT-PLIST is the property
 list will be passed to `op/export-as-html'.
 TODO: improve this function."
@@ -223,8 +284,7 @@ TODO: improve this function."
       (insert "#+TITLE: Tag Index" "\n")
       (insert "#+OPTIONS: *:nil" "\n\n")
       (mapc '(lambda (tag-list)
-               (insert " - ")
-               (insert "@<a href=\""
+               (insert " - " "@<a href=\""
                        (op/generate-tag-uri (car tag-list))
                        "\">" (car tag-list)
                        " (" (number-to-string (length (cdr tag-list))) ")"
@@ -243,8 +303,7 @@ TODO: improve this function."
           (insert "#+TITLE: Tag " (car tag-list) "\n")
           (insert "#+OPTIONS: *:nil" "\n\n")
           (mapc '(lambda (attr-plist)
-                   (insert " - ")
-                   (insert "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                   (insert " - " "@<a href=\"" (plist-get attr-plist :uri) "\">"
                            (plist-get attr-plist :title) "@</a>" "\n"))
                 (cdr tag-list))
           (setq tag-dir (concat tag-base-dir
