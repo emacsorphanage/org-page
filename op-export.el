@@ -1,4 +1,4 @@
-(require 'org-page-util)
+(require 'op-util)
 
 (defun op/publish-changes (all-list change-plist pub-root-dir)
   "This function is for:

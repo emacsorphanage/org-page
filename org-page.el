@@ -95,7 +95,7 @@
 
 ;;; Code:
 
-(require 'org-page-util)
+(require 'op-util)
 
 (defun op/do-publication (pub-base-dir &optional base-git-commit)
   "The main entrance of org-page, PUB-BASE-DIR is the directory where published
