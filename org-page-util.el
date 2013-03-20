@@ -27,7 +27,7 @@
 ;;; Code:
 
 (defun compare-standard-date (date1 date2)
-  "this function compares two standard ISO 8601 format dates, format is as below:
+  "Compare two standard ISO 8601 format dates, format is as below:
 2012-08-17
 1. if date1 is earlier than date2, returns 1
 2. if equal, returns 0
@@ -40,17 +40,13 @@
          (year2 (nth 5 date-list2))
          (month2 (nth 4 date-list2))
          (day2 (nth 3 date-list2)))
-    (cond
-     ((< year1 year2) 1)
-     ((> year1 year2) -1)
-     (t (cond
-         ((< month1 month2) 1)
-         ((> month1 month2) -1)
-         (t (cond
-             ((< day1 day2) 1)
-             ((> day1 day2) -1)
-             (t 0)
-             )))))))
+    (cond ((< year1 year2) 1)
+          ((> year1 year2) -1)
+          (t (cond ((< month1 month2) 1)
+                   ((> month1 month2) -1)
+                   (t (cond ((< day1 day2) 1)
+                            ((> day1 day2) -1)
+                            (t 0))))))))
 
 (defun fix-timestamp-string (date-string)
   "this is a piece code copied from Xah Lee (I modified a little):
