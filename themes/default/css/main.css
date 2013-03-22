@@ -18,20 +18,27 @@ body {
 }
 #preamble {
     border-bottom: 1px solid #DDDDDD;
-    height: 30px;
-    line-height: 30px;
+    height: 60px;
     padding: 30px 0;
     width: 800px;
     margin: 0 auto;
 }
-#preamble h1 {
+#header {
     float: left;
+    height: 60px;
+}
+#header > h1 {
     font-size: 30px;
     font-weight: 300;
+}
+#header > h2 {
+    font-size: 17px;
+    font-weight: 100;
 }
 #main-nav {
     float: left;
     margin-left: 30px;
+    line-height: 60px;
 }
 #main-nav > ul li {
     position: relative;
@@ -50,7 +57,6 @@ a {
     transition: color 0.3s ease 0s;
 }
 #main-nav > ul > li > a {
-    margin-top: -38px;
     padding: 38px 0;
 }
 #main-nav > ul > li > a:after {
@@ -65,6 +71,7 @@ a {
 }
 .align-right {
     float: right;
+    line-height: 60px;
 }
 #sub-nav .social {
     float: left;
@@ -101,7 +108,7 @@ a {
 }
 #sub-nav .search {
     float: left;
-    margin-top: 1px;
+    margin-top: 15px;
     position: relative;
 }
 #sub-nav .search input[type="text"] {
