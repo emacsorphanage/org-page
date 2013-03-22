@@ -11,7 +11,10 @@ deleted. PUB-ROOT-DIR is the root publication directory."
          (del-list (plist-get change-plist :delete))
          (header (op/generate-page-header))
          (style (op/generate-style))
-         (ext-plist `(:style ,style :html-preamble ,header))
+         (ext-plist `(:style ,style
+                      :html-preamble ,header
+                      :style-include-default nil
+                      :style-include-scripts nil))
          visiting file-buffer file-attr-list)
     (when (or upd-list del-list)
       (mapc
