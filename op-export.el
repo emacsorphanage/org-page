@@ -187,7 +187,7 @@ CATEGORY is 'blog or 'wiki, 'blog if nil."
                            (symbol-name cat)))))
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
-      (insert "#+TITLE: Index of " (capitalize (symbol-name cat)) "\n")
+      (insert "#+TITLE: " (capitalize (symbol-name cat)) " Index" "\n")
       (insert "#+OPTIONS: *:nil" "\n\n")
       (mapc '(lambda (attr-plist)
                (insert " - " (plist-get attr-plist (cdr (assq cat sort-alist)))
