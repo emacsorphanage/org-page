@@ -272,10 +272,14 @@ PUB-DIR is set, use this as the publishing directory."
                       (cdr (assoc "html" org-export-html-xml-declaration))
 
                       "")
-                  (or charset "iso-8859-1"))
+                  ;; HACK: use utf-8 instead of iso-8859-1
+                  ;(or charset "iso-8859-1"))
+                  (or charset "utf-8"))
                  language language
                  title
-                 (or charset "iso-8859-1")
+                 ;; HACK: use utf-8 instead of iso-8859-1
+                 ;(or charset "iso-8859-1")
+                 (or charset "utf-8")
                  title date author description keywords
                  style
                  mathjax
