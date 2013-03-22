@@ -301,7 +301,7 @@ TODO: improve this function."
      '(lambda (tag-list)
         (with-current-buffer (get-buffer-create op/temp-buffer-name)
           (erase-buffer)
-          (insert "#+TITLE: Tag " (car tag-list) "\n")
+          (insert "#+TITLE: Tag: " (car tag-list) "\n")
           (insert "#+OPTIONS: *:nil" "\n\n")
           (mapc '(lambda (attr-plist)
                    (insert " - " "@<a href=\"" (plist-get attr-plist :uri) "\">"
