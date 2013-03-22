@@ -95,8 +95,8 @@
 
 ;;; Code:
 
-(require 'op-vars)
 (require 'op-util)
+(require 'op-vars)
 (require 'op-git)
 (require 'op-enhance)
 (require 'op-export)
