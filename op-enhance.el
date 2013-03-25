@@ -53,19 +53,19 @@ new theme."
   (setq theme (symbol-name theme))
   (setq op/html-header-template
         (file-to-string
-         (concat (file-name-directory load-file-name)
+         (concat op/load-directory
                  (format "templates/html/%s/header-template.html" theme))))
   (setq op/meta-info
         (file-to-string
-         (concat (file-name-directory load-file-name)
+         (concat op/load-directory
                  (format "templates/html/%s/meta-info-template.html" theme))))
   (setq op/comment
         (file-to-string
-         (concat (file-name-directory load-file-name)
+         (concat op/load-directory
                  (format "templates/html/%s/comment-template.html" theme))))
   (setq op/footer
         (file-to-string
-         (concat (file-name-directory load-file-name)
+         (concat op/load-directory
                  (format "templates/html/%s/footer-template.html" theme))))
   (setq op/html-postamble-template
         (concat op/meta-info op/comment op/footer)))

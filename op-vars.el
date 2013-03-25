@@ -54,12 +54,21 @@
 (defconst op/temp-buffer-name "*Org Page Output*"
   "Name of the temporary buffer used by org-page.")
 
+(defconst op/load-directory
+  (cond
+   (load-file-name (file-name-directory load-file-name))
+   ((symbol-file 'op/temp-buffer-name)
+    (file-name-directory (symbol-file 'op/temp-buffer-name)))
+   ((string= (file-name-nondirectory buffer-file-name) "op-vars.el")
+    (file-name-directory buffer-file-name))
+   (t nil))
+  "The directory where org-page is loaded from.")
+
 (defcustom op/repository-directory nil
   "The git repository directory, where org files stored on branch
 `op/repository-org-branch', and generated html files stored on branch
 `op/repository-html-branch'."
-  :group 'org-page
-  :type 'string)
+  :group 'org-page :type 'string)
 
 (defcustom op/site-url nil
   "The domain name of entire site, it is recommended to assign with prefix
@@ -85,8 +94,7 @@ presented by `op/repository-directory'."
   :group 'org-page :type 'string)
 
 (defcustom op/theme-directory
-  (concat (file-name-directory (or load-file-name
-                                   (buffer-file-name))) "themes/")
+  (expand-file-name "themes/" op/load-directory)
   "The directory stores org-page styles/scripts/images."
   :group 'org-page :type 'string)
 
@@ -95,7 +103,7 @@ presented by `op/repository-directory'."
   :group 'org-page :type 'symbol)
 
 (defcustom op/html-header-template
-  (file-to-string (concat (file-name-directory load-file-name)
+  (file-to-string (concat op/load-directory
                           (format "templates/html/%s/header-template.html"
                                   (symbol-name (or op/theme 'default)))))
   "The template used to construct page header, below parameters can be used:
@@ -114,7 +122,7 @@ presented by `op/repository-directory'."
   :group 'org-page :type 'list)
 
 (defcustom op/meta-info
-  (file-to-string (concat (file-name-directory load-file-name)
+  (file-to-string (concat op/load-directory
                           (format "templates/html/%s/meta-info-template.html"
                                   (symbol-name (or op/theme 'default)))))
   "Meta info of current post, will be used to compose
@@ -123,7 +131,7 @@ detailed information."
   :group 'org-page :type 'string)
 
 (defcustom op/comment
-  (file-to-string (concat (file-name-directory load-file-name)
+  (file-to-string (concat op/load-directory
                           (format "templates/html/%s/comment-template.html"
                                   (symbol-name (or op/theme 'default)))))
   "Comment section of current post, will be used to compose
@@ -132,7 +140,7 @@ detailed information."
   :group 'org-page :type 'string)
 
 (defcustom op/footer
-  (file-to-string (concat (file-name-directory load-file-name)
+  (file-to-string (concat op/load-directory
                           (format "templates/html/%s/footer-template.html"
                                   (symbol-name (or op/theme 'default)))))
   "Footer of current post, will be used to compose
