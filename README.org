@@ -9,10 +9,6 @@
 
   Org-page is a static page generator based on [[http://orgmode.org/][org-mode]].
 
-  @<del>Org-page is designed to enhance the org publish process(only improve the
-  html format), actually the publish process of org mode is already simple and
-  powerful enough, but org-page can make it simpler and more powerful.@</del>
-
   From v0.3, org-page is not just an enhancement for org publish process, since
   org publish process is designed for general publication, it is not only for
   html generation. But what we need, is only html generation with highly
