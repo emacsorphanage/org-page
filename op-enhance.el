@@ -36,12 +36,39 @@
     (unless (file-directory-p theme-dir)
       (message "Theme %s not found, use `default' theme instead."
                (symbol-name op/theme))
+      (setq op/theme 'default)
       (setq theme-dir (file-name-as-directory
                        (concat (file-name-as-directory op/theme-directory)
-                               (symbol-name 'default)))))
+                               (symbol-name op/theme)))))
+    (op/update-theme op/theme)
     (when (file-directory-p pub-theme-dir)
       (delete-directory pub-theme-dir t))
     (copy-directory theme-dir pub-theme-dir t t t)))
+
+(defun op/update-theme (theme)
+  "Update theme related variables, to make them take effect after user used a
+new theme."
+  (unless theme
+    (setq theme 'default))
+  (setq theme (symbol-name theme))
+  (setq op/html-header-template
+        (file-to-string
+         (concat (file-name-directory load-file-name)
+                 (format "templates/html/%s/header-template.html" theme))))
+  (setq op/meta-info
+        (file-to-string
+         (concat (file-name-directory load-file-name)
+                 (format "templates/html/%s/meta-info-template.html" theme))))
+  (setq op/comment
+        (file-to-string
+         (concat (file-name-directory load-file-name)
+                 (format "templates/html/%s/comment-template.html" theme))))
+  (setq op/footer
+        (file-to-string
+         (concat (file-name-directory load-file-name)
+                 (format "templates/html/%s/footer-template.html" theme))))
+  (setq op/html-postamble-template
+        (concat op/meta-info op/comment op/footer)))
 
 (defun op/generate-page-header ()
   "Generate page header, based on the template defined by
