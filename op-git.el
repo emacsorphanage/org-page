@@ -1,3 +1,31 @@
+;;; op-git.el --- git related functions required by org-page
+
+;; Copyright (C) 2012, 2013 Kelvin Hu
+
+;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
+;; Keywords: convenience
+;; Homepage: https://github.com/kelvinh/org-page
+;; Version: 0.3
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; git repository operation functions
+
+;;; Code:
+
 (defun op/verify-git-repository (repo-dir)
   "This function will verify whether REPO-DIR is a valid git repository.
 TODO: may add branch/commit verification later."
