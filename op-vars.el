@@ -1,4 +1,51 @@
-;;; TODO: add some description here
+;;; op-vars.el --- Variable configurations required by org-page
+
+;; Copyright (C) 2012, 2013 Kelvin Hu
+
+;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
+;; Keywords: convenience
+;; Homepage: https://github.com/kelvinh/org-page
+;; Version: 0.3
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; op-vars.el contains almost all variable definitions and configurations.
+;;
+;; As described in `org-page.el', most variables will work with default
+;; values, but you can configure them for more customization. You could
+;; visit each variable's description for its usage.
+;;
+;; Three variables are required to configure:
+;;
+;; 1.`op/repository-directory'
+;; 2. `op/site-url'
+;; 3. `op/personal-disqus-shortname'
+;;
+;; Six variables are recommended to do customization:
+;;
+;; 1. `op/repository-org-branch'
+;; 2. `op/repository-html-branch'
+;; 3. `op/site-main-title'
+;; 4. `op/site-sub-title'
+;; 5. `op/email'
+;; 6. `op/personal-github-link'
+;;
+;; If you perfer another theme, you may need to change `op/theme'.
+
+;;; Code:
 
 (defgroup org-page nil
   "Options for generating static pages using org-page."
