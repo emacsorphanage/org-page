@@ -30,8 +30,7 @@
   "This function will verify whether REPO-DIR is a valid git repository.
 TODO: may add branch/commit verification later."
   (unless (and (file-directory-p repo-dir)
-               (file-directory-p (concat (file-name-as-directory repo-dir)
-                                         ".git/")))
+               (file-directory-p (expand-file-name ".git/" repo-dir)))
     (error "Fatal: `%s' is not a valid git repository." repo-dir)))
 
 (defun op/git-all-files (repo-dir &optional branch)
@@ -47,8 +46,8 @@ instead of pointer HEAD."
                              (or branch "HEAD")) t nil)
       (setq output (buffer-string)))
     (delq nil (mapcar '(lambda (line)
-                         (if (string-suffix-p org-file-ext line t)
-                             (concat (file-name-as-directory repo-dir) line)))
+                         (when (string-suffix-p org-file-ext line t)
+                           (expand-file-name line repo-dir)))
                       (split-string output "\n")))))
 
 (defun op/git-branch-name (repo-dir)

@@ -58,14 +58,12 @@ deleted. PUB-ROOT-DIR is the root publication directory."
               (op/handle-deleted-file org-file)))
           (or visiting (kill-buffer file-buffer)))
        all-list)
-      (unless (member
-               (concat (file-name-as-directory op/repository-directory)
-                       "index.org") ; TODO customization
+      (unless (member ; TODO customization
+               (expand-file-name "index.org" op/repository-directory)
                all-list)
         (op/generate-default-index file-attr-list pub-root-dir ext-plist))
-      (unless (member
-               (concat (file-name-as-directory op/repository-directory)
-                       "about.org") ; TODO customization
+      (unless (member ; TODO customization
+               (expand-file-name "about.org" op/repository-directory)
                all-list)
         (op/generate-default-about pub-root-dir ext-plist))
       (op/update-category-index file-attr-list pub-root-dir ext-plist 'blog)
@@ -112,17 +110,10 @@ The URI-TEMPLATE can contain following parameters:
 How to judge a file's category is based on its name and its root folder name
 under `op/repository-directory'.
 TODO: This function may be improved to have a better type determination system."
-  (let ((full-path (expand-file-name org-file))
-        (wiki-prefix-path (expand-file-name
-                           (concat
-                            (file-name-as-directory op/repository-directory)
-                            "wiki/"))) ; TODO customization
-        (index-path (expand-file-name (concat (file-name-as-directory
-                                               op/repository-directory)
-                                              "index.org"))) ; TODO customization
-        (about-path (expand-file-name (concat (file-name-as-directory
-                                               op/repository-directory)
-                                              "about.org")))) ; TODO customization
+  (let ((full-path (expand-file-name org-file)) ; TODO customization
+        (wiki-prefix-path (expand-file-name "wiki/" op/repository-directory))
+        (index-path (expand-file-name "index.org" op/repository-directory))
+        (about-path (expand-file-name "about.org" op/repository-directory)))
     (cond
      ((string= index-path full-path) 'index)
      ((string= about-path full-path) 'about)
@@ -214,8 +205,7 @@ CATEGORY is 'blog or 'wiki, 'blog if nil."
          (sort-alist '((blog . :creation-date) (wiki . :mod-date)))
          (cat-list (op/filter-category-sorted file-attr-list cat))
          (pub-dir (file-name-as-directory
-                   (concat (file-name-as-directory pub-base-dir)
-                           (symbol-name cat)))))
+                   (expand-file-name (symbol-name cat) pub-base-dir))))
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
       (insert "#+TITLE: " (capitalize (symbol-name cat)) " Index" "\n")
@@ -267,7 +257,7 @@ publication directory. EXT-PLIST is the property list will be passed to
 is the root publication directory. EXT-PLIST is the property list will be passed
 to `op/export-as-html'."
   (let* ((author-name (or user-full-name "[author]"))
-         (pub-dir (concat (file-name-as-directory pub-base-dir) "about/")))
+         (pub-dir (expand-file-name "about/" pub-base-dir)))
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
       (insert "#+TITLE: About" "\n\n")
@@ -296,7 +286,7 @@ to improve, many thanks. :-)" (confound-email "ini.kelvin@gmail.com")))
 lists. PUB-BASE-DIR is the root publication directory. EXT-PLIST is the property
 list will be passed to `op/export-as-html'.
 TODO: improve this function."
-  (let ((tag-base-dir (concat (file-name-as-directory pub-base-dir) "tags/"))
+  (let ((tag-base-dir (expand-file-name "tags/" pub-base-dir))
         tag-alist tag-list tag-dir)
     (mapc
      '(lambda (attr-plist)
