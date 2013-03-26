@@ -136,7 +136,7 @@ recommended to use #+DATE."
          (file-attrs (file-attributes filename))
          (fcdate (format-time-string "%Y-%m-%d" (nth 6 file-attrs)))
          (mdate (format-time-string "%Y-%m-%d" (nth 5 file-attrs)))
-         (attr-plist `(:creation-date ,fcdate :mod-date ,mdate :tags nil))
+         (attr-plist `(:creation-date ,fcdate :mod-date ,mdate :tags ,nil))
          opt-plist tags cdate)
 
     (setq opt-plist (org-infile-export-plist))
