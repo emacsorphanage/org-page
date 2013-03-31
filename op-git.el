@@ -33,18 +33,29 @@ TODO: may add branch/commit verification later."
                (file-directory-p (expand-file-name ".git/" repo-dir)))
     (error "Fatal: `%s' is not a valid git repository." repo-dir)))
 
+(defun op/shell-command (dir command &optional need-git)
+  "This function execute some shell command in a specified directory.
+
+If NEED-GIT is not nil, then dir must be a git repository.
+COMMAND is just a string."
+  (if need-git
+      (op/verify-git-repository dir))
+  (with-current-buffer (get-buffer-create op/temp-buffer-name)
+    (erase-buffer)
+    (setq default-directory (file-name-as-directory dir))
+    (shell-command command t nil)
+    (buffer-string)))
+
 (defun op/git-all-files (repo-dir &optional branch)
   "This function will return a list contains all org files in git repository
 presented by REPO-DIR, if optional BRANCH is offered, will check that branch
 instead of pointer HEAD."
-  (let ((org-file-ext ".org") output)
-    (op/verify-git-repository repo-dir)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (setq default-directory (file-name-as-directory repo-dir))
-      (shell-command (concat "git ls-tree -r --name-only "
-                             (or branch "HEAD")) t nil)
-      (setq output (buffer-string)))
+  (let ((org-file-ext ".org")
+        (output (op/shell-command
+                 repo-dir
+                 (concat "git ls-tree -r --name-only "
+                         (or branch "HEAD"))
+                 t)))
     (delq nil (mapcar '(lambda (line)
                          (when (string-suffix-p org-file-ext line t)
                            (expand-file-name line repo-dir)))
@@ -52,25 +63,21 @@ instead of pointer HEAD."
 
 (defun op/git-branch-name (repo-dir)
   "Return name of current branch of git repository presented by REPO-DIR."
-  (let ((repo-dir (file-name-as-directory repo-dir)) output)
-    (op/verify-git-repository repo-dir)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (setq default-directory repo-dir)
-      (shell-command "git rev-parse --abbrev-ref HEAD" t nil)
-      (setq output (buffer-string)))
+  (let ((repo-dir (file-name-as-directory repo-dir))
+        (output (op/shell-command
+                 repo-dir
+                 "git rev-parse --abbrev-ref HEAD"
+                 t)))
     (replace-regexp-in-string "[\n\r]" "" output)))
 
 (defun op/git-change-branch (repo-dir branch-name)
   "This function will change branch to BRANCH-NAME of git repository presented
 by REPO-DIR. Do nothing if it is current branch."
-  (let ((repo-dir (file-name-as-directory repo-dir)) output)
-    (op/verify-git-repository repo-dir)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (setq default-directory repo-dir)
-      (shell-command (concat "git checkout " branch-name) t nil)
-      (setq output (buffer-string)))
+  (let ((repo-dir (file-name-as-directory repo-dir))
+        (output (op/shell-command
+                 repo-dir
+                 (concat "git checkout " branch-name)
+                 t)))
     (when (string-match "\\`error" output)
       (error "Failed to change branch to '%s' of repository '%s'."
              branch-name repo-dir))))
@@ -79,14 +86,11 @@ by REPO-DIR. Do nothing if it is current branch."
   "This function will commit uncommitted changes to git repository presented by
 REPO-DIR, MESSAGE is the commit message."
   (let ((repo-dir (file-name-as-directory repo-dir)) output)
-    (op/verify-git-repository repo-dir)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (setq default-directory repo-dir)
-      (erase-buffer)
-      (shell-command "git add ." t nil)
-      (erase-buffer)
-      (shell-command (format "git commit -m \"%s\"" message) t nil)
-      (setq output (buffer-string)))
+    (op/shell-command repo-dir "git add ." t)
+    (setq output
+          (op/shell-command repo-dir
+                            (format "git commit -m \"%s\"" message)
+                            t))
     (when (not (string-match "\\[.* .*\\]" output))
       (error "Failed to commit changes on current branch of repository '%s'."
              repo-dir))))
@@ -101,14 +105,12 @@ only two types will work well: need to publish or need to delete.
 <TODO>: robust enhance, branch check, etc."
   (let ((org-file-ext ".org")
         (repo-dir (file-name-as-directory repo-dir))
-        output upd-list del-list)
-    (op/verify-git-repository repo-dir)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (setq default-directory repo-dir)
-      (shell-command (concat "git diff --name-status "
-                             base-commit " HEAD") t nil)
-      (setq output (buffer-string)))
+        (output (op/shell-command
+                 repo-dir
+                 (concat "git diff --name-status "
+                         base-commit " HEAD")
+                 t))
+        upd-list del-list)
     (mapc '(lambda (line)
              (if (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" line)
                  (setq upd-list (cons (concat repo-dir (match-string 1 line))

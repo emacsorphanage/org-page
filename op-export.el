@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'format-spec)
+
 (defun op/publish-changes (all-list change-plist pub-root-dir)
   "This function is for:
 1. publish changed org files to html
