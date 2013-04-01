@@ -96,12 +96,12 @@ The URI-TEMPLATE can contain following parameters:
   (let* ((date-list (split-string creation-date "-"))
          (encoded-title (convert-string-to-path title))
          uri)
-    (setq uri (or uri-template
-                  (cond
-                   ((eq category 'index) "/")
-                   ((eq category 'about) "/about/") ; TODO customization
-                   ((eq category 'wiki) (concat "/wiki/" encoded-title "/"))
-                   (t (concat "/blog/%y/%m/%d/" encoded-title "/"))))) ; TODO customization
+    (setq uri (cond
+               ((eq category 'index) "/")
+               ((eq category 'about) "/about/") ; TODO customization
+               (uri-template uri-template)
+               ((eq category 'wiki) (concat "/wiki/" encoded-title "/"))
+               (t (concat "/blog/%y/%m/%d/" encoded-title "/")))) ; TODO customization
     (format-spec uri `((?y . ,(car date-list))
                        (?m . ,(cadr date-list))
                        (?d . ,(caddr date-list))))))
