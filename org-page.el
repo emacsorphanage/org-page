@@ -102,7 +102,7 @@ careful, this feature is NOT recommended, and a manual commit is much better"
     (op/prepare-theme store-dir)
     (op/publish-changes (op/git-all-files op/repository-directory)
                         (op/git-files-changed
-                         op/repository-directory (or base-git-commit "HEAD^1"))
+                         op/repository-directory (or base-git-commit "HEAD~1"))
                         store-dir)
     (when to-repo
       (op/git-change-branch op/repository-directory op/repository-html-branch)
