@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'format-spec)
+
 (defun op/export-as-html (arg &optional hidden ext-plist
                               to-buffer body-only pub-dir)
   "This function is the hacked version of `org-export-as-html', to make it meet

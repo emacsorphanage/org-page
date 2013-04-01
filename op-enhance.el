@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'format-spec)
+
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
   (let* ((pub-theme-dir (expand-file-name "media/" pub-root-dir))
