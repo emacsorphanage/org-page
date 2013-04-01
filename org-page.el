@@ -89,6 +89,10 @@ to store the generated html files, otherwise html files will be stored on branch
 4) if PUB-BASE-DIR is nil, and auto-commit is non-nil, then the changes stored
 on branch `op/repository-html-branch' will be automatically committed, but be
 careful, this feature is NOT recommended, and a manual commit is much better"
+  (interactive
+   (list (read-string "Base git commit: " "HEAD~1")
+         (read-directory-name "Publication directory: ")
+         (y-or-n-p "Auto commit to repo? ")))
   (op/verify-configuration)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
         (to-repo (not (stringp pub-base-dir)))
