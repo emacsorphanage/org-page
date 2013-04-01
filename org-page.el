@@ -91,7 +91,8 @@ on branch `op/repository-html-branch' will be automatically committed, but be
 careful, this feature is NOT recommended, and a manual commit is much better"
   (interactive
    (list (read-string "Base git commit: " "HEAD~1")
-         (read-directory-name "Publication directory: ")
+         (when (y-or-n-p "Publish to a directory? (to original repo if not) ")
+           (read-directory-name "Publication directory: "))
          (y-or-n-p "Auto commit to repo? ")))
   (op/verify-configuration)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
