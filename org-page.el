@@ -76,7 +76,6 @@
 (require 'op-export)
 (require 'op-hack)
 
-
 (defun op/do-publication (&optional base-git-commit pub-base-dir auto-commit)
   "The main entrance of org-page. The entire procedure is:
 1) verify configuration
@@ -114,6 +113,15 @@ files, committed by org-page.")
       (op/git-change-branch op/repository-directory orig-branch))
     (message "Publication finished: on branch '%s' of repository '%s'."
              op/repository-html-branch op/repository-directory)))
+
+(defun op/do-republish-all (&optional pub-base-dir auto-commit)
+  (interactive
+   (list (when (y-or-n-p "Publish to a directory? (to original repo if not) ")
+           (read-directory-name "Publication directory: "))
+         (y-or-n-p "Auto commit to repo? ")))
+  (op/do-publication (op/git-first-commit op/repository-directory)
+                     pub-base-dir
+                     auto-commit))
 
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:

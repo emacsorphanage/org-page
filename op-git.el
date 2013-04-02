@@ -70,6 +70,22 @@ instead of pointer HEAD."
                  t)))
     (replace-regexp-in-string "[\n\r]" "" output)))
 
+(defun op/git-first-commit (repo-dir)
+  "Return the first commit of the entire git repository.
+
+Actually, a git repo could have more than one root commit when using subtree
+merge, see
+http://stackoverflow.com/questions/5188914/how-to-show-first-commit-by-git-log
+for details. Thus republish all by finding the first git commit is not a final
+way in the long run"
+  (let ((repo-dir (file-name-as-directory repo-dir))
+        (output (op/shell-command
+                 repo-dir
+                 "git log --oneline | tail -n 1 | cut -d' ' -f1"
+                 t)))
+    (replace-regexp-in-string "[\n\r]" "" output)))
+
+
 (defun op/git-change-branch (repo-dir branch-name)
   "This function will change branch to BRANCH-NAME of git repository presented
 by REPO-DIR. Do nothing if it is current branch."
