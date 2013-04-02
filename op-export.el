@@ -93,9 +93,9 @@ The URI-TEMPLATE can contain following parameters:
 %y: year of creation date
 %m: month of creation date
 %d: day of creation date"
-  (let* ((date-list (split-string creation-date "-"))
-         (encoded-title (convert-string-to-path title))
-         uri)
+  (let ((date-list (split-string creation-date "-"))
+        (encoded-title (convert-string-to-path title))
+        uri)
     (setq uri (cond
                ((eq category 'index) "/")
                ((eq category 'about) "/about/") ; TODO customization
@@ -258,8 +258,8 @@ publication directory. EXT-PLIST is the property list will be passed to
   "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
 is the root publication directory. EXT-PLIST is the property list will be passed
 to `op/export-as-html'."
-  (let* ((author-name (or user-full-name "[author]"))
-         (pub-dir (expand-file-name "about/" pub-base-dir)))
+  (let ((author-name (or user-full-name "[author]"))
+        (pub-dir (expand-file-name "about/" pub-base-dir)))
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
       (insert "#+TITLE: About" "\n\n")
