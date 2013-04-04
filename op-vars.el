@@ -117,10 +117,6 @@ presented by `op/repository-directory'."
 %u: the url of current site, used for search (defined by `op/site-url')"
   :group 'org-page :type 'string)
 
-(defcustom op/css-list '("main.css")
-  "CSS style file name list, will using uri \"/media/css/<name>\"."
-  :group 'org-page :type 'list)
-
 (defcustom op/meta-info
   (file-to-string (concat op/load-directory
                           (format "templates/html/%s/meta-info-template.html"
