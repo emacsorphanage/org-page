@@ -118,7 +118,6 @@ files, committed by org-page.")
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:
 `op/repository-directory': <required>
-`op/theme-directory': <required> (but do not need user to configure)
 `op/site-url': <required>
 `op/personal-disqus-shortname': <required>
 `op/repository-org-branch': [optional] (but customization recommended)
@@ -133,11 +132,10 @@ files, committed by org-page.")
                (file-directory-p op/repository-directory))
     (error "Directory `%s' is not properly configured."
            (symbol-name 'op/repository-directory)))
-  (unless (and op/theme-directory
-               (file-directory-p op/theme-directory))
+  (unless (file-directory-p (op/get-theme-dir op/theme))
     (error "Org-page cannot detect theme directory `%s' automatically, please \
 help configure it manually, usually it should be <org-page directory>/themes/."
-           (symbol-name 'op/theme-directory)))
+           (symbol-name 'op/theme)))
   (unless op/site-url
     (error "Site url `%s' is not properly configured."
            (symbol-name 'op/site-url)))
