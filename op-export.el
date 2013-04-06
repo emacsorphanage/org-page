@@ -218,6 +218,8 @@ CATEGORY is 'blog or 'wiki, 'blog if nil."
                        "@<a href=\"" (plist-get attr-plist :uri) "\">"
                        (plist-get attr-plist :title) "@</a>" "\n"))
             cat-list)
+      (unless (file-directory-p pub-dir)
+        (mkdir pub-dir t))
       (plist-put ext-plist :html-postamble
                  (op/generate-footer (format "/%s/" (symbol-name cat)) nil t t))
       (op/kill-exported-buffer
