@@ -110,6 +110,29 @@ files, committed by org-page.")
     (message "Publication finished: on branch '%s' of repository '%s'."
              op/repository-html-branch op/repository-directory)))
 
+(defun op/republish-all (&optional pub-base-dir auto-commit)
+  "This function is like `op/do-publication', but it publishes all org files,
+while the latter publishes files changed between two commits."
+  (op/verify-configuration)
+  (let* ((orig-branch (op/git-branch-name op/repository-directory))
+         (to-repo (not (stringp pub-base-dir)))
+         (store-dir (if to-repo "~/.op-tmp/" pub-base-dir)) ; TODO customization
+         all-files)
+    (op/git-change-branch op/repository-directory op/repository-org-branch)
+    (op/prepare-theme store-dir)
+    (setq all-files (op/git-all-files op/repository-directory))
+    (op/publish-changes all-files `(:update ,all-files :delete nil) store-dir)
+    (when to-repo
+      (op/git-change-branch op/repository-directory op/repository-html-branch)
+      (copy-directory store-dir op/repository-directory t t t)
+      (delete-directory store-dir t))
+    (when (and to-repo auto-commit)
+      (op/git-commit-changes op/repository-directory "Update published html \
+files, committed by org-page.")
+      (op/git-change-branch op/repository-directory orig-branch))
+    (message "Publication finished: on branch '%s' of repository '%s'."
+             op/repository-html-branch op/repository-directory)))
+
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:
 `op/repository-directory': <required>
