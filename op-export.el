@@ -93,15 +93,15 @@ The URI-TEMPLATE can contain following parameters:
 %y: year of creation date
 %m: month of creation date
 %d: day of creation date"
-  (let* ((date-list (split-string creation-date "-"))
-         (encoded-title (convert-string-to-path title))
-         uri)
-    (setq uri (or uri-template
-                  (cond
-                   ((eq category 'index) "/")
-                   ((eq category 'about) "/about/") ; TODO customization
-                   ((eq category 'wiki) (concat "/wiki/" encoded-title "/"))
-                   (t (concat "/blog/%y/%m/%d/" encoded-title "/"))))) ; TODO customization
+  (let ((date-list (split-string creation-date "-"))
+        (encoded-title (convert-string-to-path title))
+        uri)
+    (setq uri (cond
+               ((eq category 'index) "/")
+               ((eq category 'about) "/about/") ; TODO customization
+               (uri-template uri-template)
+               ((eq category 'wiki) (concat "/wiki/" encoded-title "/"))
+               (t (concat "/blog/%y/%m/%d/" encoded-title "/")))) ; TODO customization
     (format-spec uri `((?y . ,(car date-list))
                        (?m . ,(cadr date-list))
                        (?d . ,(caddr date-list))))))
@@ -138,7 +138,7 @@ recommended to use #+DATE."
          (file-attrs (file-attributes filename))
          (fcdate (format-time-string "%Y-%m-%d" (nth 6 file-attrs)))
          (mdate (format-time-string "%Y-%m-%d" (nth 5 file-attrs)))
-         (attr-plist `(:creation-date ,fcdate :mod-date ,mdate :tags nil))
+         (attr-plist `(:creation-date ,fcdate :mod-date ,mdate :tags ,nil))
          opt-plist tags cdate)
 
     (setq opt-plist (org-infile-export-plist))
@@ -260,8 +260,8 @@ publication directory. EXT-PLIST is the property list will be passed to
   "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
 is the root publication directory. EXT-PLIST is the property list will be passed
 to `op/export-as-html'."
-  (let* ((author-name (or user-full-name "[author]"))
-         (pub-dir (expand-file-name "about/" pub-base-dir)))
+  (let ((author-name (or user-full-name "[author]"))
+        (pub-dir (expand-file-name "about/" pub-base-dir)))
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
       (insert "#+TITLE: About" "\n\n")

@@ -89,6 +89,11 @@ to store the generated html files, otherwise html files will be stored on branch
 4) if PUB-BASE-DIR is nil, and auto-commit is non-nil, then the changes stored
 on branch `op/repository-html-branch' will be automatically committed, but be
 careful, this feature is NOT recommended, and a manual commit is much better"
+  (interactive
+   (list (read-string "Base git commit: " "HEAD~1")
+         (when (y-or-n-p "Publish to a directory? (to original repo if not) ")
+           (read-directory-name "Publication directory: "))
+         (y-or-n-p "Auto commit to repo? ")))
   (op/verify-configuration)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
         (to-repo (not (stringp pub-base-dir)))
@@ -97,7 +102,7 @@ careful, this feature is NOT recommended, and a manual commit is much better"
     (op/prepare-theme store-dir)
     (op/publish-changes (op/git-all-files op/repository-directory)
                         (op/git-files-changed
-                         op/repository-directory (or base-git-commit "HEAD^1"))
+                         op/repository-directory (or base-git-commit "HEAD~1"))
                         store-dir)
     (when to-repo
       (op/git-change-branch op/repository-directory op/repository-html-branch)
@@ -136,7 +141,6 @@ files, committed by org-page.")
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:
 `op/repository-directory': <required>
-`op/theme-directory': <required> (but do not need user to configure)
 `op/site-url': <required>
 `op/personal-disqus-shortname': <required>
 `op/repository-org-branch': [optional] (but customization recommended)
@@ -151,11 +155,10 @@ files, committed by org-page.")
                (file-directory-p op/repository-directory))
     (error "Directory `%s' is not properly configured."
            (symbol-name 'op/repository-directory)))
-  (unless (and op/theme-directory
-               (file-directory-p op/theme-directory))
+  (unless (file-directory-p (op/get-theme-dir op/theme))
     (error "Org-page cannot detect theme directory `%s' automatically, please \
 help configure it manually, usually it should be <org-page directory>/themes/."
-           (symbol-name 'op/theme-directory)))
+           (symbol-name 'op/theme)))
   (unless op/site-url
     (error "Site url `%s' is not properly configured."
            (symbol-name 'op/site-url)))

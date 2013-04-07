@@ -28,19 +28,21 @@
 
 (require 'format-spec)
 
+(defun op/get-theme-dir (theme)
+  (file-name-as-directory
+   (expand-file-name (symbol-name op/theme)
+                     (expand-file-name "themes"
+                                       op/load-directory))))
+
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
-  (let* ((pub-theme-dir (expand-file-name "media/" pub-root-dir))
-         (theme-dir (file-name-as-directory
-                     (expand-file-name (symbol-name op/theme)
-                                       op/theme-directory))))
+  (let ((pub-theme-dir (expand-file-name "media/" pub-root-dir))
+        (theme-dir (op/get-theme-dir op/theme)))
     (unless (file-directory-p theme-dir)
       (message "Theme %s not found, use `default' theme instead."
                (symbol-name op/theme))
       (setq op/theme 'default)
-      (setq theme-dir (file-name-as-directory
-                       (expand-file-name (symbol-name op/theme)
-                                         op/theme-directory))))
+      (setq theme-dir (op/get-theme-dir 'default)))
     (op/update-theme op/theme)
     (when (file-directory-p pub-theme-dir)
       (delete-directory pub-theme-dir t))
@@ -74,7 +76,7 @@ new theme."
 (defun op/generate-page-header ()
   "Generate page header, based on the template defined by
 `op/html-header-template', please see its description for more detail."
-  (let* ((search-url op/site-url))
+  (let ((search-url op/site-url))
     (when (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'" op/site-url)
       (setq search-url (match-string 1 op/site-url)))
     (format-spec op/html-header-template `((?m . ,op/site-main-title)
@@ -88,9 +90,9 @@ new theme."
 
 (defun op/generate-style ()
   "Generate css style links."
-  (let* ((template "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\" />")
-         (css-list op/css-list)
-         css-links)
+  (let ((template "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\" />")
+        (css-list op/css-list)
+        css-links)
     (unless css-list
       (setq css-list '("main.css")))
     (mapconcat '(lambda (css)
