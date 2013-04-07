@@ -163,6 +163,7 @@ help configure it manually, usually it should be <org-page directory>/themes/."
     (error "Disqus shortname `%s' is not properly configured."
            (symbol-name 'op/personal-disqus-shortname)))
 
+  (setq op/repository-directory (expand-file-name op/repository-directory))
   (unless (or (string-prefix-p "http://" op/site-url)
               (string-prefix-p "https://" op/site-url))
     (setq op/site-url (concat "http://" op/site-url)))
