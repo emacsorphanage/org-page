@@ -93,11 +93,6 @@ http:// or https://, http will be considered if not assigned."
 presented by `op/repository-directory'."
   :group 'org-page :type 'string)
 
-(defcustom op/theme-directory
-  (expand-file-name "themes/" op/load-directory)
-  "The directory stores org-page styles/scripts/images."
-  :group 'org-page :type 'string)
-
 (defcustom op/theme 'default
   "The theme used for page generation."
   :group 'org-page :type 'symbol)
