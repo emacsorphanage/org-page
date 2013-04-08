@@ -129,6 +129,9 @@ files, committed by org-page.")
 (defun op/new-repository (repo-dir)
   "Generate a new git repository in directory REPO-DIR, which can be
 perfectly manipulated by org-page."
+  (interactive
+   (list (read-directory-name
+          "Specify a directory to become the repository: " nil nil nil)))
   (op/git-init-repo repo-dir)
   (op/generate-readme repo-dir)
   (op/git-commit-changes repo-dir "initial commit")
