@@ -81,6 +81,15 @@ by REPO-DIR. Do nothing if it is current branch."
       (error "Failed to change branch to '%s' of repository '%s'."
              branch-name repo-dir))))
 
+(defun op/git-init-repo (repo-dir)
+  "This function will initialize a new empty git repository. REPO-DIR is the
+directory where repository will be initialized."
+  (unless (file-directory-p repo-dir)
+    (mkdir repo-dir t))
+  (unless (string-prefix-p "Initialized empty Git repository"
+                           (op/shell-command repo-dir "git init" nil))
+    (error "Fatal: Failed to initialize new git repository '%s'." repo-dir)))
+
 (defun op/git-commit-changes (repo-dir message)
   "This function will commit uncommitted changes to git repository presented by
 REPO-DIR, MESSAGE is the commit message."
