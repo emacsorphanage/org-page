@@ -69,6 +69,18 @@ instead of pointer HEAD."
                  t)))
     (replace-regexp-in-string "[\n\r]" "" output)))
 
+(defun op/git-new-branch (repo-dir branch-name)
+  "This function will create a new branch with BRANCH-NAME, and checkout it.
+TODO: verify if the branch exists."
+  (let ((repo-dir (file-name-as-directory repo-dir))
+        (output (op/shell-command
+                 repo-dir
+                 (concat "git checkout -b " branch-name)
+                 t)))
+    (unless (string-match "Switched to a new branch" output)
+      (error "Fatal: Failed to create a new branch with name '%s'."
+             branch-name))))
+
 (defun op/git-change-branch (repo-dir branch-name)
   "This function will change branch to BRANCH-NAME of git repository presented
 by REPO-DIR. Do nothing if it is current branch."
