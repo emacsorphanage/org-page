@@ -34,10 +34,9 @@ TODO: may add branch/commit verification later."
     (error "Fatal: `%s' is not a valid git repository." repo-dir)))
 
 (defun op/shell-command (dir command &optional need-git)
-  "This function execute some shell command in a specified directory.
-
-If NEED-GIT is not nil, then dir must be a git repository.
-COMMAND is just a string."
+  "This function execute shell commands in a specified directory.
+If NEED-GIT is non-nil, then DIR must be a git repository. COMMAND is the
+command to be executed."
   (if need-git
       (op/verify-git-repository dir))
   (with-current-buffer (get-buffer-create op/temp-buffer-name)
