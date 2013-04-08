@@ -77,12 +77,17 @@
 (require 'op-hack)
 
 
-(defun op/do-publication (&optional base-git-commit pub-base-dir auto-commit)
+(defun op/do-publication (&optional force-all
+                                    base-git-commit pub-base-dir auto-commit)
   "The main entrance of org-page. The entire procedure is:
 1) verify configuration
 2) read changed files on branch `op/repository-org-branch' of repository
-`op/repository-directory', based on BASE-GIT-COMMIT, if it is omitted, will use
-previous commit as the base commit.
+`op/repository-directory', the definition of 'changed files' is:
+   1. if FORCE-ALL is non-nil, then all files will be published
+   2. if FORCE-ALL is nil, the changed files will be obtained based on
+BASE-GIT-COMMIT
+   3. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
+based on previous commit
 3) publish org files to html, if PUB-BASE-DIR is specified, use that directory
 to store the generated html files, otherwise html files will be stored on branch
 `op/repository-html-branch' of repository `op/repository-directory'
@@ -90,43 +95,26 @@ to store the generated html files, otherwise html files will be stored on branch
 on branch `op/repository-html-branch' will be automatically committed, but be
 careful, this feature is NOT recommended, and a manual commit is much better"
   (interactive
-   (list (read-string "Base git commit: " "HEAD~1")
-         (when (y-or-n-p "Publish to a directory? (to original repo if not) ")
-           (read-directory-name "Publication directory: "))
-         (y-or-n-p "Auto commit to repo? ")))
-  (op/verify-configuration)
-  (let* ((orig-branch (op/git-branch-name op/repository-directory))
-        (to-repo (not (stringp pub-base-dir)))
-        (store-dir (if to-repo "~/.op-tmp/" pub-base-dir))) ; TODO customization
-    (op/git-change-branch op/repository-directory op/repository-org-branch)
-    (op/prepare-theme store-dir)
-    (op/publish-changes (op/git-all-files op/repository-directory)
-                        (op/git-files-changed
-                         op/repository-directory (or base-git-commit "HEAD~1"))
-                        store-dir)
-    (when to-repo
-      (op/git-change-branch op/repository-directory op/repository-html-branch)
-      (copy-directory store-dir op/repository-directory t t t)
-      (delete-directory store-dir t))
-    (when (and to-repo auto-commit)
-      (op/git-commit-changes op/repository-directory "Update published html \
-files, committed by org-page.")
-      (op/git-change-branch op/repository-directory orig-branch))
-    (message "Publication finished: on branch '%s' of repository '%s'."
-             op/repository-html-branch op/repository-directory)))
-
-(defun op/republish-all (&optional pub-base-dir auto-commit)
-  "This function is like `op/do-publication', but it publishes all org files,
-while the latter publishes files changed between two commits."
+   (let* ((f (y-or-n-p "Publish all org files? "))
+          (b (unless f (read-string "Base git commit: " "HEAD~1")))
+          (p (when (y-or-n-p
+                    "Publish to a directory? (to original repo if not) ")
+               (read-directory-name "Publication directory: ")))
+          (a (y-or-n-p "Auto commit to repo? ")))
+     (list f b p a)))
   (op/verify-configuration)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
          (to-repo (not (stringp pub-base-dir)))
          (store-dir (if to-repo "~/.op-tmp/" pub-base-dir)) ; TODO customization
-         all-files)
+         changed-files all-files)
     (op/git-change-branch op/repository-directory op/repository-org-branch)
     (op/prepare-theme store-dir)
     (setq all-files (op/git-all-files op/repository-directory))
-    (op/publish-changes all-files `(:update ,all-files :delete nil) store-dir)
+    (setq changed-files (if force-all
+                            `(:update ,all-files :delete nil)
+                          (op/git-files-changed op/repository-directory
+                                                (or base-git-commit "HEAD~1"))))
+    (op/publish-changes all-files changed-files store-dir)
     (when to-repo
       (op/git-change-branch op/repository-directory op/repository-html-branch)
       (copy-directory store-dir op/repository-directory t t t)
