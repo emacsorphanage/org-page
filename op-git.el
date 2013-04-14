@@ -141,6 +141,18 @@ only two types will work well: need to publish or need to delete.
           (split-string output "\n"))
     (list :update upd-list :delete del-list)))
 
+(defun op/git-last-change-date (repo-dir filepath)
+  "This function will return the last commit date of a file in git repository
+presented by REPO-DIR, FILEPATH is the path of target file, can be absolute or
+relative."
+  (let ((repo-dir (file-name-as-directory repo-dir))
+        (output (op/shell-command
+                 repo-dir
+                 (concat "git log -1 --format=\"%ci\" -- " filepath)
+                 t)))
+    (when (string-match "\\`\\([0-9]+-[0-9]+-[0-9]+\\) .*\n\\'" output)
+      (match-string 1 output))))
+
 
 (provide 'op-git)
 
