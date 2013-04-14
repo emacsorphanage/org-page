@@ -148,7 +148,7 @@ relative."
   (let ((repo-dir (file-name-as-directory repo-dir))
         (output (op/shell-command
                  repo-dir
-                 (concat "git log -1 --format=\"%ci\" -- " filepath)
+                 (concat "git log -1 --format=\"%ci\" -- \"" filepath "\"")
                  t)))
     (when (string-match "\\`\\([0-9]+-[0-9]+-[0-9]+\\) .*\n\\'" output)
       (match-string 1 output))))
