@@ -30,7 +30,7 @@
 
 (defun op/get-theme-dir (theme)
   (file-name-as-directory
-   (expand-file-name (symbol-name op/theme)
+   (expand-file-name (symbol-name theme)
                      (expand-file-name "themes"
                                        op/load-directory))))
 
