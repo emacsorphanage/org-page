@@ -88,17 +88,6 @@ new theme."
                                            (?g . ,op/personal-github-link)
                                            (?u . ,search-url)))))
 
-(defun op/generate-style ()
-  "Generate css style links."
-  (let ((template "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\" />")
-        (css-list op/css-list)
-        css-links)
-    (unless css-list
-      (setq css-list '("main.css")))
-    (mapconcat '(lambda (css)
-                  (format template (concat "/media/css/" css))) ;; TODO customization
-               css-list "\n")))
-
 (defun op/generate-footer (uri attr-plist hide-meta-info hide-comment)
   "Generate page footer, based on the template defined by
 `op/html-postamble-template', please see its description for more detail."

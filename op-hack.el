@@ -72,13 +72,6 @@ PUB-DIR is set, use this as the publishing directory."
                                ext-plist
                                (org-infile-export-plist))))
          (body-only (or body-only (plist-get opt-plist :body-only)))
-         (style (concat (if (plist-get opt-plist :style-include-default)
-                            org-export-html-style-default)
-                        (plist-get opt-plist :style)
-                        (plist-get opt-plist :style-extra)
-                        "\n"
-                        (if (plist-get opt-plist :style-include-scripts)
-                            org-export-html-scripts)))
          (html-extension (plist-get opt-plist :html-extension))
          valid thetoc have-headings first-heading-pos
          (odd org-odd-levels-only)
@@ -289,7 +282,7 @@ PUB-DIR is set, use this as the publishing directory."
 <meta name=\"author\" content=\"%s\"/>
 <meta name=\"description\" content=\"%s\"/>
 <meta name=\"keywords\" content=\"%s\"/>
-%s
+<link href=\"/media/css/main.css\" rel=\"stylesheet\" type=\"text/css\" />
 %s
 </head>
 <body>
@@ -311,7 +304,6 @@ PUB-DIR is set, use this as the publishing directory."
                  ;(or charset "iso-8859-1")
                  (or charset "utf-8")
                  title date author description keywords
-                 style
                  mathjax
                  (if (or link-up link-home)
                      (concat
