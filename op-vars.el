@@ -97,6 +97,20 @@ presented by `op/repository-directory'."
   "The theme used for page generation."
   :group 'org-page :type 'symbol)
 
+(defcustom op/entire-page-template
+  (file-to-string (concat op/load-directory
+                          (format "templates/html/%s/entire-page-template.html"
+                                  (symbol-name (or op/theme 'default)))))
+  "The page template used construct entire page, below parameters can be used:
+%t: the page title (retrieved from #+TITLE property)
+%a: author (retrieved from #+AUTHOR property)
+%d: description (retrieved from #+DESCRIPTION property)
+%k: keywords (retrieved from #+KEYWORDS property)
+%h: the page header (its value is the rendered `op/html-header-template')
+%b: body (the body part, from the org source)
+%f: the page footer (rendered from `op/html-postamble-template')"
+  :group 'org-page :type 'string)
+
 (defcustom op/html-header-template
   (file-to-string (concat op/load-directory
                           (format "templates/html/%s/header-template.html"
