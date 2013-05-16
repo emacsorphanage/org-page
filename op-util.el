@@ -185,6 +185,13 @@ TODO2: maybe DBCS strings should also be converted into ASCII URL path"
     (insert-file-contents file)
     (buffer-string)))
 
+(defun string-to-file (string file)
+  "Write STRING into FILE, only when FILE is writable."
+  (with-temp-buffer
+    (insert string)
+    (when (file-writable-p file)
+      (write-region (point-min) (point-max) file))))
+
 
 (provide 'op-util)
 
