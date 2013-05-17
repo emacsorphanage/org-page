@@ -23,8 +23,9 @@ ATTR-PLIST is the attribute plist of the buffer, read by `op/read-file-info'."
   (let* ((info
           (org-combine-plists
            (org-export--get-global-options 'html)
-           (org-export--get-buffer-attributes)
-           (org-export--get-inbuffer-options 'html)
+           ;;; the two are not needed because they are included in attr-plist
+           ;; (org-export--get-buffer-attributes)
+           ;; (org-export--get-inbuffer-options 'html)
            attr-plist))
          (title (org-element-interpret-data (plist-get info :title)))
          (author (org-element-interpret-data
@@ -42,7 +43,7 @@ ATTR-PLIST is the attribute plist of the buffer, read by `op/read-file-info'."
                      #'(lambda (tag-name)
                          (mustache-render
                           "<a href=\"{{link}}\">{{name}}</a>"
-                          (ht ("link" (op/generate-uri tag-name))
+                          (ht ("link" (op/generate-tag-uri tag-name))
                               ("name" tag-name))))
                      (plist-get info :tags) ", "))
          (show-comment (eq category 'blog))
@@ -70,6 +71,6 @@ ATTR-PLIST is the attribute plist of the buffer, read by `op/read-file-info'."
     param-table))
 
 
-(provide 'op-export)
+(provide 'op-template)
 
 ;;; op-template.el ends here
