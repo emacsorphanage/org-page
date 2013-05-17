@@ -193,6 +193,29 @@ automatically."
   "the personal disqus shortname"
   :group 'org-page :type 'string)
 
+(defcustom op/personal-google-analytics-id nil
+  "Personal google analytics id."
+  :group 'org-page :type 'string)
+
+(defvar op/default-template-parameters
+  (ht ("blog-uri" "/blog/")
+      ("wiki-uri" "/wiki/")
+      ("tags-uri" "/tags/")
+      ("about-uri" "/about/")
+      ("site-main-title" op/site-main-title)
+      ("site-sub-title" op/site-sub-title)
+      ("github" op/personal-github-link)
+      ("site-domain" (if (and op/site-url
+                              (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                            op/site-url))
+                         (match-string 1 op/site-url)
+                       op/site-url))
+      ("disqus-shortname" op/personal-disqus-shortname)
+      ("google-analytics-id" op/personal-google-analytics-id)
+      ("google-analytics" (if op/personal-google-analytics-id t nil))
+      ("creator-info" org-html-creator-string))
+  "Default template rendering parameters.")
+
 
 (provide 'op-vars)
 
