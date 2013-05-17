@@ -69,12 +69,15 @@
 
 ;;; Code:
 
+(require 'ox)
+(require 'mustache)
 (require 'op-util)
 (require 'op-vars)
+(require 'op-template)
 (require 'op-git)
 (require 'op-enhance)
 (require 'op-export)
-(require 'op-hack)
+;; TODO remove this (require 'op-hack)
 
 
 (defun op/do-publication (&optional force-all
