@@ -36,7 +36,8 @@ ATTR-PLIST is the attribute plist of the buffer, read by `op/read-file-info'."
          (keywords (or (plist-get info :keywords) nil))
          (category (plist-get info :category))
          (show-meta-info (and (not (eq category 'index))
-                              (not (eq category 'about))))
+                              (not (eq category 'about))
+                              (not (eq category 'none))))
          (creation-date (or (plist-get info :creation-date) "N/A"))
          (mod-date (or (plist-get info :mod-date) "N/A"))
          (tag-links (mapconcat
