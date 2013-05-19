@@ -185,10 +185,12 @@ CATEGORY. CATEGORY can only be 'blog or 'wiki, others will be considered as
                          file-attr-list)
           #'(lambda (plist1 plist2)
               (<= (compare-standard-date
-                   (org-element-interpret-data
-                    (plist-get plist1 (cdr (assq cat sort-alist))))
-                   (org-element-interpret-data
-                    (plist-get plist2 (cdr (assq cat sort-alist)))))
+                   (fix-timestamp-string
+                    (org-element-interpret-data
+                     (plist-get plist1 (cdr (assq cat sort-alist)))))
+                   (fix-timestamp-string
+                    (org-element-interpret-data
+                     (plist-get plist2 (cdr (assq cat sort-alist))))))
                   0)))))
 
 (defun op/update-category-index (file-attr-list pub-base-dir category)
@@ -207,8 +209,9 @@ directory. CATEGORY is 'blog or 'wiki, 'blog if other values."
       (insert "#+OPTIONS: *:nil" "\n\n")
       (mapc '(lambda (attr-plist)
                (insert " - "
-                       (org-element-interpret-data
-                        (plist-get attr-plist (cdr (assq cat sort-alist))))
+                       (fix-timestamp-string
+                        (org-element-interpret-data
+                         (plist-get attr-plist (cdr (assq cat sort-alist)))))
                        "\\nbsp\\nbsp»\\nbsp\\nbsp"
                        "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
                        (org-element-interpret-data
@@ -245,8 +248,9 @@ publication directory."
                 (if (string= category "wiki") :mod-date :date))
           (insert " - " category "\n")
           (mapc '(lambda (attr-plist)
-                   (insert "   - " (org-element-interpret-data
-                                    (plist-get attr-plist plist-key))
+                   (insert "   - " (fix-timestamp-string
+                                    (org-element-interpret-data
+                                     (plist-get attr-plist plist-key)))
                            "\\nbsp\\nbsp»\\nbsp\\nbsp"
                            "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
                            (org-element-interpret-data

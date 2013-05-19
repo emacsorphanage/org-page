@@ -117,7 +117,8 @@ new theme."
         (setq footer-template (concat op/meta-info footer-template))))
     (when attr-plist
       (setq uri (plist-get attr-plist :uri))
-      (setq cdate (plist-get attr-plist :creation-date))
+      (setq cdate (fix-timestamp-string
+                   (org-element-interpret-data (plist-get attr-plist :date))))
       (setq mdate (plist-get attr-plist :mod-date))
       (setq tag-list (plist-get attr-plist :tags)))
     (when tag-list
