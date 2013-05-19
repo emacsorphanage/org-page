@@ -210,9 +210,9 @@ directory. CATEGORY is 'blog or 'wiki, 'blog if other values."
                        (org-element-interpret-data
                         (plist-get attr-plist (cdr (assq cat sort-alist))))
                        "\\nbsp\\nbsp»\\nbsp\\nbsp"
-                       "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                       "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
                        (org-element-interpret-data
-                        (plist-get attr-plist :title)) "@</a>" "\n"))
+                        (plist-get attr-plist :title)) "</a>@@" "\n"))
             cat-list)
       (unless (file-directory-p pub-dir)
         (mkdir pub-dir t))
@@ -248,10 +248,10 @@ publication directory."
                    (insert "   - " (org-element-interpret-data
                                     (plist-get attr-plist plist-key))
                            "\\nbsp\\nbsp»\\nbsp\\nbsp"
-                           "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                           "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
                            (org-element-interpret-data
                             (plist-get attr-plist :title))
-                           "@</a>" "\n"))
+                           "</a>@@" "\n"))
                 (cdr cell)))
        cat-alist)
       (string-to-file
@@ -318,11 +318,11 @@ TODO: improve this function."
       (insert "#+URI: /tags/" "\n")
       (insert "#+OPTIONS: *:nil" "\n\n")
       (mapc '(lambda (tag-list)
-               (insert " - " "@<a href=\""
+               (insert " - " "@@html:<a href=\""
                        (op/generate-tag-uri (car tag-list))
                        "\">" (car tag-list)
                        " (" (number-to-string (length (cdr tag-list))) ")"
-                       "@</a>" "\n"))
+                       "</a>@@" "\n"))
             tag-alist)
       (unless (file-directory-p tag-base-dir)
         (mkdir tag-base-dir t))
@@ -343,10 +343,10 @@ TODO: improve this function."
            (insert "#+OPTIONS: *:nil" "\n\n")
            (mapc #'(lambda (attr-plist)
                      (insert " - "
-                             "@<a href=\"" (plist-get attr-plist :uri) "\">"
+                             "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
                              (org-element-interpret-data
                               (plist-get attr-plist :title))
-                             "@</a>" "\n"))
+                             "</a>@@" "\n"))
                  (cdr tag-list))
            (setq tag-dir (file-name-as-directory
                           (concat tag-base-dir
