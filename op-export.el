@@ -92,8 +92,11 @@ The URI-TEMPLATE can contain following parameters:
 %y: year of creation date
 %m: month of creation date
 %d: day of creation date"
-  (let ((date-list (split-string (or creation-date
-                                     (format-time-string "%Y-%m-%d")) "-"))
+  (let ((date-list (split-string (if creation-date
+                                     (fix-timestamp-string
+                                      (org-element-interpret-data
+                                       creation-date))
+                                   (format-time-string "%Y-%m-%d")) "-"))
         (encoded-title (convert-string-to-path title))
         uri)
     (setq uri (cond
