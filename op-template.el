@@ -1,3 +1,31 @@
+;;; op-template.el --- templating system based on mustache, required by org-page
+
+;; Copyright (C) 2012, 2013 Kelvin Hu
+
+;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
+;; Keywords: convenience
+;; Homepage: https://github.com/kelvinh/org-page
+;; Version: 0.3
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; templating system based on mustache.el, to replace `format-spec'.
+
+;;; Code:
+
 (require 'mustache)
 
 (defun op/update-default-template-parameters ()
@@ -19,13 +47,11 @@ customization to relevant variables."
 
 (defun op/compose-template-parameters (attr-plist content)
   "Compose parameters for org file represented in current buffer.
-ATTR-PLIST is the attribute plist of the buffer, read by `op/read-file-info'."
+ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
+`org-export--get-inbuffer-options' and `op/get-inbuffer-extra-options'."
   (let* ((info
           (org-combine-plists
            (org-export--get-global-options 'html)
-           ;;; the two are not needed because they are included in attr-plist
-           ;; (org-export--get-buffer-attributes)
-           ;; (org-export--get-inbuffer-options 'html)
            attr-plist))
          (title (org-element-interpret-data (plist-get info :title)))
          (author (org-element-interpret-data
