@@ -45,8 +45,8 @@
 ;;
 ;; 1. `op/repository-directory': the git repository directory, where your
 ;;    org files stored, and managed by git
-;; 2. `op/site-url': the URL that search engine and disqus commenting will
-;;    base on, it should be your personal site's URL
+;; 2. `op/site-domain': the URL that search engine and disqus commenting
+;;    will base on, it should be your personal site's URL
 ;; 3. `op/personal-disqus-shortname': the disqus shortname you own on
 ;;    disqus website, will be used for commenting
 ;;
@@ -149,16 +149,15 @@ perfectly manipulated by org-page."
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:
 `op/repository-directory': <required>
-`op/site-url': <required>
+`op/site-domain': <required>
 `op/personal-disqus-shortname': <required>
 `op/repository-org-branch': [optional] (but customization recommended)
 `op/repository-html-branch': [optional] (but customization recommended)
 `op/site-main-title': [optional] (but customization recommanded)
 `op/site-sub-title': [optional] (but customization recommanded)
-`op/email': [optional] (but customization recommanded)
-`op/personal-github-link': [optional] (but customization recommanded)
-`op/theme': [optional]
-`op/css-list': [optional]"
+`op/personal-github-link': [optional] (but customization recommended)
+`op/personal-google-analytics-id': [optional] (but customization recommended)
+`op/theme': [optional]"
   (unless (and op/repository-directory
                (file-directory-p op/repository-directory))
     (error "Directory `%s' is not properly configured."
@@ -167,17 +166,17 @@ perfectly manipulated by org-page."
     (error "Org-page cannot detect theme directory `%s' automatically, please \
 help configure it manually, usually it should be <org-page directory>/themes/."
            (symbol-name 'op/theme)))
-  (unless op/site-url
-    (error "Site url `%s' is not properly configured."
-           (symbol-name 'op/site-url)))
+  (unless op/site-domain
+    (error "Site domain `%s' is not properly configured."
+           (symbol-name 'op/site-domain)))
   (unless op/personal-disqus-shortname
     (error "Disqus shortname `%s' is not properly configured."
            (symbol-name 'op/personal-disqus-shortname)))
 
   (setq op/repository-directory (expand-file-name op/repository-directory))
-  (unless (or (string-prefix-p "http://" op/site-url)
-              (string-prefix-p "https://" op/site-url))
-    (setq op/site-url (concat "http://" op/site-url)))
+  (unless (or (string-prefix-p "http://" op/site-domain)
+              (string-prefix-p "https://" op/site-domain))
+    (setq op/site-domain (concat "http://" op/site-domain)))
   (unless op/theme
     (setq op/theme 'default)))
 
@@ -195,8 +194,8 @@ function, it is only used for demonstrating how the git branches and directory \
 structure are organized by org-page.")))
 
 (defun op/generate-index (save-dir)
-  "Generate index.org for `op/new-repository'. SAVE-DIR is the directory where to
-save generated index.org."
+  "Generate index.org for `op/new-repository'. SAVE-DIR is the directory where
+to save generated index.org."
   (op/generate-file
    (expand-file-name "index.org" save-dir)
    (concat "#+TITLE: Index" "\n\n"
@@ -204,8 +203,8 @@ save generated index.org."
                    (or user-full-name "[Author]")))))
 
 (defun op/generate-about (save-dir)
-  "Generate about.org for `op/new-repository'. SAVE-DIR is the directory where to
-save generated about.org."
+  "Generate about.org for `op/new-repository'. SAVE-DIR is the directory where
+to save generated about.org."
   (op/generate-file
    (expand-file-name "about.org" save-dir)
    (concat "#+TITLE: About" "\n\n"

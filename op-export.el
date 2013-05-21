@@ -166,7 +166,7 @@ property list of current file. PUB-BASE-DIR is the root publication directory."
          pub-content)
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
-    (string-to-file (mustache-render op/entire-page-template
+    (string-to-file (mustache-render op/page-template
                                      (op/compose-template-parameters
                                       attr-plist
                                       (org-export-as 'html nil nil t nil)))
@@ -223,7 +223,7 @@ directory. CATEGORY is 'blog or 'wiki, 'blog if other values."
       (unless (file-directory-p pub-dir)
         (mkdir pub-dir t))
       (string-to-file
-       (mustache-render op/entire-page-template
+       (mustache-render op/page-template
                         (op/compose-template-parameters
                          (org-combine-plists
                           (org-export--get-inbuffer-options 'html)
@@ -262,7 +262,7 @@ publication directory."
                 (cdr cell)))
        cat-alist)
       (string-to-file
-       (mustache-render op/entire-page-template
+       (mustache-render op/page-template
                         (op/compose-template-parameters
                          (org-combine-plists
                           (org-export--get-inbuffer-options 'html)
@@ -291,7 +291,7 @@ about page, so I generated this page myself." author-name))
 creator, please [[mailto:%s][contact him]] if you find there is something need \
 to improve, many thanks. :-)" (confound-email "ini.kelvin@gmail.com")))
       (string-to-file
-       (mustache-render op/entire-page-template
+       (mustache-render op/page-template
                         (op/compose-template-parameters
                          (org-combine-plists
                           (org-export--get-inbuffer-options 'html)
@@ -334,7 +334,7 @@ TODO: improve this function."
       (unless (file-directory-p tag-base-dir)
         (mkdir tag-base-dir t))
       (string-to-file
-       (mustache-render op/entire-page-template
+       (mustache-render op/page-template
                         (op/compose-template-parameters
                          (org-combine-plists
                           (org-export--get-inbuffer-options 'html)
@@ -361,7 +361,7 @@ TODO: improve this function."
            (unless (file-directory-p tag-dir)
              (mkdir tag-dir t))
            (string-to-file
-            (mustache-render op/entire-page-template
+            (mustache-render op/page-template
                              (op/compose-template-parameters
                               (org-combine-plists
                                (org-export--get-inbuffer-options 'html)
