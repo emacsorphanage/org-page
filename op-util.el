@@ -180,7 +180,7 @@ TODO2: maybe DBCS strings should also be converted into ASCII URL path"
   (downcase (replace-regexp-in-string "[ :/\\]+" "-" string)))
 
 (defun file-to-string (file)
-  "Read the file contents and return it as a string"
+  "Read the content of FILE and return it as a string."
   (with-temp-buffer
     (insert-file-contents file)
     (buffer-string)))
