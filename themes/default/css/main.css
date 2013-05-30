@@ -227,6 +227,12 @@ blockquote {
     text-align: left;
     padding: 0 15px;
 }
+#text-footnotes {
+    margin-top: 15px;
+}
+.footpara {
+    display: inline;
+}
 #post-meta {
     border-top: 1px solid #FFFFFF;
     border-bottom: 1px solid #DDDDDD;
