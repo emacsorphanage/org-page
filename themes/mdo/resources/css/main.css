@@ -1,0 +1,271 @@
+/*
+  __
+  __                  /\ \
+  /'_`\_    ___ ___    \_\ \    ___
+  /'/'_` \ /' __` __`\  /'_` \  / __`\
+  /\ \ \L\ \/\ \/\ \/\ \/\ \L\ \/\ \L\ \
+  \ \ `\__,_\ \_\ \_\ \_\ \___,_\ \____/
+  \ `\_____\\/_/\/_/\/_/\/__,_ /\/___/
+  `\/_____/
+
+*/
+
+
+
+/* Body resets
+   -------------------------------------------------- */
+
+* {
+    -webkit-box-sizing: border-box;
+       -moz-box-sizing: border-box;
+            box-sizing: border-box;
+}
+html, body {
+    margin: 0;
+    padding: 0;
+}
+html {
+    font-size: 62.5%;
+}
+body {
+    padding: 2rem;
+    font-family: Menlo, Monaco, monospace;
+    font-size: 1.4rem;
+    line-height: 1.5;
+    color: #666;
+    background-color: #fff;
+}
+p {
+    margin: 0 0 1.5rem;
+}
+h1, h2, h3 {
+    position: relative;
+    margin: 3rem 0 1.5rem;
+    font-size: 1.8rem;
+    font-weight: bold;
+    line-height: 1.1;
+    color: #111;
+    text-rendering: optimizeLegibility;
+}
+h1:before, h2:before, h3:before {
+    position: absolute;
+    top: auto;
+    color: #ccc;
+    display: none;
+}
+h1:before {
+    content: "*";
+    left: -1.25em;
+}
+h2:before {
+    content: "**";
+    left: -2em;
+}
+h3:before {
+    content: "***";
+    left: -2.5em;
+}
+i, em, b, strong {
+    padding-left: .1rem;
+    padding-right: .1rem;
+}
+b, strong {
+    font-weight: bold;
+    color: #333;
+}
+b:before, b:after, strong:before, strong:after {
+    content: "*";
+}
+i:before, i:after, em:before, em:after {
+    content: "/";
+}
+hr {
+    /* margin: 0; */
+    margin: 0 0 4rem;
+    border: 0;
+}
+hr:after {
+    display: block;
+    /* margin: 2rem 0; */
+    content: "----------------------------------------------------------------";
+    color: #ccc;
+}
+ul, ol {
+    padding: 0;
+    margin: 0 0 1.5rem;
+}
+code, pre {
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+code {
+    color: #d14;
+}
+code:before, code:after {
+    content: "=";
+    color: #ccc;
+}
+pre {
+    display: block;
+    margin: 0 0 14px;
+    padding: 15px;
+    border-radius: 3px 3px 3px 3px;
+    font-size: 16px;
+    line-height: 28px;
+    background-color: #f5f5f5;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+blockquote {
+    padding: 0 0 0 1.75rem;
+    margin: 0 3rem 1.5rem -2.25rem;
+    color: #999;
+    border-left: .5rem solid #e5e5e5;
+}
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+img {
+    display: block;
+    margin: 0 0 20px;
+    border-radius: 5px;
+}
+a {
+    font-weight: inherit;
+    line-height: inherit;
+    color: #000;
+    text-decoration: none;
+}
+sup a:before {
+    content: "[";
+}
+sup a:after {
+    content: "]";
+}
+a:hover {
+    text-decoration: underline;
+}
+table {
+    line-height: 2.5;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+    width: 100%;
+}
+table td, table th {
+    padding: 0 15px;
+}
+table th.left, table td.left {
+    text-align: left;
+}
+table th.right, table td.right {
+    text-align: right;
+}
+/******************************************************/
+/* body */
+.container {
+    margin: 0 auto;
+    max-width: 77rem;
+}
+/* head */
+.masthead {
+    color: #888;
+}
+.masthead:after {
+    display: block;
+    content: '----------------------------------------------------------------';
+    margin: 1rem 0;
+    color: #ccc;
+}
+.masthead a {
+    color: #333;
+}
+.masthead ul {
+    list-style: none;
+}
+.masthead li {
+    display: inline-block;
+}
+.masthead li + li:before {
+    display: inline-block;
+    content: "\00B7 \00a0";
+    color: #ccc;
+}
+/* post */
+.post {
+    position: relative;
+}
+.post:after {
+    display: block;
+    content: "----------------------------------------------------------------";
+    color: #ccc;
+}
+.post img {
+    max-width: 100%;
+}
+.post li {
+    list-style: none outside none;
+}
+.post ul > li:before {
+    content: "- ";
+    margin-left: -1.25em;
+    color: #ccc;
+}
+.post ol {
+    counter-reset: o-list;
+}
+.post ol > li:before {
+    content: counter(o-list) ") ";
+    counter-increment: o-list;
+    margin-left: -1.85em;
+    color: #ccc;
+}
+/* meta info */
+.post-info {
+    display: inline-block;
+    margin: -1rem 0 1rem;
+    color: #999;
+}
+.post-info + .post-info:before {
+    content: "\2223 \00a0";
+}
+.post-meta:after {
+    content: "----------------------------------------------------------------";
+    display: block;
+    margin-top: -1.5rem;
+    color: #ccc;
+}
+.footer {
+    margin: 8rem 0 0;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #999;
+}
+.footer > p {
+    margin: 0;
+    line-height: 1.5;
+}
+.footpara {
+    display: inline;
+}
+
+/* Responsive
+   -------------------------------------------------- */
+
+@media (min-width: 768px) {
+    /* Increase body padding and font-sizes */
+    body {
+        padding: 3rem;
+        font-size: 1.8rem;
+        line-height: 1.75;
+    }
+    h1:before, h2:before, h3:before {
+        display: inline;
+    }
+}
+
+@media (min-width: 1024px) {
+    body {
+        padding: 3rem;
+    }
+}
