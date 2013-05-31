@@ -111,7 +111,7 @@ presented by `op/repository-directory'."
 
 (defcustom op/page-template
   (file-to-string (concat op/load-directory
-                          (format "templates/html/%s/template.html"
+                          (format "themes/%s/templates/template.html"
                                   (symbol-name (or op/theme 'default)))))
   "The template used to construct pages, see the template itself for detail."
   :group 'org-page :type 'string)

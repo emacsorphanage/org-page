@@ -29,10 +29,11 @@
 (require 'format-spec)
 
 (defun op/get-theme-dir (theme)
+  "Return the resource storage directory of THEME."
   (file-name-as-directory
-   (expand-file-name (symbol-name theme)
-                     (expand-file-name "themes"
-                                       op/load-directory))))
+   (expand-file-name
+    (format "themes/%s/resources" (symbol-name 'default))
+    op/load-directory)))
 
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
@@ -57,7 +58,7 @@ used a new theme."
   (setq op/page-template
         (file-to-string
          (concat op/load-directory
-                 (format "templates/html/%s/template.html" theme)))))
+                 (format "themes/%s/templates/template.html" theme)))))
 
 
 (provide 'op-enhance)
