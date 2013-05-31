@@ -32,7 +32,7 @@
   "Return the resource storage directory of THEME."
   (file-name-as-directory
    (expand-file-name
-    (format "themes/%s/resources" (symbol-name 'default))
+    (format "themes/%s/resources" (symbol-name theme))
     op/load-directory)))
 
 (defun op/prepare-theme (pub-root-dir)
