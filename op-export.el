@@ -143,7 +143,7 @@ a temp buffer)"
     (when tags
       (plist-put
        attr-plist :tags (delete "" (mapcar 'trim-string
-                                           (split-string tags ":" t))))) ;; TODO customization
+                                           (split-string tags "[:,]+" t))))) ;; TODO customization
     (when filename
       (plist-put
        attr-plist :mod-date
