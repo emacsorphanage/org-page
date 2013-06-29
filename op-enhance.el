@@ -40,10 +40,10 @@
   (let ((pub-theme-dir (expand-file-name "media/" pub-root-dir))
         (theme-dir (op/get-theme-dir op/theme)))
     (unless (file-directory-p theme-dir)
-      (message "Theme %s not found, use `default' theme instead."
+      (message "Theme %s not found, use default theme `mdo' instead."
                (symbol-name op/theme))
-      (setq op/theme 'default)
-      (setq theme-dir (op/get-theme-dir 'default)))
+      (setq op/theme 'mdo)
+      (setq theme-dir (op/get-theme-dir 'mdo)))
     (op/update-theme op/theme)
     (when (file-directory-p pub-theme-dir)
       (delete-directory pub-theme-dir t))
@@ -53,7 +53,7 @@
   "Update theme related variable(s), to make it(them) take effect after user
 used a new theme."
   (unless theme
-    (setq theme 'default))
+    (setq theme 'mdo))
   (setq theme (symbol-name theme))
   (setq op/page-template
         (file-to-string

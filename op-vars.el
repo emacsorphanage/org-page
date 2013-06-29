@@ -93,7 +93,7 @@ http:// or https://, http will be considered if not assigned."
 presented by `op/repository-directory'."
   :group 'org-page :type 'string)
 
-(defcustom op/theme 'default
+(defcustom op/theme 'mdo
   "The theme used for page generation."
   :group 'org-page :type 'symbol)
 
@@ -112,7 +112,7 @@ presented by `op/repository-directory'."
 (defcustom op/page-template
   (file-to-string (concat op/load-directory
                           (format "themes/%s/templates/template.html"
-                                  (symbol-name (or op/theme 'default)))))
+                                  (symbol-name (or op/theme 'mdo)))))
   "The template used to construct pages, see the template itself for detail."
   :group 'org-page :type 'string)
 
