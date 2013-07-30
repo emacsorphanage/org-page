@@ -86,6 +86,18 @@ content of the buffer will be converted into html."
                                    "Unknown Email")
                        :date ,(or (op/read-org-option "DATE")
                                   (format-time-string "%Y-%m-%d"))
+                       :keywords ,(op/read-org-option "KEYWORDS")
+                       :description ,(op/read-org-option "DESCRIPTION")
+                       :site-main-title ,op/site-main-title
+                       :site-sub-title ,op/site-sub-title
+                       :github ,op/personal-github-link
+                       :site-domain ,(if (and
+                                          op/site-domain
+                                          (string-match
+                                           "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                           op/site-domain))
+                                         (match-string 1 op/site-domain)
+                                       op/site-domain)
                        :mod-date ,(if (not filename)
                                       (format-time-string "%Y-%m-%d")
                                     (or (op/git-last-change-date
@@ -95,13 +107,30 @@ content of the buffer will be converted into html."
                                          "%Y-%m-%d"
                                          (nth 5 (file-attributes filename)))))
                        :tags ,nil
-                       :pub-content ,nil))
+                       :disqus-shortname ,op/personal-disqus-shortname
+                       :google-analytics ,(if op/personal-google-analytics-id
+                                              t nil)
+                       :google-analytics-id ,op/personal-google-analytics-id
+                       :creator-info ,org-html-creator-string
+                       :content ,nil))
          tags category cat-config)
+    (plist-put attr-plist :page-title (concat (plist-get attr-plist :title)
+                                              " - "
+                                              op/site-main-title))
     (setq tags (op/read-org-option "TAGS"))
     (when tags
       (plist-put
        attr-plist :tags (delete "" (mapcar 'trim-string
                                            (split-string tags "[;,]+" t)))))
+    (plist-put
+     attr-plist :tag-links
+     (if (not tags) "N/A"
+       (mapconcat #'(lambda (tag-name)
+                      (mustache-render
+                       "<a href=\"{{link}}\">{{name}}</a>"
+                       (ht ("link" (op/generate-tag-uri tag-name))
+                           ("name" tag-name))))
+                  tags ", ")))
     (setq category (funcall (or op/retrieve-category-function
                                 op/get-file-category)
                             filename))
@@ -114,6 +143,11 @@ content of the buffer will be converted into html."
                                         (plist-get cat-config :uri-template)
                                         (plist-get attr-plist :date)
                                         (plist-get attr-plist :title)))
+    (plist-put attr-plist :disqus-id (plist-get attr-plist :uri))
+    (plist-put attr-plist :disqus-url (concat
+                                       (replace-regexp-in-string
+                                        "/?$" "" op/site-domain)
+                                       (plist-get attr-plist :disqus-id)))
     (plist-put attr-plist :pub-dir (file-name-as-directory
                                     (concat
                                      (file-name-as-directory pub-root-dir)
@@ -121,7 +155,7 @@ content of the buffer will be converted into html."
                                       "\\`/" ""
                                       (plist-get attr-plist :uri)))))
     (when do-pub
-      (plist-put attr-plist :pub-content (org-export-as 'html nil nil t nil)))))
+      (plist-put attr-plist :content (org-export-as 'html nil nil t nil)))))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
