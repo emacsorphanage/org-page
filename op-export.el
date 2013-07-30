@@ -108,8 +108,8 @@ content of the buffer will be converted into html."
                                          (nth 5 (file-attributes filename)))))
                        :tags ,nil
                        :disqus-shortname ,op/personal-disqus-shortname
-                       :google-analytics ,(if op/personal-google-analytics-id
-                                              t nil)
+                       :google-analytics ,(boundp
+                                           'op/personal-google-analytics-id)
                        :google-analytics-id ,op/personal-google-analytics-id
                        :creator-info ,org-html-creator-string
                        :content ,nil))
