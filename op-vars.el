@@ -116,6 +116,29 @@ presented by `op/repository-directory'."
   "The template used to construct pages, see the template itself for detail."
   :group 'org-page :type 'string)
 
+(defcustom op/retrieve-category-function 'op/get-file-category
+  "The function used to retrieve an org file's category, its parameter is the
+org file's path, the default value is `op/get-file-category'."
+  :group 'org-page :type 'function)
+
+(defvar op/category-config-alist
+  '(("blog" ;; this is the default configuration
+    :show-meta t
+    :show-comment t
+    :uri-generator 'op/generate-uri
+    :uri-template "/%y/%m/%d/%t/")
+   ("index"
+    :show-meta nil
+    :show-comment nil
+    :uri-generator 'op/generate-uri
+    :uri-template "/index/")
+   ("about"
+    :show-meta nil
+    :show-comment nil
+    :uri-generator 'op/generate-uri
+    :uri-template "/about/"))
+  "Configurations for different categories, can and should be customized.")
+
 (defvar op/default-template-parameters
   (ht ("blog-uri" "/blog/")
       ("wiki-uri" "/wiki/")
