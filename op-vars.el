@@ -126,7 +126,7 @@ org file's path, the default value is `op/get-file-category'."
     :show-meta t
     :show-comment t
     :uri-generator 'op/generate-uri
-    :uri-template "/%y/%m/%d/%t/")
+    :uri-template "/blog/%y/%m/%d/%t/")
    ("index"
     :show-meta nil
     :show-comment nil
