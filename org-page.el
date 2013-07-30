@@ -178,7 +178,7 @@ help configure it manually, usually it should be <org-page directory>/themes/."
               (string-prefix-p "https://" op/site-domain))
     (setq op/site-domain (concat "http://" op/site-domain)))
   (unless op/theme
-    (setq op/theme 'default)))
+    (setq op/theme 'mdo)))
 
 (defun op/generate-readme (save-dir)
   "Generate README for `op/new-repository'. SAVE-DIR is the directory where to
