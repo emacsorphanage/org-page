@@ -340,6 +340,15 @@ publication directory."
       (ht ("page-title" (concat "Index - " op/site-main-title))
           ("author" (or user-full-name "Unknown Author"))
           ("email" (confound-email (or user-mail-address "Unknown Email")))
+          ("site-mail-title" op/site-main-title)
+          ("site-sub-title" op/site-sub-title)
+          ("github" op/personal-github-link)
+          ("site-domain" (if (and op/site-domain
+                                  (string-match
+                                   "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                   op/site-domain))
+                             (match-string 1 op/site-domain)
+                           op/site-domain))
           ("show-meta" nil)
           ("show-comment" nil)
           ("google-analytics" t)
