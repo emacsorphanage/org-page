@@ -129,17 +129,17 @@ org file's path, the default value is `op/get-file-category'."
   '(("blog" ;; this is the default configuration
     :show-meta t
     :show-comment t
-    :uri-generator 'op/generate-uri
+    :uri-generator op/generate-uri
     :uri-template "/blog/%y/%m/%d/%t/")
    ("index"
     :show-meta nil
     :show-comment nil
-    :uri-generator 'op/generate-uri
+    :uri-generator op/generate-uri
     :uri-template "/")
    ("about"
     :show-meta nil
     :show-comment nil
-    :uri-generator 'op/generate-uri
+    :uri-generator op/generate-uri
     :uri-template "/about/"))
   "Configurations for different categories, can and should be customized.")
 
