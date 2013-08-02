@@ -332,40 +332,31 @@ directory. CATEGORY is 'blog or 'wiki, 'blog if other values."
   "Generate default index page, only if index.org does not exist. FILE-ATTR-LIST
 is the list of all file attribute property lists. PUB-BASE-DIR is the root
 publication directory."
-  (let* ((blog-list (op/filter-category-sorted file-attr-list 'blog))
-         (wiki-list (op/filter-category-sorted file-attr-list 'wiki))
-         (cat-alist `((blog . ,blog-list) (wiki . ,wiki-list)))
-         category plist-key)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (insert "#+TITLE: Index" "\n")
-      (insert "#+URI: /" "\n")
-      (insert "#+OPTIONS: *:nil" "\n\n")
-      (mapc
-       '(lambda (cell)
-          (setq category (symbol-name (car cell)))
-          (setq plist-key
-                (if (string= category "wiki") :mod-date :date))
-          (insert " - " category "\n")
-          (mapc '(lambda (attr-plist)
-                   (insert "   - " (fix-timestamp-string
-                                    (org-element-interpret-data
-                                     (plist-get attr-plist plist-key)))
-                           "\\nbsp\\nbsp»\\nbsp\\nbsp"
-                           "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
-                           (org-element-interpret-data
-                            (plist-get attr-plist :title))
-                           "</a>@@" "\n"))
-                (cdr cell)))
-       cat-alist)
-      (string-to-file
-       (mustache-render op/page-template
-                        (op/compose-template-parameters
-                         (org-combine-plists
-                          (org-export--get-inbuffer-options 'html)
-                          (op/get-inbuffer-extra-options))
-                         (org-export-as 'html nil nil t nil)))
-       (concat pub-base-dir "index.html")))))
+  (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
+        (id 0))
+    (string-to-file
+     (mustache-render
+      (file-to-string (concat op/template-directory "index.mustache"))
+      (ht ("page-title" (concat "Index - " op/site-main-title))
+          ("author" (or user-full-name "Unknown Author"))
+          ("email" (confound-email (or user-mail-address "Unknown Email")))
+          ("show-meta" nil)
+          ("show-comment" nil)
+          ("google-analytics" t)
+          ("google-analytics-id" op/personal-google-analytics-id)
+          ("creator-info" org-html-creator-string)
+          ("categories"
+           (mapcar
+            #'(lambda (cell)
+                (ht ("id" (setq id (+ id 1)))
+                    ("category" (car cell))
+                    ("posts" (mapcar
+                              #'(lambda (plist)
+                                  (ht ("post-uri" (plist-get plist :uri))
+                                      ("post-title" (plist-get plist :title))))
+                              (cdr cell)))))
+            sort-alist))))
+     (concat pub-base-dir "index.html"))))
 
 (defun op/generate-default-about (pub-base-dir)
   "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
