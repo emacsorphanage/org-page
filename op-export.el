@@ -250,25 +250,48 @@ NOTE: if :content of ATTR-PLIST is nil, the publication will be skipped."
   "TODO: add logic for this function, maybe a little complex."
   )
 
-(defun op/filter-category-sorted (file-attr-list category)
-  "Filter and sort attribute property lists from FILE-ATTR-LIST specified by
-CATEGORY. CATEGORY can only be 'blog or 'wiki, others will be considered as
-'blog. Category 'blog will make the filtered list sorted by creation date, while
-'wiki makes it sorted by last modification date. Later lies headmost for both."
-  (let ((cat (if (memq category '(blog wiki)) category 'blog))
-        (sort-alist '((blog . :date) (wiki . :mod-date))))
-    (sort (remove-if-not #'(lambda (attr-plist)
-                             (eq cat (plist-get attr-plist :category)))
-                         file-attr-list)
-          #'(lambda (plist1 plist2)
-              (<= (compare-standard-date
-                   (fix-timestamp-string
-                    (org-element-interpret-data
-                     (plist-get plist1 (cdr (assq cat sort-alist)))))
-                   (fix-timestamp-string
-                    (org-element-interpret-data
-                     (plist-get plist2 (cdr (assq cat sort-alist))))))
-                  0)))))
+(defun op/rearrange-category-sorted (file-attr-list)
+  "Rearrange and sort attribute property lists from FILE-ATTR-LIST. Rearrange
+according to category, and sort according to :sort-by property defined in
+`op/category-config-alist', if category is not in `op/category-config-alist',
+the default 'blog' category will be used. For sorting, later lies headmost."
+  (let (cat-alist cat-list)
+    (mapc
+     #'(lambda (plist)
+         (setq cat-list (cdr (assoc (plist-get plist :category) cat-alist)))
+         (if cat-list
+             (nconc cat-list (list plist))
+           (setq cat-alist (cons (cons (plist-get plist :category)
+                                       (list plist))
+                                 cat-alist))))
+     file-attr-list)
+    (mapcar
+     #'(lambda (cell)
+         (setcdr
+          cell
+          (sort (cdr cell)
+                #'(lambda (plist1 plist2)
+                    (<= (compare-standard-date
+                         (fix-timestamp-string
+                          (plist-get
+                           plist1
+                           (plist-get
+                            (cdr (or (assoc (plist-get plist1 :category)
+                                            op/category-config-alist)
+                                     (assoc "blog"
+                                            op/category-config-alist)))
+                            :sort-by)))
+                         (fix-timestamp-string
+                          (plist-get
+                           plist2
+                           (plist-get
+                            (cdr (or (assoc (plist-get plist2 :category)
+                                            op/category-config-alist)
+                                     (assoc "blog"
+                                            op/category-config-alist)))
+                            :sort-by))))
+                        0)))))
+     cat-alist)))
 
 (defun op/update-category-index (file-attr-list pub-base-dir category)
   "Update index page of category 'blog or 'wiki. FILE-ATTR-LIST is the list of
