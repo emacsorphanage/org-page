@@ -43,21 +43,19 @@ deleted. PUB-ROOT-DIR is the root publication directory."
     (op/update-default-template-parameters) ;; ensure default parameters are newest
     (when (or upd-list del-list)
       (mapc
-       '(lambda (org-file)
-          (setq visiting (find-buffer-visiting org-file))
-          (with-current-buffer (setq file-buffer
-                                     (or visiting (find-file org-file)))
-            (setq file-attr-list (cons (org-combine-plists
-                                        (org-export--get-buffer-attributes)
-                                        (org-export--get-inbuffer-options 'html)
-                                        (op/get-inbuffer-extra-options))
-                                       file-attr-list))
-            (when (member org-file upd-list)
-              (op/publish-modified-file
-               (car file-attr-list) pub-root-dir))
-            (when (member org-file del-list)
-              (op/handle-deleted-file org-file)))
-          (or visiting (kill-buffer file-buffer)))
+       #'(lambda (org-file)
+           (setq visiting (find-buffer-visiting org-file))
+           (with-current-buffer (setq file-buffer
+                                      (or visiting (find-file org-file)))
+             (setq file-attr-list (cons (op/get-org-file-options
+                                         pub-root-dir
+                                         (member org-file upd-list))
+                                        file-attr-list))
+             (when (member org-file upd-list)
+               (op/publish-modified-file (car file-attr-list)))
+             (when (member org-file del-list)
+               (op/handle-deleted-file org-file)))
+           (or visiting (kill-buffer file-buffer)))
        all-list)
       (unless (member
                (expand-file-name "index.org" op/repository-directory)
@@ -205,6 +203,7 @@ under `op/repository-directory'."
                                                   op/repository-directory)
                               "[/\\\\]+")))))
 
+;;; this function is now deprecated
 (defun op/get-inbuffer-extra-options ()
   "Read extra options(defined by ourselves) in current buffer, include:
 1. modification date (read from git last commit date, current date if current
@@ -234,21 +233,18 @@ a temp buffer)"
                                 (op/read-org-option "TITLE")
                                 (plist-get attr-plist :category)))))
 
-(defun op/publish-modified-file (attr-plist pub-base-dir)
+(defun op/publish-modified-file (attr-plist)
   "Publish org file opened in current buffer. ATTR-PLIST is the attribute
-property list of current file. PUB-BASE-DIR is the root publication directory."
-  (let* ((uri (plist-get attr-plist :uri))
-         (pub-dir (file-name-as-directory
-                   (concat (file-name-as-directory pub-base-dir)
-                           (replace-regexp-in-string "\\`/" "" uri))))
-         pub-content)
-    (unless (file-directory-p pub-dir)
-      (mkdir pub-dir t))
-    (string-to-file (mustache-render op/page-template
-                                     (op/compose-template-parameters
-                                      attr-plist
-                                      (org-export-as 'html nil nil t nil)))
-                    (concat pub-dir "index.html"))))
+property list of current file.
+NOTE: if :content of ATTR-PLIST is nil, the publication will be skipped."
+  (when (plist-get attr-plist :content)
+    (let ((pub-dir (plist-get attr-plist :pub-dir))
+          (mustache-partial-paths `(,op/template-directory)))
+      (unless (file-directory-p pub-dir)
+        (mkdir pub-dir t))
+      (string-to-file (mustache-render op/page-template
+                                       (ht-from-plist attr-plist))
+                      (concat pub-dir "index.html")))))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."

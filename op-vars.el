@@ -109,11 +109,15 @@ presented by `op/repository-directory'."
   "Personal google analytics id."
   :group 'org-page :type 'string)
 
+(defcustom op/template-directory
+  (concat op/load-directory
+          (format "themes/%s/templates/" (symbol-name (or op/theme 'mdo))))
+  "The directory stores templates for page rendering."
+  :group 'org-page :type 'string)
+
 (defcustom op/page-template
-  (file-to-string (concat op/load-directory
-                          (format "themes/%s/templates/template.html"
-                                  (symbol-name (or op/theme 'mdo)))))
-  "The template used to construct pages, see the template itself for detail."
+  (file-to-string (concat op/template-directory "container.mustache"))
+  "The template used to render pages, see the template itself for detail."
   :group 'org-page :type 'string)
 
 (defcustom op/retrieve-category-function 'op/get-file-category
