@@ -102,7 +102,7 @@
 * Dependencies
 
   1. [[http://www.gnu.org/software/emacs/][Emacs]]: this is an "of-course" dependency
-  2. [[http://orgmode.org/][org mode]]: which is already included in Emacs
+  2. [[http://orgmode.org/][org mode]] (version >= 8.0): in Emacs, "M-x list-packages", make sure org-mode version >= 8.0. [[http://orgmode.org/worg/org-8.0.html][reference]]
   3. [[http://git-scm.com][git]]: a free and open source version control system
   4. [[https://github.com/Wilfred/mustache.el][mustache.el]]: a mustache templating library for Emacs
 
