@@ -373,6 +373,8 @@ publication directory."
 is the root publication directory."
   (let ((pub-dir (expand-file-name "about/" pub-base-dir))
         (mustache-partial-paths `(,op/template-directory)))
+    (unless (file-directory-p pub-dir)
+      (mkdir pub-dir t))
     (string-to-file
      (mustache-render
       (file-to-string (concat op/template-directory "about.mustache"))
