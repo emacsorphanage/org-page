@@ -409,14 +409,14 @@ TODO: improve this function."
         (msutache-partial-paths `(,op/template-directory))
         tag-alist tag-list tag-dir)
     (mapc
-     '(lambda (attr-plist)
-        (mapc
-         '(lambda (tag-name)
-            (setq tag-list (assoc tag-name tag-alist))
-            (unless tag-list
-              (add-to-list 'tag-alist (setq tag-list `(,tag-name))))
-            (nconc tag-list (list attr-plist)))
-         (plist-get attr-plist :tags)))
+     #'(lambda (attr-plist)
+         (mapc
+          #'(lambda (tag-name)
+              (setq tag-list (assoc tag-name tag-alist))
+              (unless tag-list
+                (add-to-list 'tag-alist (setq tag-list `(,tag-name))))
+              (nconc tag-list (list attr-plist)))
+          (plist-get attr-plist :tags)))
      file-attr-list)
     (unless (file-directory-p tag-base-dir)
       (mkdir tag-base-dir t))
