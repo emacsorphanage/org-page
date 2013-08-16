@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  {{> header}}
+  <body class="container">
+    {{> nav}}
+
+    <div>
+      <div class="post">
+        <h1>{{cat-name}} Index</h1>
+        <ul class="org-ul">
+          {{#posts}}
+          <li>{{date}}&nbsp;&nbsp;»&nbsp;&nbsp;<a href="{{post-uri}}">{{post-title}}</a></li>
+          {{/posts}}
+        </ul>
+      </div>
+    </div>
+
+    {{> footer}}
+  </body>
+</html>

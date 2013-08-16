@@ -293,15 +293,60 @@ the default 'blog' category will be used. For sorting, later lies headmost."
                         0)))))
      cat-alist)))
 
-(defun op/update-category-index (file-attr-list pub-base-dir category)
-  "Update index page of category 'blog or 'wiki. FILE-ATTR-LIST is the list of
-all file attribute property lists. PUB-BASE-DIR is the root publication
-directory. CATEGORY is 'blog or 'wiki, 'blog if other values."
-  (let* ((cat (if (memq category '(blog wiki)) category 'blog))
-         (sort-alist '((blog . :date) (wiki . :mod-date)))
-         (cat-list (op/filter-category-sorted file-attr-list cat))
-         (pub-dir (file-name-as-directory
-                   (expand-file-name (symbol-name cat) pub-base-dir))))
+(defun op/update-category-index (file-attr-list pub-base-dir)
+  "Update index page of different categories. FILE-ATTR-LIST is the list of all
+file attribute property lists. PUB-BASE-DIR is the root publication directory."
+  (let* ((sort-alist (op/rearrange-category-sorted file-attr-list))
+         (mustache-partial-paths `(,op/template-directory))
+         cat-dir)
+    (mapc
+     #'(lambda (cat-list)
+         (setq cat-dir (file-name-as-directory
+                        (concat pub-base-dir
+                                (convert-string-to-path (car cat-list)))))
+         (unless (file-directory-p cat-dir)
+           (mkdir cat-dir t))
+         (string-to-file
+          (mustache-render
+           (file-to-string (concat op/template-directory "cat-index.mustache"))
+           (ht ("page-title" (concat (car cat-list) " Index"
+                                     " - "
+                                     op/site-main-title))
+               ("author" (or user-full-name "Unknown Author"))
+               ("email" (confound-email (or user-mail-address "Unknown Email")))
+               ("site-mail-title" op/site-main-title)
+               ("site-sub-title" op/site-sub-title)
+               ("github" op/personal-github-link)
+               ("site-domain" (if (and op/site-domain
+                                       (string-match
+                                        "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                        op/site-domain))
+                                  (match-string 1 op/site-domain)
+                                op/site-domain))
+               ("show-meta" nil)
+               ("show-comment" nil)
+               ("google-analytics" t)
+               ("google-analytics-id" op/personal-google-analytics-id)
+               ("creator-info" org-html-creator-string)
+               ("cat-name" (car cat-list))
+               ("posts"
+                (mapcar
+                 #'(lambda (attr-plist)
+                     (ht ("date" (plist-get
+                                  attr-plist
+                                  (plist-get
+                                   (cdr
+                                    (or (assoc (plist-get attr-plist :category)
+                                               op/category-config-alist)
+                                        (assoc "blog"
+                                               op/category-config-alist)))
+                                   :sort-by)))
+                         ("post-uri" (plist-get attr-plist :uri))
+                         ("post-title" (plist-get attr-plist :title))))
+                 (cdr cat-list)))))
+          (concat cat-dir "index.html")))
+     sort-alist)
+
     (with-current-buffer (get-buffer-create op/temp-buffer-name)
       (erase-buffer)
       (insert "#+TITLE: " (capitalize (symbol-name cat)) " Index" "\n")
