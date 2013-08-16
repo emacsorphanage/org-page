@@ -118,7 +118,7 @@ content of the buffer will be converted into html."
     (when tags
       (plist-put
        attr-plist :tags (delete "" (mapcar 'trim-string
-                                           (split-string tags "[;,]+" t)))))
+                                           (split-string tags "[:,]+" t)))))
     (plist-put
      attr-plist :tag-links
      (if (not tags) "N/A"
@@ -127,7 +127,7 @@ content of the buffer will be converted into html."
                        "<a href=\"{{link}}\">{{name}}</a>"
                        (ht ("link" (op/generate-tag-uri tag-name))
                            ("name" tag-name))))
-                  tags ", ")))
+                  (plist-get attr-plist :tags) ", ")))
     (setq category (funcall (or op/retrieve-category-function
                                 op/get-file-category)
                             filename))
