@@ -32,8 +32,8 @@
   "This function is for:
 1. publish changed org files to html
 2. delete html files which are relevant to deleted org files (NOT implemented)
-3. update index page
-4. regenerate tag pages.
+3. update index pages
+4. regenerate tag pages
 ALL-LIST contains paths of all org files, CHANGE-PLIST contains two properties,
 one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
@@ -65,8 +65,7 @@ deleted. PUB-ROOT-DIR is the root publication directory."
                (expand-file-name "about.org" op/repository-directory)
                all-list)
         (op/generate-default-about pub-root-dir))
-      (op/update-category-index file-attr-list pub-root-dir 'blog)
-      (op/update-category-index file-attr-list pub-root-dir 'wiki)
+      (op/update-category-index file-attr-list pub-root-dir)
       (op/update-tags file-attr-list pub-root-dir))))
 
 (defun op/get-org-file-options (pub-root-dir do-pub)
