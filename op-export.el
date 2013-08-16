@@ -333,6 +333,7 @@ directory. CATEGORY is 'blog or 'wiki, 'blog if other values."
 is the list of all file attribute property lists. PUB-BASE-DIR is the root
 publication directory."
   (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
+        (mustache-partial-paths `(,op/template-directory))
         (id 0))
     (string-to-file
      (mustache-render
