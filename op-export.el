@@ -406,6 +406,7 @@ is the root publication directory."
 lists. PUB-BASE-DIR is the root publication directory.
 TODO: improve this function."
   (let ((tag-base-dir (expand-file-name "tags/" pub-base-dir))
+        (msutache-partial-paths `(,op/template-directory))
         tag-alist tag-list tag-dir)
     (mapc
      '(lambda (attr-plist)
@@ -417,55 +418,73 @@ TODO: improve this function."
             (nconc tag-list (list attr-plist)))
          (plist-get attr-plist :tags)))
      file-attr-list)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (insert "#+TITLE: Tag Index" "\n")
-      (insert "#+URI: /tags/" "\n")
-      (insert "#+OPTIONS: *:nil" "\n\n")
-      (mapc '(lambda (tag-list)
-               (insert " - " "@@html:<a href=\""
-                       (op/generate-tag-uri (car tag-list))
-                       "\">" (car tag-list)
-                       " (" (number-to-string (length (cdr tag-list))) ")"
-                       "</a>@@" "\n"))
-            tag-alist)
-      (unless (file-directory-p tag-base-dir)
-        (mkdir tag-base-dir t))
-      (string-to-file
-       (mustache-render op/page-template
-                        (op/compose-template-parameters
-                         (org-combine-plists
-                          (org-export--get-inbuffer-options 'html)
-                          (op/get-inbuffer-extra-options))
-                         (org-export-as 'html nil nil t nil)))
-       (concat tag-base-dir "index.html")))
+    (unless (file-directory-p tag-base-dir)
+      (mkdir tag-base-dir t))
+    (string-to-file
+     (mustache-render
+      (file-to-string (concat op/template-directory "tag-index.mustache"))
+      (ht ("page-title" (concat "Tag Index - " op/site-main-title))
+          ("author" (or user-full-name "Unknown Author"))
+          ("email" (confound-email (or user-mail-address "Unknown Email")))
+          ("site-mail-title" op/site-main-title)
+          ("site-sub-title" op/site-sub-title)
+          ("github" op/personal-github-link)
+          ("site-domain" (if (and op/site-domain
+                                  (string-match
+                                   "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                   op/site-domain))
+                             (match-string 1 op/site-domain)
+                           op/site-domain))
+          ("show-meta" nil)
+          ("show-comment" nil)
+          ("google-analytics" t)
+          ("google-analytics-id" op/personal-google-analytics-id)
+          ("creator-info" org-html-creator-string)
+          ("tags"
+           (mapcar
+            #'(lambda (tag-list)
+                (ht ("tag-name" (car tag-list))
+                    ("tag-uri" (op/generate-tag-uri (car tag-list)))
+                    ("count" (number-to-string (length (cdr tag-list))))))
+            tag-alist))))
+     (concat tag-base-dir "index.html"))
     (mapc
      #'(lambda (tag-list)
-         (with-current-buffer (get-buffer-create op/temp-buffer-name)
-           (erase-buffer)
-           (insert "#+TITLE: Tag: " (car tag-list) "\n")
-           (insert "#+URI: " (op/generate-tag-uri (car tag-list)) "\n")
-           (insert "#+OPTIONS: *:nil" "\n\n")
-           (mapc #'(lambda (attr-plist)
-                     (insert " - "
-                             "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
-                             (org-element-interpret-data
-                              (plist-get attr-plist :title))
-                             "</a>@@" "\n"))
-                 (cdr tag-list))
-           (setq tag-dir (file-name-as-directory
-                          (concat tag-base-dir
-                                  (convert-string-to-path (car tag-list)))))
-           (unless (file-directory-p tag-dir)
-             (mkdir tag-dir t))
-           (string-to-file
-            (mustache-render op/page-template
-                             (op/compose-template-parameters
-                              (org-combine-plists
-                               (org-export--get-inbuffer-options 'html)
-                               (op/get-inbuffer-extra-options))
-                              (org-export-as 'html nil nil t nil)))
-            (concat tag-dir "index.html"))))
+         (setq tag-dir (file-name-as-directory
+                        (concat tag-base-dir
+                                (convert-string-to-path (car tag-list)))))
+         (unless (file-directory-p tag-dir)
+           (mkdir tag-dir t))
+         (string-to-file
+          (mustache-render
+           (file-to-string (concat op/template-directory "tag.mustache"))
+           (ht ("page-title" (concat "Tag: " (car tag-list)
+                                     " - "
+                                     op/site-main-title))
+               ("author" (or user-full-name "Unknown Author"))
+               ("email" (confound-email (or user-mail-address "Unknown Email")))
+               ("site-mail-title" op/site-main-title)
+               ("site-sub-title" op/site-sub-title)
+               ("github" op/personal-github-link)
+               ("site-domain" (if (and op/site-domain
+                                       (string-match
+                                        "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                        op/site-domain))
+                                  (match-string 1 op/site-domain)
+                                op/site-domain))
+               ("show-meta" nil)
+               ("show-comment" nil)
+               ("google-analytics" t)
+               ("google-analytics-id" op/personal-google-analytics-id)
+               ("creator-info" org-html-creator-string)
+               ("tag-name" (car tag-list))
+               ("posts"
+                (mapcar
+                 #'(lambda (attr-plist)
+                     (ht ("post-uri" (plist-get attr-plist :uri))
+                         ("post-title" (plist-get attr-plist :title))))
+                 (cdr tag-list)))))
+          (concat tag-dir "index.html")))
      tag-alist)))
 
 ;; (defun op/kill-exported-buffer (export-buf-or-file)
