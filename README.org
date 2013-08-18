@@ -105,6 +105,7 @@
   2. [[http://orgmode.org/][org mode]] (version >= 8.0): in Emacs, "M-x list-packages", make sure org-mode version >= 8.0. [[http://orgmode.org/worg/org-8.0.html][reference]]
   3. [[http://git-scm.com][git]]: a free and open source version control system
   4. [[https://github.com/Wilfred/mustache.el][mustache.el]]: a mustache templating library for Emacs
+  5. Be sure htmlize.el is installed to make syntax highlighting work
 
 * Known issues
 
