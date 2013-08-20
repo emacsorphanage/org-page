@@ -301,51 +301,57 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
          cat-dir)
     (mapc
      #'(lambda (cat-list)
-         (setq cat-dir (file-name-as-directory
-                        (concat (file-name-as-directory pub-base-dir)
-                                (convert-string-to-path (car cat-list)))))
-         (unless (file-directory-p cat-dir)
-           (mkdir cat-dir t))
-         (string-to-file
-          (mustache-render
-           (file-to-string (concat op/template-directory
-                                   "category-index.mustache"))
-           (ht ("page-title" (concat (car cat-list) " Index"
-                                     " - "
-                                     op/site-main-title))
-               ("author" (or user-full-name "Unknown Author"))
-               ("email" (confound-email (or user-mail-address "Unknown Email")))
-               ("site-mail-title" op/site-main-title)
-               ("site-sub-title" op/site-sub-title)
-               ("github" op/personal-github-link)
-               ("site-domain" (if (and op/site-domain
-                                       (string-match
-                                        "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                        op/site-domain))
-                                  (match-string 1 op/site-domain)
-                                op/site-domain))
-               ("show-meta" nil)
-               ("show-comment" nil)
-               ("google-analytics" t)
-               ("google-analytics-id" op/personal-google-analytics-id)
-               ("creator-info" org-html-creator-string)
-               ("cat-name" (car cat-list))
-               ("posts"
-                (mapcar
-                 #'(lambda (attr-plist)
-                     (ht ("date" (plist-get
-                                  attr-plist
-                                  (plist-get
-                                   (cdr
-                                    (or (assoc (plist-get attr-plist :category)
-                                               op/category-config-alist)
-                                        (assoc "blog"
-                                               op/category-config-alist)))
-                                   :sort-by)))
-                         ("post-uri" (plist-get attr-plist :uri))
-                         ("post-title" (plist-get attr-plist :title))))
-                 (cdr cat-list)))))
-          (concat cat-dir "index.html")))
+         (unless (not (plist-get (cdr (or (assoc (car cat-list)
+                                                 op/category-config-alist)
+                                          (assoc "blog"
+                                                 op/category-config-alist)))
+                                 :category-index))
+           (setq cat-dir (file-name-as-directory
+                          (concat (file-name-as-directory pub-base-dir)
+                                  (convert-string-to-path (car cat-list)))))
+           (unless (file-directory-p cat-dir)
+             (mkdir cat-dir t))
+           (string-to-file
+            (mustache-render
+             (file-to-string (concat op/template-directory
+                                     "category-index.mustache"))
+             (ht ("page-title" (concat (car cat-list) " Index"
+                                       " - "
+                                       op/site-main-title))
+                 ("author" (or user-full-name "Unknown Author"))
+                 ("email" (confound-email (or user-mail-address
+                                              "Unknown Email")))
+                 ("site-mail-title" op/site-main-title)
+                 ("site-sub-title" op/site-sub-title)
+                 ("github" op/personal-github-link)
+                 ("site-domain" (if (and op/site-domain
+                                         (string-match
+                                          "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                          op/site-domain))
+                                    (match-string 1 op/site-domain)
+                                  op/site-domain))
+                 ("show-meta" nil)
+                 ("show-comment" nil)
+                 ("google-analytics" t)
+                 ("google-analytics-id" op/personal-google-analytics-id)
+                 ("creator-info" org-html-creator-string)
+                 ("cat-name" (car cat-list))
+                 ("posts"
+                  (mapcar
+                   #'(lambda (attr-plist)
+                       (ht ("date"
+                            (plist-get
+                             attr-plist
+                             (plist-get
+                              (cdr (or (assoc (plist-get attr-plist :category)
+                                              op/category-config-alist)
+                                       (assoc "blog"
+                                              op/category-config-alist)))
+                              :sort-by)))
+                           ("post-uri" (plist-get attr-plist :uri))
+                           ("post-title" (plist-get attr-plist :title))))
+                   (cdr cat-list)))))
+            (concat cat-dir "index.html"))))
      sort-alist)))
 
 (defun op/generate-default-index (file-attr-list pub-base-dir)

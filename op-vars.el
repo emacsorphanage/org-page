@@ -131,19 +131,22 @@ org file's path, the default value is `op/get-file-category'."
     :show-comment t
     :uri-generator op/generate-uri
     :uri-template "/blog/%y/%m/%d/%t/"
-    :sort-by :date)
+    :sort-by :date     ;; how to sort the posts
+    :category-index t) ;; generate category index or not
    ("index"
     :show-meta nil
     :show-comment nil
     :uri-generator op/generate-uri
     :uri-template "/"
-    :sort-by :date)
+    :sort-by :date
+    :category-index nil)
    ("about"
     :show-meta nil
     :show-comment nil
     :uri-generator op/generate-uri
     :uri-template "/about/"
-    :sort-by :date))
+    :sort-by :date
+    :category-index nil))
   "Configurations for different categories, can and should be customized.")
 
 (defvar op/default-template-parameters
