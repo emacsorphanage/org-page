@@ -264,7 +264,7 @@ the default 'blog' category will be used. For sorting, later lies headmost."
                                        (list plist))
                                  cat-alist))))
      file-attr-list)
-    (mapcar
+    (mapc
      #'(lambda (cell)
          (setcdr
           cell
