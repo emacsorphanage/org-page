@@ -122,7 +122,8 @@ presented by `op/repository-directory'."
 
 (defcustom op/retrieve-category-function 'op/get-file-category
   "The function used to retrieve an org file's category, its parameter is the
-org file's path, the default value is `op/get-file-category'."
+org file's path, if parameter is nil, it should return all categories, the
+default value is `op/get-file-category'."
   :group 'org-page :type 'function)
 
 (defvar op/category-config-alist

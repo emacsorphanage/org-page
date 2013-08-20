@@ -187,13 +187,22 @@ can contain following parameters:
                                 (?t . ,encoded-title)))))
 
 (defun op/get-file-category (org-file)
-  "Get org file category presented by ORG-FILE. This is the default function
-used to get a file's category, see `op/retrieve-category-function'.
-How to judge a file's category is based on its name and its root folder name
-under `op/repository-directory'."
-  (cond ((or (not org-file)
-             (string= (file-name-directory (expand-file-name org-file))
-                      op/repository-directory)) "blog")
+  "Get org file category presented by ORG-FILE, return all categories if
+ORG-FILE is nil. This is the default function used to get a file's category,
+see `op/retrieve-category-function'. How to judge a file's category is based on
+its name and its root folder name under `op/repository-directory'."
+  (cond ((not org-file)
+         (let ((cat-list '("index" "about" "blog"))) ;; 3 default categories
+           (dolist (f (directory-files op/repository-directory))
+             (when (and (not (equal f "."))
+                        (not (equal f ".."))
+                        (not (equal f ".git"))
+                        (not (equal f "blog"))
+                        (file-directory-p
+                         (expand-file-name f op/repository-directory)))
+               (cons f cat-list)))))
+        ((string= (file-name-directory (expand-file-name org-file))
+                  op/repository-directory) "blog")
         ((string= (expand-file-name "index.org" op/repository-directory)
                   (expand-file-name org-file)) "index")
         ((string= (expand-file-name "about.org" op/repository-directory)
