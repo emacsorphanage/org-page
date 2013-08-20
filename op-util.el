@@ -192,7 +192,7 @@ TODO2: maybe DBCS strings should also be converted into ASCII URL path"
     (when (file-writable-p file)
       (write-region (point-min) (point-max) file))))
 
-(defun covert-plist-to-hashtable (plist)
+(defun convert-plist-to-hashtable (plist)
   "Convert normal property list PLIST into hash table, keys of PLIST should be
 in format :key, and it will be converted into \"key\" in hash table. This is an
 alternative to `ht-from-plist'."
