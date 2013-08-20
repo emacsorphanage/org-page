@@ -301,13 +301,14 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
     (mapc
      #'(lambda (cat-list)
          (setq cat-dir (file-name-as-directory
-                        (concat pub-base-dir
+                        (concat (file-name-as-directory pub-base-dir)
                                 (convert-string-to-path (car cat-list)))))
          (unless (file-directory-p cat-dir)
            (mkdir cat-dir t))
          (string-to-file
           (mustache-render
-           (file-to-string (concat op/template-directory "cat-index.mustache"))
+           (file-to-string (concat op/template-directory
+                                   "category-index.mustache"))
            (ht ("page-title" (concat (car cat-list) " Index"
                                      " - "
                                      op/site-main-title))
