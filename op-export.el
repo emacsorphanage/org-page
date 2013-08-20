@@ -242,7 +242,8 @@ NOTE: if :content of ATTR-PLIST is nil, the publication will be skipped."
       (unless (file-directory-p pub-dir)
         (mkdir pub-dir t))
       (string-to-file (mustache-render op/page-template
-                                       (ht-from-plist attr-plist))
+                                       ;; (ht-from-plist attr-plist)
+                                       (convert-plist-to-hashtable attr-plist))
                       (concat pub-dir "index.html")))))
 
 (defun op/handle-deleted-file (org-file-path)
