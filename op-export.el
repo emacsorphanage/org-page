@@ -346,33 +346,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                          ("post-title" (plist-get attr-plist :title))))
                  (cdr cat-list)))))
           (concat cat-dir "index.html")))
-     sort-alist)
-
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (insert "#+TITLE: " (capitalize (symbol-name cat)) " Index" "\n")
-      (insert "#+URI: /" (symbol-name cat) "/\n")
-      (insert "#+OPTIONS: *:nil" "\n\n")
-      (mapc '(lambda (attr-plist)
-               (insert " - "
-                       (fix-timestamp-string
-                        (org-element-interpret-data
-                         (plist-get attr-plist (cdr (assq cat sort-alist)))))
-                       "\\nbsp\\nbsp»\\nbsp\\nbsp"
-                       "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
-                       (org-element-interpret-data
-                        (plist-get attr-plist :title)) "</a>@@" "\n"))
-            cat-list)
-      (unless (file-directory-p pub-dir)
-        (mkdir pub-dir t))
-      (string-to-file
-       (mustache-render op/page-template
-                        (op/compose-template-parameters
-                         (org-combine-plists
-                          (org-export--get-inbuffer-options 'html)
-                          (op/get-inbuffer-extra-options))
-                         (org-export-as 'html nil nil t nil)))
-       (concat pub-dir "index.html")))))
+     sort-alist)))
 
 (defun op/generate-default-index (file-attr-list pub-base-dir)
   "Generate default index page, only if index.org does not exist. FILE-ATTR-LIST
