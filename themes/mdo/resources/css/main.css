@@ -201,7 +201,7 @@ table th.right, table td.right {
 /* searchform*/
 #searchform {
     position: absolute;
-    top: 3.8em;
+    top: 5.4rem;
     right: 30.4%;
 }
 #searchform #s {
@@ -210,7 +210,7 @@ table th.right, table td.right {
     border: 1px solid #ddd;
     border-radius: 2px;
     -moz-border-radius: 2px;
-    width: 90px;
+    width: 9rem;
     height: 30px;
     line-height: 1.2em;
     padding: 4px 10px 4px 28px;
@@ -227,7 +227,7 @@ table th.right, table td.right {
 }
 #searchform #s:focus {
     background-color: #f9f9f9;
-    width: 196px;    
+    width: 16rem;    
 }
 /* post */
 .post {
