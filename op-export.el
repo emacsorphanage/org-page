@@ -200,7 +200,8 @@ its name and its root folder name under `op/repository-directory'."
                         (not (equal f "blog"))
                         (file-directory-p
                          (expand-file-name f op/repository-directory)))
-               (cons f cat-list)))))
+               (setq cat-list (cons f cat-list))))
+           cat-list))
         ((string= (file-name-directory (expand-file-name org-file))
                   op/repository-directory) "blog")
         ((string= (expand-file-name "index.org" op/repository-directory)
