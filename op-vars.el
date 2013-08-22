@@ -150,6 +150,7 @@ default value is `op/get-file-category'."
     :category-index nil))
   "Configurations for different categories, can and should be customized.")
 
+;;; this variable is deprecated
 (defvar op/default-template-parameters
   (ht ("blog-uri" "/blog/")
       ("wiki-uri" "/wiki/")
@@ -168,6 +169,11 @@ default value is `op/get-file-category'."
       ("google-analytics" (if op/personal-google-analytics-id t nil))
       ("creator-info" org-html-creator-string))
   "Default template rendering parameters.")
+
+;;; testing
+(defvar op/navigation-html-cache nil
+  "The cache of generated navigation bar html content, caching it because it is
+the same for every page.")
 
 
 (provide 'op-vars)

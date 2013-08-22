@@ -28,6 +28,39 @@
 
 (require 'mustache)
 
+(defun op/render-navigation-bar (&optional param-table)
+  "Render the navigation bar on each page. it will be read firstly from
+`op/navigation-html-cache', if there is no cached content, it will be rendered
+and pushed into cache from template. PARAM-TABLE is the hash table for mustache
+to render the template. If it is not set or nil, this function will try to
+render from a default hash table."
+  (or op/navigation-html-cache
+      (setq op/navigation-html-cache
+            (mustache-render
+             (file-to-string (concat op/template-directory "nav.mustache"))
+             (or param-table
+                 (ht ("site-main-title" op/site-main-title)
+                     ("site-sub-title" op/site-sub-title)
+                     ("nav-categories"
+                      (mapcar
+                       #'(lambda (cat)
+                           (ht ("category-uri"
+                                (concat "/" (convert-string-to-path cat) "/"))
+                               ("category-name" (capitalize cat))))
+                       (sort (remove-if
+                              #'(lambda (cat)
+                                  (or (string= cat "index")
+                                      (string= cat "about")))
+                              (op/get-file-category nil))
+                             'string-lessp)))
+                     ("github" op/personal-github-link)
+                     ("site-domain" (if (string-match
+                                         "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                         op/site-domain)
+                                        (match-string 1 op/site-domain)
+                                      op/site-domain))))))))
+
+;;; this function is deprecated
 (defun op/update-default-template-parameters ()
   "Update the default template parameters. It is only needed when user did some
 customization to relevant variables."
@@ -45,6 +78,7 @@ customization to relevant variables."
        ("google-analytics" (if op/personal-google-analytics-id t nil))))
   op/default-template-parameters)
 
+;;; this function is deprecated
 (defun op/compose-template-parameters (attr-plist content)
   "Compose parameters for org file represented in current buffer.
 ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
