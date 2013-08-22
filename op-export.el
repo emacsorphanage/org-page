@@ -345,8 +345,8 @@ directory."
              (file-to-string (concat op/template-directory
                                      "category-index.mustache"))
              (ht-merge
-              (ht ("page-title" (concat (car cat-list) " Index"
-                                        " - "
+              (ht ("page-title" (concat (capitalize (car cat-list))
+                                        " Index" " - "
                                         op/site-main-title))
                   ("author" (or user-full-name "Unknown Author"))
                   ("email" (confound-email (or user-mail-address
@@ -365,7 +365,7 @@ directory."
                   ("google-analytics" t)
                   ("google-analytics-id" op/personal-google-analytics-id)
                   ("creator-info" org-html-creator-string)
-                  ("cat-name" (car cat-list))
+                  ("cat-name" (capitalize (car cat-list)))
                   ("posts"
                    (mapcar
                     #'(lambda (attr-plist)
