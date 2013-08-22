@@ -471,7 +471,7 @@ lists. NAV-CATEGORY-TABLE is the hash table of categories will be shown in
 navigation bar. PUB-BASE-DIR is the root publication directory.
 TODO: improve this function."
   (let ((tag-base-dir (expand-file-name "tags/" pub-base-dir))
-        (msutache-partial-paths `(,op/template-directory))
+        (mustache-partial-paths `(,op/template-directory))
         tag-alist tag-list tag-dir)
     (mapc
      #'(lambda (attr-plist)
