@@ -81,8 +81,9 @@ content of the buffer will be converted into html."
                        :email ,(confound-email (or (op/read-org-option "EMAIL")
                                                    user-mail-address
                                                    "Unknown Email"))
-                       :date ,(or (op/read-org-option "DATE")
-                                  (format-time-string "%Y-%m-%d"))
+                       :date ,(fix-timestamp-string
+                               (or (op/read-org-option "DATE")
+                                   (format-time-string "%Y-%m-%d")))
                        :keywords ,(op/read-org-option "KEYWORDS")
                        :description ,(op/read-org-option "DESCRIPTION")
                        :site-main-title ,op/site-main-title
