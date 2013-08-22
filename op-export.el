@@ -39,6 +39,15 @@ one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
   (let* ((upd-list (plist-get change-plist :update))
          (del-list (plist-get change-plist :delete))
+         (nav-cat-table (ht ("nav-categories"
+                             (mapcar #'(lambda (cat)
+                                         (ht ("category-uri"
+                                              (convert-string-to-path cat))
+                                             ("category-name" cat)))
+                                     (remove-if #'(lambda (cat)
+                                                    (or (string= cat "index")
+                                                        (string= cat "about")))
+                                                (op/get-file-category nil))))))
          visiting file-buffer file-attr-list)
     (op/update-default-template-parameters) ;; ensure default parameters are newest
     (when (or upd-list del-list)
@@ -52,7 +61,7 @@ deleted. PUB-ROOT-DIR is the root publication directory."
                                          (member org-file upd-list))
                                         file-attr-list))
              (when (member org-file upd-list)
-               (op/publish-modified-file (car file-attr-list)))
+               (op/publish-modified-file nav-cat-table (car file-attr-list)))
              (when (member org-file del-list)
                (op/handle-deleted-file org-file)))
            (or visiting (kill-buffer file-buffer)))
@@ -60,13 +69,13 @@ deleted. PUB-ROOT-DIR is the root publication directory."
       (unless (member
                (expand-file-name "index.org" op/repository-directory)
                all-list)
-        (op/generate-default-index file-attr-list pub-root-dir))
+        (op/generate-default-index file-attr-list nav-cat-table pub-root-dir))
       (unless (member ; TODO customization
                (expand-file-name "about.org" op/repository-directory)
                all-list)
-        (op/generate-default-about pub-root-dir))
-      (op/update-category-index file-attr-list pub-root-dir)
-      (op/update-tags file-attr-list pub-root-dir))))
+        (op/generate-default-about nav-category-table pub-root-dir))
+      (op/update-category-index file-attr-list nav-cat-table pub-root-dir)
+      (op/update-tags file-attr-list nav-cat-table pub-root-dir))))
 
 (defun op/get-org-file-options (pub-root-dir do-pub)
   "Retrieve all needed options for org file opened in current buffer.
@@ -243,9 +252,10 @@ a temp buffer)"
                                 (op/read-org-option "TITLE")
                                 (plist-get attr-plist :category)))))
 
-(defun op/publish-modified-file (attr-plist)
-  "Publish org file opened in current buffer. ATTR-PLIST is the attribute
-property list of current file.
+(defun op/publish-modified-file (nav-category-table attr-plist)
+  "Publish org file opened in current buffer. NAV-CATEGORY-TABLE is the hash
+table of categories that will be shown in navigation bar, ATTR-PLIST is the
+attribute property list of current file.
 NOTE: if :content of ATTR-PLIST is nil, the publication will be skipped."
   (when (plist-get attr-plist :content)
     (let ((pub-dir (plist-get attr-plist :pub-dir))
@@ -254,7 +264,9 @@ NOTE: if :content of ATTR-PLIST is nil, the publication will be skipped."
         (mkdir pub-dir t))
       (string-to-file (mustache-render op/page-template
                                        ;; (ht-from-plist attr-plist)
-                                       (convert-plist-to-hashtable attr-plist))
+                                       (ht-merge
+                                        (convert-plist-to-hashtable attr-plist)
+                                        nav-category-table))
                       (concat pub-dir "index.html") 'html-mode))))
 
 (defun op/handle-deleted-file (org-file-path)
@@ -304,9 +316,11 @@ the default 'blog' category will be used. For sorting, later lies headmost."
                         0)))))
      cat-alist)))
 
-(defun op/update-category-index (file-attr-list pub-base-dir)
+(defun op/update-category-index (file-attr-list nav-category-table pub-base-dir)
   "Update index page of different categories. FILE-ATTR-LIST is the list of all
-file attribute property lists. PUB-BASE-DIR is the root publication directory."
+file attribute property lists. NAV-CATEGORY-TABLE is the hash table of
+categories will be shown in navigation bar. PUB-BASE-DIR is the root publication
+directory."
   (let* ((sort-alist (op/rearrange-category-sorted file-attr-list))
          (mustache-partial-paths `(,op/template-directory))
          cat-dir)
@@ -326,48 +340,52 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
             (mustache-render
              (file-to-string (concat op/template-directory
                                      "category-index.mustache"))
-             (ht ("page-title" (concat (car cat-list) " Index"
-                                       " - "
-                                       op/site-main-title))
-                 ("author" (or user-full-name "Unknown Author"))
-                 ("email" (confound-email (or user-mail-address
-                                              "Unknown Email")))
-                 ("site-mail-title" op/site-main-title)
-                 ("site-sub-title" op/site-sub-title)
-                 ("github" op/personal-github-link)
-                 ("site-domain" (if (and op/site-domain
-                                         (string-match
-                                          "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                          op/site-domain))
-                                    (match-string 1 op/site-domain)
-                                  op/site-domain))
-                 ("show-meta" nil)
-                 ("show-comment" nil)
-                 ("google-analytics" t)
-                 ("google-analytics-id" op/personal-google-analytics-id)
-                 ("creator-info" org-html-creator-string)
-                 ("cat-name" (car cat-list))
-                 ("posts"
-                  (mapcar
-                   #'(lambda (attr-plist)
-                       (ht ("date"
-                            (plist-get
-                             attr-plist
+             (ht-merge
+              (ht ("page-title" (concat (car cat-list) " Index"
+                                        " - "
+                                        op/site-main-title))
+                  ("author" (or user-full-name "Unknown Author"))
+                  ("email" (confound-email (or user-mail-address
+                                               "Unknown Email")))
+                  ("site-mail-title" op/site-main-title)
+                  ("site-sub-title" op/site-sub-title)
+                  ("github" op/personal-github-link)
+                  ("site-domain" (if (and op/site-domain
+                                          (string-match
+                                           "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                           op/site-domain))
+                                     (match-string 1 op/site-domain)
+                                   op/site-domain))
+                  ("show-meta" nil)
+                  ("show-comment" nil)
+                  ("google-analytics" t)
+                  ("google-analytics-id" op/personal-google-analytics-id)
+                  ("creator-info" org-html-creator-string)
+                  ("cat-name" (car cat-list))
+                  ("posts"
+                   (mapcar
+                    #'(lambda (attr-plist)
+                        (ht ("date"
                              (plist-get
-                              (cdr (or (assoc (plist-get attr-plist :category)
-                                              op/category-config-alist)
-                                       (assoc "blog"
-                                              op/category-config-alist)))
-                              :sort-by)))
-                           ("post-uri" (plist-get attr-plist :uri))
-                           ("post-title" (plist-get attr-plist :title))))
-                   (cdr cat-list)))))
+                              attr-plist
+                              (plist-get
+                               (cdr (or (assoc (plist-get attr-plist :category)
+                                               op/category-config-alist)
+                                        (assoc "blog"
+                                               op/category-config-alist)))
+                               :sort-by)))
+                            ("post-uri" (plist-get attr-plist :uri))
+                            ("post-title" (plist-get attr-plist :title))))
+                    (cdr cat-list))))
+                        nav-category-table))
             (concat cat-dir "index.html") 'html-mode)))
      sort-alist)))
 
-(defun op/generate-default-index (file-attr-list pub-base-dir)
+(defun op/generate-default-index (file-attr-list nav-category-table
+                                                 pub-base-dir)
   "Generate default index page, only if index.org does not exist. FILE-ATTR-LIST
-is the list of all file attribute property lists. PUB-BASE-DIR is the root
+is the list of all file attribute property lists. NAV-CATEGORY-TABLE is the hash
+table of categories will be shown in navigation bar. PUB-BASE-DIR is the root
 publication directory."
   (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
         (mustache-partial-paths `(,op/template-directory))
@@ -375,39 +393,42 @@ publication directory."
     (string-to-file
      (mustache-render
       (file-to-string (concat op/template-directory "index.mustache"))
-      (ht ("page-title" (concat "Index - " op/site-main-title))
-          ("author" (or user-full-name "Unknown Author"))
-          ("email" (confound-email (or user-mail-address "Unknown Email")))
-          ("site-mail-title" op/site-main-title)
-          ("site-sub-title" op/site-sub-title)
-          ("github" op/personal-github-link)
-          ("site-domain" (if (and op/site-domain
-                                  (string-match
-                                   "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                   op/site-domain))
-                             (match-string 1 op/site-domain)
-                           op/site-domain))
-          ("show-meta" nil)
-          ("show-comment" nil)
-          ("google-analytics" t)
-          ("google-analytics-id" op/personal-google-analytics-id)
-          ("creator-info" org-html-creator-string)
-          ("categories"
-           (mapcar
-            #'(lambda (cell)
-                (ht ("id" (setq id (+ id 1)))
-                    ("category" (car cell))
-                    ("posts" (mapcar
-                              #'(lambda (plist)
-                                  (ht ("post-uri" (plist-get plist :uri))
-                                      ("post-title" (plist-get plist :title))))
-                              (cdr cell)))))
-            sort-alist))))
+      (ht-merge
+       (ht ("page-title" (concat "Index - " op/site-main-title))
+           ("author" (or user-full-name "Unknown Author"))
+           ("email" (confound-email (or user-mail-address "Unknown Email")))
+           ("site-mail-title" op/site-main-title)
+           ("site-sub-title" op/site-sub-title)
+           ("github" op/personal-github-link)
+           ("site-domain" (if (and op/site-domain
+                                   (string-match
+                                    "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                    op/site-domain))
+                              (match-string 1 op/site-domain)
+                            op/site-domain))
+           ("show-meta" nil)
+           ("show-comment" nil)
+           ("google-analytics" t)
+           ("google-analytics-id" op/personal-google-analytics-id)
+           ("creator-info" org-html-creator-string)
+           ("categories"
+            (mapcar
+             #'(lambda (cell)
+                 (ht ("id" (setq id (+ id 1)))
+                     ("category" (car cell))
+                     ("posts" (mapcar
+                               #'(lambda (plist)
+                                   (ht ("post-uri" (plist-get plist :uri))
+                                       ("post-title" (plist-get plist :title))))
+                               (cdr cell)))))
+             sort-alist)))
+       nav-category-table))
      (concat pub-base-dir "index.html") 'html-mode)))
 
-(defun op/generate-default-about (pub-base-dir)
-  "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
-is the root publication directory."
+(defun op/generate-default-about (nav-category-table pub-base-dir)
+  "Generate default about page, only if about.org does not exist.
+NAV-CATEGORY-TABLE is the hash table of categories will be shown in navigation
+bar.PUB-BASE-DIR is the root publication directory."
   (let ((pub-dir (expand-file-name "about/" pub-base-dir))
         (mustache-partial-paths `(,op/template-directory)))
     (unless (file-directory-p pub-dir)
@@ -415,32 +436,35 @@ is the root publication directory."
     (string-to-file
      (mustache-render
       (file-to-string (concat op/template-directory "about.mustache"))
-      (ht ("page-title" (concat "About - " op/site-main-title))
-          ("author" (or user-full-name "Unknown Author"))
-          ("email" (confound-email (or user-mail-address "Unknown Email")))
-          ("site-mail-title" op/site-main-title)
-          ("site-sub-title" op/site-sub-title)
-          ("github" op/personal-github-link)
-          ("site-domain" (if (and op/site-domain
-                                  (string-match
-                                   "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                   op/site-domain))
-                             (match-string 1 op/site-domain)
-                           op/site-domain))
-          ("show-meta" nil)
-          ("show-comment" nil)
-          ("google-analytics" t)
-          ("google-analytics-id" op/personal-google-analytics-id)
-          ("creator-info" org-html-creator-string)))
+      (ht-merge
+       (ht ("page-title" (concat "About - " op/site-main-title))
+           ("author" (or user-full-name "Unknown Author"))
+           ("email" (confound-email (or user-mail-address "Unknown Email")))
+           ("site-mail-title" op/site-main-title)
+           ("site-sub-title" op/site-sub-title)
+           ("github" op/personal-github-link)
+           ("site-domain" (if (and op/site-domain
+                                   (string-match
+                                    "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                    op/site-domain))
+                              (match-string 1 op/site-domain)
+                            op/site-domain))
+           ("show-meta" nil)
+           ("show-comment" nil)
+           ("google-analytics" t)
+           ("google-analytics-id" op/personal-google-analytics-id)
+           ("creator-info" org-html-creator-string))
+       nav-category-table))
      (concat pub-dir "index.html") 'html-mode)))
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
   (concat "/tags/" (convert-string-to-path tag-name) "/"))
 
-(defun op/update-tags (file-attr-list pub-base-dir)
+(defun op/update-tags (file-attr-list nav-category-table pub-base-dir)
   "Update tag pages. FILE-ATTR-LIST is the list of all file attribute property
-lists. PUB-BASE-DIR is the root publication directory.
+lists. NAV-CATEGORY-TABLE is the hash table of categories will be shown in
+navigation bar. PUB-BASE-DIR is the root publication directory.
 TODO: improve this function."
   (let ((tag-base-dir (expand-file-name "tags/" pub-base-dir))
         (msutache-partial-paths `(,op/template-directory))
@@ -460,30 +484,32 @@ TODO: improve this function."
     (string-to-file
      (mustache-render
       (file-to-string (concat op/template-directory "tag-index.mustache"))
-      (ht ("page-title" (concat "Tag Index - " op/site-main-title))
-          ("author" (or user-full-name "Unknown Author"))
-          ("email" (confound-email (or user-mail-address "Unknown Email")))
-          ("site-mail-title" op/site-main-title)
-          ("site-sub-title" op/site-sub-title)
-          ("github" op/personal-github-link)
-          ("site-domain" (if (and op/site-domain
-                                  (string-match
-                                   "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                   op/site-domain))
-                             (match-string 1 op/site-domain)
-                           op/site-domain))
-          ("show-meta" nil)
-          ("show-comment" nil)
-          ("google-analytics" t)
-          ("google-analytics-id" op/personal-google-analytics-id)
-          ("creator-info" org-html-creator-string)
-          ("tags"
-           (mapcar
-            #'(lambda (tag-list)
-                (ht ("tag-name" (car tag-list))
-                    ("tag-uri" (op/generate-tag-uri (car tag-list)))
-                    ("count" (number-to-string (length (cdr tag-list))))))
-            tag-alist))))
+      (ht-merge
+       (ht ("page-title" (concat "Tag Index - " op/site-main-title))
+           ("author" (or user-full-name "Unknown Author"))
+           ("email" (confound-email (or user-mail-address "Unknown Email")))
+           ("site-mail-title" op/site-main-title)
+           ("site-sub-title" op/site-sub-title)
+           ("github" op/personal-github-link)
+           ("site-domain" (if (and op/site-domain
+                                   (string-match
+                                    "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                    op/site-domain))
+                              (match-string 1 op/site-domain)
+                            op/site-domain))
+           ("show-meta" nil)
+           ("show-comment" nil)
+           ("google-analytics" t)
+           ("google-analytics-id" op/personal-google-analytics-id)
+           ("creator-info" org-html-creator-string)
+           ("tags"
+            (mapcar
+             #'(lambda (tag-list)
+                 (ht ("tag-name" (car tag-list))
+                     ("tag-uri" (op/generate-tag-uri (car tag-list)))
+                     ("count" (number-to-string (length (cdr tag-list))))))
+             tag-alist)))
+       nav-category-table))
      (concat tag-base-dir "index.html") 'html-mode)
     (mapc
      #'(lambda (tag-list)
@@ -495,32 +521,34 @@ TODO: improve this function."
          (string-to-file
           (mustache-render
            (file-to-string (concat op/template-directory "tag.mustache"))
-           (ht ("page-title" (concat "Tag: " (car tag-list)
-                                     " - "
-                                     op/site-main-title))
-               ("author" (or user-full-name "Unknown Author"))
-               ("email" (confound-email (or user-mail-address "Unknown Email")))
-               ("site-mail-title" op/site-main-title)
-               ("site-sub-title" op/site-sub-title)
-               ("github" op/personal-github-link)
-               ("site-domain" (if (and op/site-domain
-                                       (string-match
-                                        "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                        op/site-domain))
-                                  (match-string 1 op/site-domain)
-                                op/site-domain))
-               ("show-meta" nil)
-               ("show-comment" nil)
-               ("google-analytics" t)
-               ("google-analytics-id" op/personal-google-analytics-id)
-               ("creator-info" org-html-creator-string)
-               ("tag-name" (car tag-list))
-               ("posts"
-                (mapcar
-                 #'(lambda (attr-plist)
-                     (ht ("post-uri" (plist-get attr-plist :uri))
-                         ("post-title" (plist-get attr-plist :title))))
-                 (cdr tag-list)))))
+           (ht-merge
+            (ht ("page-title" (concat "Tag: " (car tag-list)
+                                      " - "
+                                      op/site-main-title))
+                ("author" (or user-full-name "Unknown Author"))
+                ("email" (confound-email (or user-mail-address "Unknown Email")))
+                ("site-mail-title" op/site-main-title)
+                ("site-sub-title" op/site-sub-title)
+                ("github" op/personal-github-link)
+                ("site-domain" (if (and op/site-domain
+                                        (string-match
+                                         "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                         op/site-domain))
+                                   (match-string 1 op/site-domain)
+                                 op/site-domain))
+                ("show-meta" nil)
+                ("show-comment" nil)
+                ("google-analytics" t)
+                ("google-analytics-id" op/personal-google-analytics-id)
+                ("creator-info" org-html-creator-string)
+                ("tag-name" (car tag-list))
+                ("posts"
+                 (mapcar
+                  #'(lambda (attr-plist)
+                      (ht ("post-uri" (plist-get attr-plist :uri))
+                          ("post-title" (plist-get attr-plist :title))))
+                  (cdr tag-list))))
+            nav-category-table))
           (concat tag-dir "index.html") 'html-mode))
      tag-alist)))
 

@@ -3,8 +3,9 @@
     <h1 class="masthead-title"><a href="/">{{site-main-title}}</a></h1>
     <p>{{site-sub-title}}</p>
     <ul>
-      <li><a href="{{blog-uri}}">Blog</a></li>
-      <li><a href="{{wiki-uri}}">Wiki</a></li>
+      {{#nav-categories}}
+      <li><a href="{{category-uri}}">{{category-name}}</a></li>
+      {{/nav-categories}}
       <li><a href="{{tags-uri}}">Tags</a></li>
       <li><a href="{{about-uri}}">About</a></li>
       <li><a href="{{github}}">GitHub</a></li>
