@@ -191,7 +191,7 @@ mode, format the string with MODE's format settings."
   (with-temp-buffer
     (insert string)
     (set-buffer-file-coding-system 'utf-8-unix)
-    (when (and do-format (functionp mode))
+    (when (and mode (functionp mode))
       (funcall mode)
       (flush-lines "^[ \\t]*$" (point-min) (point-max))
       (delete-trailing-whitespace (point-min) (point-max))
