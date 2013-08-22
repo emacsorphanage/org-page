@@ -254,7 +254,7 @@ NOTE: if :content of ATTR-PLIST is nil, the publication will be skipped."
       (string-to-file (mustache-render op/page-template
                                        ;; (ht-from-plist attr-plist)
                                        (convert-plist-to-hashtable attr-plist))
-                      (concat pub-dir "index.html")))))
+                      (concat pub-dir "index.html") 'html-mode))))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."
@@ -361,7 +361,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                            ("post-uri" (plist-get attr-plist :uri))
                            ("post-title" (plist-get attr-plist :title))))
                    (cdr cat-list)))))
-            (concat cat-dir "index.html"))))
+            (concat cat-dir "index.html") 'html-mode)))
      sort-alist)))
 
 (defun op/generate-default-index (file-attr-list pub-base-dir)
@@ -402,7 +402,7 @@ publication directory."
                                       ("post-title" (plist-get plist :title))))
                               (cdr cell)))))
             sort-alist))))
-     (concat pub-base-dir "index.html"))))
+     (concat pub-base-dir "index.html") 'html-mode)))
 
 (defun op/generate-default-about (pub-base-dir)
   "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
@@ -431,7 +431,7 @@ is the root publication directory."
           ("google-analytics" t)
           ("google-analytics-id" op/personal-google-analytics-id)
           ("creator-info" org-html-creator-string)))
-     (concat pub-dir "index.html"))))
+     (concat pub-dir "index.html") 'html-mode)))
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
@@ -483,7 +483,7 @@ TODO: improve this function."
                     ("tag-uri" (op/generate-tag-uri (car tag-list)))
                     ("count" (number-to-string (length (cdr tag-list))))))
             tag-alist))))
-     (concat tag-base-dir "index.html"))
+     (concat tag-base-dir "index.html") 'html-mode)
     (mapc
      #'(lambda (tag-list)
          (setq tag-dir (file-name-as-directory
@@ -520,7 +520,7 @@ TODO: improve this function."
                      (ht ("post-uri" (plist-get attr-plist :uri))
                          ("post-title" (plist-get attr-plist :title))))
                  (cdr tag-list)))))
-          (concat tag-dir "index.html")))
+          (concat tag-dir "index.html") 'html-mode))
      tag-alist)))
 
 ;; (defun op/kill-exported-buffer (export-buf-or-file)
