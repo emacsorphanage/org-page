@@ -78,9 +78,9 @@ content of the buffer will be converted into html."
                        :author ,(or (op/read-org-option "AUTHOR")
                                     user-full-name
                                     "Unknown Author")
-                       :email ,(or (op/read-org-option "EMAIL")
-                                   user-mail-address
-                                   "Unknown Email")
+                       :email ,(confound-email (or (op/read-org-option "EMAIL")
+                                                   user-mail-address
+                                                   "Unknown Email"))
                        :date ,(or (op/read-org-option "DATE")
                                   (format-time-string "%Y-%m-%d"))
                        :keywords ,(op/read-org-option "KEYWORDS")
