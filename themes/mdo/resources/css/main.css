@@ -198,6 +198,37 @@ table th.right, table td.right {
     content: "\00B7 \00a0";
     color: #ccc;
 }
+/* searchform*/
+#searchform {
+    position: absolute;
+    top: 5.4rem;
+    right: 30.4%;
+}
+#searchform #s {
+    background: url("./../img/search.png") no-repeat 5px 6px;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    -moz-border-radius: 2px;
+    width: 9rem;
+    height: 30px;
+    line-height: 1.2em;
+    padding: 4px 10px 4px 28px;
+
+    -webkit-transition-duration: 400ms;
+    -webkit-transition-property: width, background;
+    -webkit-transition-timing-function: ease;
+    -moz-transition-duration: 400ms;
+    -moz-transition-property: width, background;
+    -moz-transition-timing-function: ease;
+    -o-transition-duration: 400ms;
+    -o-transition-property: width, background;
+    -o-transition-timing-function: ease;
+}
+#searchform #s:focus {
+    background-color: #f9f9f9;
+    width: 16rem;    
+}
 /* post */
 .post {
     position: relative;
