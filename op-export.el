@@ -351,7 +351,7 @@ directory."
                   ("author" (or user-full-name "Unknown Author"))
                   ("email" (confound-email (or user-mail-address
                                                "Unknown Email")))
-                  ("site-mail-title" op/site-main-title)
+                  ("site-main-title" op/site-main-title)
                   ("site-sub-title" op/site-sub-title)
                   ("github" op/personal-github-link)
                   ("site-domain" (if (and op/site-domain
@@ -401,7 +401,7 @@ publication directory."
        (ht ("page-title" (concat "Index - " op/site-main-title))
            ("author" (or user-full-name "Unknown Author"))
            ("email" (confound-email (or user-mail-address "Unknown Email")))
-           ("site-mail-title" op/site-main-title)
+           ("site-main-title" op/site-main-title)
            ("site-sub-title" op/site-sub-title)
            ("github" op/personal-github-link)
            ("site-domain" (if (and op/site-domain
@@ -444,7 +444,7 @@ bar.PUB-BASE-DIR is the root publication directory."
        (ht ("page-title" (concat "About - " op/site-main-title))
            ("author" (or user-full-name "Unknown Author"))
            ("email" (confound-email (or user-mail-address "Unknown Email")))
-           ("site-mail-title" op/site-main-title)
+           ("site-main-title" op/site-main-title)
            ("site-sub-title" op/site-sub-title)
            ("github" op/personal-github-link)
            ("site-domain" (if (and op/site-domain
@@ -492,7 +492,7 @@ TODO: improve this function."
        (ht ("page-title" (concat "Tag Index - " op/site-main-title))
            ("author" (or user-full-name "Unknown Author"))
            ("email" (confound-email (or user-mail-address "Unknown Email")))
-           ("site-mail-title" op/site-main-title)
+           ("site-main-title" op/site-main-title)
            ("site-sub-title" op/site-sub-title)
            ("github" op/personal-github-link)
            ("site-domain" (if (and op/site-domain
@@ -531,7 +531,7 @@ TODO: improve this function."
                                       op/site-main-title))
                 ("author" (or user-full-name "Unknown Author"))
                 ("email" (confound-email (or user-mail-address "Unknown Email")))
-                ("site-mail-title" op/site-main-title)
+                ("site-main-title" op/site-main-title)
                 ("site-sub-title" op/site-sub-title)
                 ("github" op/personal-github-link)
                 ("site-domain" (if (and op/site-domain
