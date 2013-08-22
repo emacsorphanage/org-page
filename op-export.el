@@ -42,8 +42,12 @@ deleted. PUB-ROOT-DIR is the root publication directory."
          (nav-cat-table (ht ("nav-categories"
                              (mapcar #'(lambda (cat)
                                          (ht ("category-uri"
-                                              (convert-string-to-path cat))
-                                             ("category-name" cat)))
+                                              (concat
+                                               "/"
+                                               (convert-string-to-path cat)
+                                               "/"))
+                                             ("category-name"
+                                              (capitalize cat))))
                                      (remove-if #'(lambda (cat)
                                                     (or (string= cat "index")
                                                         (string= cat "about")))
