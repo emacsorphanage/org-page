@@ -115,6 +115,63 @@ similar to `op/render-header'."
        (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
            ("content" (org-export-as 'html nil nil t nil))))))
 
+(defun op/render-footer (&optional param-table)
+  "Render the footer on each page. PARAM-TABLE is similar to
+`op/render-header'."
+  (mustache-render
+   (op/get-cache-create
+    :footer-template
+    (message "Read footer.mustache from file")
+    (file-to-string (concat op/template-directory "footer.mustache")))
+   (or param-table
+       (let* ((filename (buffer-file-name))
+              (title (or (op/read-org-option "TITLE") "Untitled"))
+              (date (fix-timestamp-string
+                     (or (op/read-org-option "DATE")
+                         (format-time-string "%Y-%m-%d"))))
+              (tags (op/read-org-option "TAGS"))
+              (category (funcall (or op/retrieve-category-function
+                                     op/get-file-category)
+                                 filename))
+              (config (cdr (or (assoc category op/category-config-alist)
+                               (assoc "blog" op/category-config-alist))))
+              (uri (funcall (plist-get config :uri-generator)
+                            (plist-get config :uri-template) date title)))
+         (ht ("show-meta" (plist-get config :show-meta))
+             ("show-comment" (plist-get config :show-comment))
+             ("date" date)
+             ("mod-date" (if (not filename)
+                             (format-time-string "%Y-%m-%d")
+                           (or (op/git-last-change-date
+                                op/repository-directory
+                                filename)
+                               (format-time-string
+                                "%Y-%m-%d"
+                                (nth 5 (file-attributes filename))))))
+             ("tag-links" (if (not tags) "N/A"
+                            (mapconcat
+                             #'(lambda (tag-name)
+                                 (mustache-render
+                                  "<a href=\"{{link}}\">{{name}}</a>"
+                                  (ht ("link" (op/generate-tag-uri tag-name))
+                                      ("name" tag-name))))
+                             (delete "" (mapcar
+                                         'trim-string
+                                         (split-string tags "[:,]+" t))) ", ")))
+             ("author" (or (op/read-org-option "AUTHOR")
+                           user-full-name
+                           "Unknown Author"))
+             ("disqus-id" uri)
+             ("disqus-url" (concat (replace-regexp-in-string
+                                    "/?$" "" op/site-domain) uri))
+             ("disqus-shortname" op/personal-disqus-shortname)
+             ("google-analytics" (boundp op/personal-google-analytics-id))
+             ("google-analytics-id" op/personal-google-analytics-id)
+             ("creator-info" org-html-creator-string)
+             ("email" (confound-email (or (op/read-org-option "EMAIL")
+                                          user-mail-address
+                                          "Unknown Email"))))))))
+
 ;;; this function is deprecated
 (defun op/update-default-template-parameters ()
   "Update the default template parameters. It is only needed when user did some
