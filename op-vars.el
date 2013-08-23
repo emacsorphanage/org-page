@@ -115,6 +115,7 @@ presented by `op/repository-directory'."
   "The directory stores templates for page rendering."
   :group 'org-page :type 'string)
 
+;;; this variable is deprecated
 (defcustom op/page-template
   (file-to-string (concat op/template-directory "container.mustache"))
   "The template used to render pages, see the template itself for detail."

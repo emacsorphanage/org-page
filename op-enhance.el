@@ -56,10 +56,7 @@ used a new theme."
     (setq theme 'mdo))
   (setq theme (symbol-name theme))
   (setq op/template-directory
-        (concat op/load-directory (format "themes/%s/templates/" theme)))
-  (setq op/page-template
-        (file-to-string
-         (concat op/template-directory "container.mustache"))))
+        (concat op/load-directory (format "themes/%s/templates/" theme))))
 
 
 (provide 'op-enhance)
