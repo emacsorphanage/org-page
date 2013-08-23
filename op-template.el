@@ -39,7 +39,14 @@ nil or there is no item associated with KEY in it, return nil."
 nil, initialize it."
   (if op/item-cache
       (plist-put op/item-cache key value)
-    (setq op/item-cache `(,key ,value))))
+    (setq op/item-cache `(,key ,value)))
+  value)
+
+(defmacro op/get-cache-create (key &rest body)
+  "Firstly get item from `op/item-cache' with KEY, if item not found, evaluate
+BODY and push the result into cache and return it."
+  `(or (op/get-cache-item ,key)
+       (op/update-cache-item ,key (funcall (lambda () ,@body)))))
 
 (defun op/render-navigation-bar (&optional param-table)
   "Render the navigation bar on each page. it will be read firstly from
