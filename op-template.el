@@ -28,6 +28,19 @@
 
 (require 'mustache)
 
+(defun op/get-cache-item (key)
+  "Get the item associated with KEY in `op/item-cache', if `op/item-cache' is
+nil or there is no item associated with KEY in it, return nil."
+  (and op/item-cache
+       (plist-get op/item-cache key)))
+
+(defun op/update-cache-item (key value)
+  "Update the item associated with KEY in `op/item-cache', if `op/item-cache' is
+nil, initialize it."
+  (if op/item-cache
+      (plist-put op/item-cache key value)
+    (setq op/item-cache `(,key ,value))))
+
 (defun op/render-navigation-bar (&optional param-table)
   "Render the navigation bar on each page. it will be read firstly from
 `op/navigation-html-cache', if there is no cached content, it will be rendered

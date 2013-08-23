@@ -175,6 +175,9 @@ default value is `op/get-file-category'."
   "The cache of generated navigation bar html content, caching it because it is
 the same for every page.")
 
+(defvar op/item-cache nil
+  "The cache for general purpose.")
+
 
 (provide 'op-vars)
 
