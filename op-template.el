@@ -110,7 +110,7 @@ similar to `op/render-header'."
     (if template
         (intern (replace-regexp-in-string "\\.mustache$" "-template" template))
       :post-template)
-    (message "Read " (or template "post.mustache") " from file")
+    (message (concat "Read " (or template "post.mustache") " from file"))
     (file-to-string (concat op/template-directory
                             (or template "post.mustache"))))
    (or param-table
@@ -167,7 +167,7 @@ similar to `op/render-header'."
              ("disqus-url" (concat (replace-regexp-in-string
                                     "/?$" "" op/site-domain) uri))
              ("disqus-shortname" op/personal-disqus-shortname)
-             ("google-analytics" (boundp op/personal-google-analytics-id))
+             ("google-analytics" (boundp 'op/personal-google-analytics-id))
              ("google-analytics-id" op/personal-google-analytics-id)
              ("creator-info" org-html-creator-string)
              ("email" (confound-email (or (op/read-org-option "EMAIL")
