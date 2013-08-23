@@ -48,6 +48,23 @@ BODY and push the result into cache and return it."
   `(or (op/get-cache-item ,key)
        (op/update-cache-item ,key (funcall (lambda () ,@body)))))
 
+(defun op/render-header (&optional param-table)
+  "Render the header on each page. PARAM-TABLE is the hash table from mustache
+to render the template. If it is not set or nil, this function will try to build
+a hash table accordint to current buffer."
+  (mustache-render
+   (op/get-cache-create
+    :header-template
+    (message "Read header.mustache from file")
+    (file-to-string (concat op/template-directory "header.mustache")))
+   (or param-table
+       (ht ("page-title" (concat (or (op/read-org-option "TITLE") "Untitled")
+                                 " - " op/site-main-title))
+           ("author" (or (op/read-org-option "AUTHOR")
+                         user-full-name "Unknown Author"))
+           ("description" (op/read-org-option "DESCRIPTION"))
+           ("keywords" (op/read-org-option "KEYWORDS"))))))
+
 (defun op/render-navigation-bar (&optional param-table)
   "Render the navigation bar on each page. it will be read firstly from
 `op/item-cache', if there is no cached content, it will be rendered
