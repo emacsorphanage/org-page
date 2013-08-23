@@ -101,6 +101,20 @@ render from a default hash table."
                                (match-string 1 op/site-domain)
                              op/site-domain)))))))
 
+(defun op/render-content (&optional template param-table)
+  "Render the content on each page. TEMPLATE is the template name for rendering,
+if it is not set of nil, will use default post.mustache instead. PARAM-TABLE is
+similar to `op/render-header'."
+  (mustache-render
+   (op/get-cache-create
+    :header-template
+    (message "Read " (or template "post.mustache") " from file")
+    (file-to-string (concat op/template-directory
+                            (or template "post.mustache"))))
+   (or param-table
+       (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
+           ("content" (org-export-as 'html nil nil t nil))))))
+
 ;;; this function is deprecated
 (defun op/update-default-template-parameters ()
   "Update the default template parameters. It is only needed when user did some
