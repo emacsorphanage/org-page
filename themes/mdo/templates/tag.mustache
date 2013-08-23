@@ -1,20 +1,10 @@
-<!DOCTYPE html>
-<html lang="en-us">
-  {{> header}}
-  <body class="container">
-    {{> nav}}
-
-    <div>
-      <div class="post">
-        <h1>Tag: {{tag-name}}</h1>
-        <ul class="org-ul">
-          {{#posts}}
-          <li><a href="{{post-uri}}">{{post-title}}</a></li>
-          {{/posts}}
-        </ul>
-      </div>
-    </div>
-
-    {{> footer}}
-  </body>
-</html>
+<div>
+  <div class="post">
+    <h1>Tag: {{tag-name}}</h1>
+    <ul class="org-ul">
+      {{#posts}}
+        <li><a href="{{post-uri}}">{{post-title}}</a></li>
+      {{/posts}}
+    </ul>
+  </div>
+</div>
