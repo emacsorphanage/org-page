@@ -32,44 +32,88 @@
   "This function is for:
 1. publish changed org files to html
 2. delete html files which are relevant to deleted org files (NOT implemented)
-3. update index page
-4. regenerate tag pages.
+3. update index pages
+4. regenerate tag pages
 ALL-LIST contains paths of all org files, CHANGE-PLIST contains two properties,
 one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
   (let* ((upd-list (plist-get change-plist :update))
          (del-list (plist-get change-plist :delete))
-         visiting file-buffer file-attr-list)
-    (op/update-default-template-parameters) ;; ensure default parameters are newest
+         visiting file-buffer attr-cell file-attr-list)
     (when (or upd-list del-list)
       (mapc
-       '(lambda (org-file)
-          (setq visiting (find-buffer-visiting org-file))
-          (with-current-buffer (setq file-buffer
-                                     (or visiting (find-file org-file)))
-            (setq file-attr-list (cons (org-combine-plists
-                                        (org-export--get-buffer-attributes)
-                                        (org-export--get-inbuffer-options 'html)
-                                        (op/get-inbuffer-extra-options))
-                                       file-attr-list))
-            (when (member org-file upd-list)
-              (op/publish-modified-file
-               (car file-attr-list) pub-root-dir))
-            (when (member org-file del-list)
-              (op/handle-deleted-file org-file)))
-          (or visiting (kill-buffer file-buffer)))
+       #'(lambda (org-file)
+           (setq visiting (find-buffer-visiting org-file))
+           (with-current-buffer (setq file-buffer
+                                      (or visiting (find-file org-file)))
+             (setq attr-cell (op/get-org-file-options
+                              pub-root-dir
+                              (member org-file upd-list)))
+             (setq file-attr-list (cons (car attr-cell) file-attr-list))
+             (when (member org-file upd-list)
+               (op/publish-modified-file (cdr attr-cell)
+                                         (plist-get (car attr-cell) :pub-dir)))
+             (when (member org-file del-list)
+               (op/handle-deleted-file org-file)))
+           (or visiting (kill-buffer file-buffer)))
        all-list)
       (unless (member
                (expand-file-name "index.org" op/repository-directory)
                all-list)
         (op/generate-default-index file-attr-list pub-root-dir))
-      (unless (member ; TODO customization
+      (unless (member
                (expand-file-name "about.org" op/repository-directory)
                all-list)
         (op/generate-default-about pub-root-dir))
-      (op/update-category-index file-attr-list pub-root-dir 'blog)
-      (op/update-category-index file-attr-list pub-root-dir 'wiki)
+      (op/update-category-index file-attr-list pub-root-dir)
       (op/update-tags file-attr-list pub-root-dir))))
+
+(defun op/get-org-file-options (pub-root-dir do-pub)
+  "Retrieve all needed options for org file opened in current buffer.
+PUB-ROOT-DIR is the root directory of published files, if DO-PUB is t, the
+content of the buffer will be converted into html."
+  (let* ((filename (buffer-file-name))
+         (attr-plist `(:title ,(or (op/read-org-option "TITLE")
+                                   "Untitled")
+                       :date ,(fix-timestamp-string
+                               (or (op/read-org-option "DATE")
+                                   (format-time-string "%Y-%m-%d")))
+                       :mod-date ,(if (not filename)
+                                      (format-time-string "%Y-%m-%d")
+                                    (or (op/git-last-change-date
+                                         op/repository-directory
+                                         filename)
+                                        (format-time-string
+                                         "%Y-%m-%d"
+                                         (nth 5 (file-attributes filename)))))))
+         component-table tags category cat-config)
+    (setq tags (op/read-org-option "TAGS"))
+    (when tags
+      (plist-put
+       attr-plist :tags (delete "" (mapcar 'trim-string
+                                           (split-string tags "[:,]+" t)))))
+    (setq category (funcall (or op/retrieve-category-function
+                                op/get-file-category)
+                            filename))
+    (plist-put attr-plist :category category)
+    (setq cat-config (cdr (or (assoc category op/category-config-alist)
+                              (assoc "blog" op/category-config-alist))))
+    (plist-put attr-plist :uri (funcall (plist-get cat-config :uri-generator)
+                                        (plist-get cat-config :uri-template)
+                                        (plist-get attr-plist :date)
+                                        (plist-get attr-plist :title)))
+    (plist-put attr-plist :pub-dir (file-name-as-directory
+                                    (concat
+                                     (file-name-as-directory pub-root-dir)
+                                     (replace-regexp-in-string
+                                      "\\`/" ""
+                                      (plist-get attr-plist :uri)))))
+    (when do-pub
+      (setq component-table (ht ("header" (op/render-header))
+                                ("nav" (op/render-navigation-bar))
+                                ("content" (op/render-content))
+                                ("footer" (op/render-footer)))))
+    (cons attr-plist component-table)))
 
 (defun op/read-org-option (option)
   "Read option value of org file opened in current buffer.
@@ -82,51 +126,54 @@ will return \"this is title\" if OPTION is \"TITLE\""
       (when (re-search-forward match-regexp nil t)
         (match-string-no-properties 2 nil)))))
 
-(defun op/generate-uri (uri-template creation-date title category)
+(defun op/generate-uri (default-uri-template creation-date title)
   "Generate URI of org file opened in current buffer. It will be firstly created
-by URL-TEMPLATE, if it is nil, will be automatically generated by CREATION-DATE,
-TITLE and CATEGORY, if CREATION-DATE is nil, current date will be used, if
-CATEGORY is 'blog, the uri will be like: /blog/2013/03/07/this-is-post-title/,
-if CATEGORY is 'wiki, the uri will be like: /wiki/compare-and-swap/.
-The URI-TEMPLATE can contain following parameters:
+by #+URI option, if it is nil, DEFAULT-URI-TEMPLATE will be used to generate the
+uri. If CREATION-DATE is nil, current date will be used. The uri template option
+can contain following parameters:
 %y: year of creation date
 %m: month of creation date
-%d: day of creation date"
-  (let ((date-list (split-string (if creation-date
-                                     (fix-timestamp-string
-                                      (org-element-interpret-data
-                                       creation-date))
-                                   (format-time-string "%Y-%m-%d")) "-"))
-        (encoded-title (convert-string-to-path title))
-        uri)
-    (setq uri (cond
-               ((eq category 'index) "/")
-               ((eq category 'about) "/about/") ; TODO customization
-               (uri-template uri-template)
-               ((eq category 'none) "")
-               ((eq category 'wiki) (concat "/wiki/" encoded-title "/"))
-               (t (concat "/blog/%y/%m/%d/" encoded-title "/")))) ; TODO customization
-    (format-spec uri `((?y . ,(car date-list))
-                       (?m . ,(cadr date-list))
-                       (?d . ,(caddr date-list))))))
+%d: day of creation date
+%t: title of current buffer"
+  (let ((uri-template (or (op/read-org-option "URI")
+                          default-uri-template))
+        (date-list (split-string (if creation-date
+                                     (fix-timestamp-string creation-date)
+                                   (format-time-string "%Y-%m-%d"))
+                                 "-"))
+        (encoded-title (convert-string-to-path title)))
+    (format-spec uri-template `((?y . ,(car date-list))
+                                (?m . ,(cadr date-list))
+                                (?d . ,(caddr date-list))
+                                (?t . ,encoded-title)))))
 
 (defun op/get-file-category (org-file)
-  "Get org file category presented by ORG-FILE, will return 'blog or 'wiki, or
-'about, or 'index, and, if ORG-FILE is nil, return 'none.
-How to judge a file's category is based on its name and its root folder name
-under `op/repository-directory'.
-TODO: This function may be improved to have a better type determination system."  
-  (if (not org-file) 'none
-    (let ((full-path (expand-file-name org-file))
-          (wiki-prefix-path (expand-file-name "wiki/" op/repository-directory))
-          (index-path (expand-file-name "index.org" op/repository-directory))
-          (about-path (expand-file-name "about.org" op/repository-directory)))
-      (cond
-       ((string= index-path full-path) 'index)
-       ((string= about-path full-path) 'about)
-       ((string-prefix-p wiki-prefix-path full-path t) 'wiki)
-       (t 'blog)))))
+  "Get org file category presented by ORG-FILE, return all categories if
+ORG-FILE is nil. This is the default function used to get a file's category,
+see `op/retrieve-category-function'. How to judge a file's category is based on
+its name and its root folder name under `op/repository-directory'."
+  (cond ((not org-file)
+         (let ((cat-list '("index" "about" "blog"))) ;; 3 default categories
+           (dolist (f (directory-files op/repository-directory))
+             (when (and (not (equal f "."))
+                        (not (equal f ".."))
+                        (not (equal f ".git"))
+                        (not (equal f "blog"))
+                        (file-directory-p
+                         (expand-file-name f op/repository-directory)))
+               (setq cat-list (cons f cat-list))))
+           cat-list))
+        ((string= (expand-file-name "index.org" op/repository-directory)
+                  (expand-file-name org-file)) "index")
+        ((string= (expand-file-name "about.org" op/repository-directory)
+                  (expand-file-name org-file)) "about")
+        ((string= (file-name-directory (expand-file-name org-file))
+                  op/repository-directory) "blog")
+        (t (car (split-string (file-relative-name (expand-file-name org-file)
+                                                  op/repository-directory)
+                              "[/\\\\]+")))))
 
+;;; this function is now deprecated
 (defun op/get-inbuffer-extra-options ()
   "Read extra options(defined by ourselves) in current buffer, include:
 1. modification date (read from git last commit date, current date if current
@@ -156,148 +203,215 @@ a temp buffer)"
                                 (op/read-org-option "TITLE")
                                 (plist-get attr-plist :category)))))
 
-(defun op/publish-modified-file (attr-plist pub-base-dir)
-  "Publish org file opened in current buffer. ATTR-PLIST is the attribute
-property list of current file. PUB-BASE-DIR is the root publication directory."
-  (let* ((uri (plist-get attr-plist :uri))
-         (pub-dir (file-name-as-directory
-                   (concat (file-name-as-directory pub-base-dir)
-                           (replace-regexp-in-string "\\`/" "" uri))))
-         pub-content)
+(defun op/publish-modified-file (component-table pub-dir)
+  "Publish org file opened in current buffer. COMPONENT-TABLE is the hash table
+used to render the template, PUB-DIR is the directory for published html file.
+If COMPONENT-TABLE is nil, the publication will be skipped."
+  (when component-table
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
-    (string-to-file (mustache-render op/page-template
-                                     (op/compose-template-parameters
-                                      attr-plist
-                                      (org-export-as 'html nil nil t nil)))
-                    (concat pub-dir "index.html"))))
+    (string-to-file (mustache-render
+                     (op/get-cache-create
+                      :container-template
+                      (message "Read container.mustache from file")
+                      (file-to-string (concat op/template-directory
+                                              "container.mustache")))
+                     component-table)
+                    (concat pub-dir "index.html") ;; 'html-mode ;; do NOT indent the code
+                    )))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."
   )
 
-(defun op/filter-category-sorted (file-attr-list category)
-  "Filter and sort attribute property lists from FILE-ATTR-LIST specified by
-CATEGORY. CATEGORY can only be 'blog or 'wiki, others will be considered as
-'blog. Category 'blog will make the filtered list sorted by creation date, while
-'wiki makes it sorted by last modification date. Later lies headmost for both."
-  (let ((cat (if (memq category '(blog wiki)) category 'blog))
-        (sort-alist '((blog . :date) (wiki . :mod-date))))
-    (sort (remove-if-not #'(lambda (attr-plist)
-                             (eq cat (plist-get attr-plist :category)))
-                         file-attr-list)
-          #'(lambda (plist1 plist2)
-              (<= (compare-standard-date
-                   (fix-timestamp-string
-                    (org-element-interpret-data
-                     (plist-get plist1 (cdr (assq cat sort-alist)))))
-                   (fix-timestamp-string
-                    (org-element-interpret-data
-                     (plist-get plist2 (cdr (assq cat sort-alist))))))
-                  0)))))
+(defun op/rearrange-category-sorted (file-attr-list)
+  "Rearrange and sort attribute property lists from FILE-ATTR-LIST. Rearrange
+according to category, and sort according to :sort-by property defined in
+`op/category-config-alist', if category is not in `op/category-config-alist',
+the default 'blog' category will be used. For sorting, later lies headmost."
+  (let (cat-alist cat-list)
+    (mapc
+     #'(lambda (plist)
+         (setq cat-list (cdr (assoc (plist-get plist :category) cat-alist)))
+         (if cat-list
+             (nconc cat-list (list plist))
+           (setq cat-alist (cons (cons (plist-get plist :category)
+                                       (list plist))
+                                 cat-alist))))
+     file-attr-list)
+    (mapc
+     #'(lambda (cell)
+         (setcdr
+          cell
+          (sort (cdr cell)
+                #'(lambda (plist1 plist2)
+                    (<= (compare-standard-date
+                         (fix-timestamp-string
+                          (plist-get
+                           plist1
+                           (plist-get
+                            (cdr (or (assoc (plist-get plist1 :category)
+                                            op/category-config-alist)
+                                     (assoc "blog"
+                                            op/category-config-alist)))
+                            :sort-by)))
+                         (fix-timestamp-string
+                          (plist-get
+                           plist2
+                           (plist-get
+                            (cdr (or (assoc (plist-get plist2 :category)
+                                            op/category-config-alist)
+                                     (assoc "blog"
+                                            op/category-config-alist)))
+                            :sort-by))))
+                        0)))))
+     cat-alist)))
 
-(defun op/update-category-index (file-attr-list pub-base-dir category)
-  "Update index page of category 'blog or 'wiki. FILE-ATTR-LIST is the list of
-all file attribute property lists. PUB-BASE-DIR is the root publication
-directory. CATEGORY is 'blog or 'wiki, 'blog if other values."
-  (let* ((cat (if (memq category '(blog wiki)) category 'blog))
-         (sort-alist '((blog . :date) (wiki . :mod-date)))
-         (cat-list (op/filter-category-sorted file-attr-list cat))
-         (pub-dir (file-name-as-directory
-                   (expand-file-name (symbol-name cat) pub-base-dir))))
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (insert "#+TITLE: " (capitalize (symbol-name cat)) " Index" "\n")
-      (insert "#+URI: /" (symbol-name cat) "/\n")
-      (insert "#+OPTIONS: *:nil" "\n\n")
-      (mapc '(lambda (attr-plist)
-               (insert " - "
-                       (fix-timestamp-string
-                        (org-element-interpret-data
-                         (plist-get attr-plist (cdr (assq cat sort-alist)))))
-                       "\\nbsp\\nbsp»\\nbsp\\nbsp"
-                       "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
-                       (org-element-interpret-data
-                        (plist-get attr-plist :title)) "</a>@@" "\n"))
-            cat-list)
-      (unless (file-directory-p pub-dir)
-        (mkdir pub-dir t))
-      (string-to-file
-       (mustache-render op/page-template
-                        (op/compose-template-parameters
-                         (org-combine-plists
-                          (org-export--get-inbuffer-options 'html)
-                          (op/get-inbuffer-extra-options))
-                         (org-export-as 'html nil nil t nil)))
-       (concat pub-dir "index.html")))))
+(defun op/update-category-index (file-attr-list pub-base-dir)
+  "Update index page of different categories. FILE-ATTR-LIST is the list of all
+file attribute property lists. PUB-BASE-DIR is the root publication directory."
+  (let* ((sort-alist (op/rearrange-category-sorted file-attr-list))
+         cat-dir)
+    (mapc
+     #'(lambda (cat-list)
+         (unless (not (plist-get (cdr (or (assoc (car cat-list)
+                                                 op/category-config-alist)
+                                          (assoc "blog"
+                                                 op/category-config-alist)))
+                                 :category-index))
+           (setq cat-dir (file-name-as-directory
+                          (concat (file-name-as-directory pub-base-dir)
+                                  (convert-string-to-path (car cat-list)))))
+           (unless (file-directory-p cat-dir)
+             (mkdir cat-dir t))
+           (string-to-file
+            (mustache-render
+             (op/get-cache-create
+              :container-template
+              (message "Read container.mustache from file")
+              (file-to-string (concat op/template-directory
+                                      "container.mustache")))
+             (ht ("header"
+                  (op/render-header
+                   (ht ("page-title" (concat (capitalize (car cat-list))
+                                             " Index - "
+                                             op/site-main-title))
+                       ("author" (or user-full-name "Unknown Author")))))
+                 ("nav" (op/render-navigation-bar))
+                 ("content"
+                  (op/render-content
+                   "category-index.mustache"
+                   (ht ("cat-name" (capitalize (car cat-list)))
+                       ("posts"
+                        (mapcar
+                         #'(lambda (attr-plist)
+                             (ht ("date"
+                                  (plist-get
+                                   attr-plist
+                                   (plist-get
+                                    (cdr (or (assoc
+                                              (plist-get attr-plist :category)
+                                              op/category-config-alist)
+                                             (assoc
+                                              "blog"
+                                              op/category-config-alist)))
+                                    :sort-by)))
+                                 ("post-uri" (plist-get attr-plist :uri))
+                                 ("post-title" (plist-get attr-plist :title))))
+                         (cdr cat-list))))))
+                 ("footer"
+                  (op/render-footer
+                   (ht ("show-meta" nil)
+                       ("show-comment" nil)
+                       ("author" (or user-full-name "Unknown Author"))
+                       ("google-analytics" (boundp
+                                            'op/personal-google-analytics-id))
+                       ("google-analytics-id" op/personal-google-analytics-id)
+                       ("creator-info" org-html-creator-string)
+                       ("email" (confound-email (or user-mail-address
+                                                    "Unknown Email"))))))))
+            (concat cat-dir "index.html") 'html-mode)))
+     sort-alist)))
 
 (defun op/generate-default-index (file-attr-list pub-base-dir)
   "Generate default index page, only if index.org does not exist. FILE-ATTR-LIST
 is the list of all file attribute property lists. PUB-BASE-DIR is the root
 publication directory."
-  (let* ((blog-list (op/filter-category-sorted file-attr-list 'blog))
-         (wiki-list (op/filter-category-sorted file-attr-list 'wiki))
-         (cat-alist `((blog . ,blog-list) (wiki . ,wiki-list)))
-         category plist-key)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (insert "#+TITLE: Index" "\n")
-      (insert "#+URI: /" "\n")
-      (insert "#+OPTIONS: *:nil" "\n\n")
-      (mapc
-       '(lambda (cell)
-          (setq category (symbol-name (car cell)))
-          (setq plist-key
-                (if (string= category "wiki") :mod-date :date))
-          (insert " - " category "\n")
-          (mapc '(lambda (attr-plist)
-                   (insert "   - " (fix-timestamp-string
-                                    (org-element-interpret-data
-                                     (plist-get attr-plist plist-key)))
-                           "\\nbsp\\nbsp»\\nbsp\\nbsp"
-                           "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
-                           (org-element-interpret-data
-                            (plist-get attr-plist :title))
-                           "</a>@@" "\n"))
-                (cdr cell)))
-       cat-alist)
-      (string-to-file
-       (mustache-render op/page-template
-                        (op/compose-template-parameters
-                         (org-combine-plists
-                          (org-export--get-inbuffer-options 'html)
-                          (op/get-inbuffer-extra-options))
-                         (org-export-as 'html nil nil t nil)))
-       (concat pub-base-dir "index.html")))))
+  (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
+        (id 0))
+    (string-to-file
+     (mustache-render
+      (op/get-cache-create
+       :container-template
+       (message "Read container.mustache from file")
+       (file-to-string (concat op/template-directory "container.mustache")))
+      (ht ("header"
+           (op/render-header
+            (ht ("page-title" (concat "Index - " op/site-main-title))
+                ("author" (or user-full-name "Unknown Author")))))
+          ("nav" (op/render-navigation-bar))
+          ("content"
+           (op/render-content
+            "index.mustache"
+            (ht ("categories"
+                 (mapcar
+                  #'(lambda (cell)
+                      (ht ("id" (setq id (+ id 1)))
+                          ("category" (car cell))
+                          ("posts" (mapcar
+                                    #'(lambda (plist)
+                                        (ht ("post-uri"
+                                             (plist-get plist :uri))
+                                            ("post-title"
+                                             (plist-get plist :title))))
+                                    (cdr cell)))))
+                  sort-alist)))))
+          ("footer"
+           (op/render-footer
+            (ht ("show-meta" nil)
+                ("show-comment" nil)
+                ("author" (or user-full-name "Unknown Author"))
+                ("google-analytics" (boundp
+                                     'op/personal-google-analytics-id))
+                ("google-analytics-id" op/personal-google-analytics-id)
+                ("creator-info" org-html-creator-string)
+                ("email" (confound-email (or user-mail-address
+                                             "Unknown Email"))))))))
+     (concat pub-base-dir "index.html") 'html-mode)))
 
 (defun op/generate-default-about (pub-base-dir)
   "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
 is the root publication directory."
-  (let ((author-name (or user-full-name "[author]"))
-        (pub-dir (expand-file-name "about/" pub-base-dir)))
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (insert "#+TITLE: About" "\n")
-      (insert "#+URI: /about/" "\n\n")
-      (insert (format "* About %s" author-name) "\n\n")
-      (insert (format "I am [[https://github.com/kelvinh/org-page][org-page]], \
-this site is generated by %s, and I provided a little help." author-name))
-      (insert "\n\n")
-      (insert (format "Since %s is a little lazy, he/she did not provide an \
-about page, so I generated this page myself." author-name))
-      (insert "\n\n")
-      (insert "* About me(org-page)" "\n\n")
-      (insert (format "[[https://github.com/kelvinh][Kelvin Hu]] is my \
-creator, please [[mailto:%s][contact him]] if you find there is something need \
-to improve, many thanks. :-)" (confound-email "ini.kelvin@gmail.com")))
-      (string-to-file
-       (mustache-render op/page-template
-                        (op/compose-template-parameters
-                         (org-combine-plists
-                          (org-export--get-inbuffer-options 'html)
-                          (op/get-inbuffer-extra-options))
-                         (org-export-as 'html nil nil t nil)))
-       (concat pub-dir "index.html")))))
+  (let ((pub-dir (expand-file-name "about/" pub-base-dir)))
+    (unless (file-directory-p pub-dir)
+      (mkdir pub-dir t))
+    (string-to-file
+     (mustache-render
+      (op/get-cache-create
+       :container-template
+       (message "Read container.mustache from file")
+       (file-to-string (concat op/template-directory "container.mustache")))
+      (ht ("header"
+           (op/render-header
+            (ht ("page-title" (concat "About - " op/site-main-title))
+                ("author" (or user-full-name "Unknown Author")))))
+          ("nav" (op/render-navigation-bar))
+          ("content"
+           (op/render-content
+            "about.mustache"
+            (ht ("author" (or user-full-name "Unknown Author")))))
+          ("footer"
+           (op/render-footer
+            (ht ("show-meta" nil)
+                ("show-comment" nil)
+                ("author" (or user-full-name "Unknown Author"))
+                ("google-analytics" (boundp
+                                     'op/personal-google-analytics-id))
+                ("google-analytics-id" op/personal-google-analytics-id)
+                ("creator-info" org-html-creator-string)
+                ("email" (confound-email (or user-mail-address
+                                             "Unknown Email"))))))))
+     (concat pub-dir "index.html") 'html-mode)))
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
@@ -310,74 +424,93 @@ TODO: improve this function."
   (let ((tag-base-dir (expand-file-name "tags/" pub-base-dir))
         tag-alist tag-list tag-dir)
     (mapc
-     '(lambda (attr-plist)
-        (mapc
-         '(lambda (tag-name)
-            (setq tag-list (assoc tag-name tag-alist))
-            (unless tag-list
-              (add-to-list 'tag-alist (setq tag-list `(,tag-name))))
-            (nconc tag-list (list attr-plist)))
-         (plist-get attr-plist :tags)))
+     #'(lambda (attr-plist)
+         (mapc
+          #'(lambda (tag-name)
+              (setq tag-list (assoc tag-name tag-alist))
+              (unless tag-list
+                (add-to-list 'tag-alist (setq tag-list `(,tag-name))))
+              (nconc tag-list (list attr-plist)))
+          (plist-get attr-plist :tags)))
      file-attr-list)
-    (with-current-buffer (get-buffer-create op/temp-buffer-name)
-      (erase-buffer)
-      (insert "#+TITLE: Tag Index" "\n")
-      (insert "#+URI: /tags/" "\n")
-      (insert "#+OPTIONS: *:nil" "\n\n")
-      (mapc '(lambda (tag-list)
-               (insert " - " "@@html:<a href=\""
-                       (op/generate-tag-uri (car tag-list))
-                       "\">" (car tag-list)
-                       " (" (number-to-string (length (cdr tag-list))) ")"
-                       "</a>@@" "\n"))
-            tag-alist)
-      (unless (file-directory-p tag-base-dir)
-        (mkdir tag-base-dir t))
-      (string-to-file
-       (mustache-render op/page-template
-                        (op/compose-template-parameters
-                         (org-combine-plists
-                          (org-export--get-inbuffer-options 'html)
-                          (op/get-inbuffer-extra-options))
-                         (org-export-as 'html nil nil t nil)))
-       (concat tag-base-dir "index.html")))
+    (unless (file-directory-p tag-base-dir)
+      (mkdir tag-base-dir t))
+    (string-to-file
+     (mustache-render
+      (op/get-cache-create
+       :container-template
+       (message "Read container.mustache from file")
+       (file-to-string (concat op/template-directory "container.mustache")))
+      (ht ("header"
+           (op/render-header
+            (ht ("page-title" (concat "Tag Index - " op/site-main-title))
+                ("author" (or user-full-name "Unknown Author")))))
+          ("nav" (op/render-navigation-bar))
+          ("content"
+           (op/render-content
+            "tag-index.mustache"
+            (ht ("tags"
+                 (mapcar
+                  #'(lambda (tag-list)
+                      (ht ("tag-name" (car tag-list))
+                          ("tag-uri" (op/generate-tag-uri (car tag-list)))
+                          ("count" (number-to-string (length (cdr tag-list))))))
+                  tag-alist)))))
+          ("footer"
+           (op/render-footer
+            (ht ("show-meta" nil)
+                ("show-comment" nil)
+                ("author" (or user-full-name "Unknown Author"))
+                ("google-analytics" (boundp
+                                     'op/personal-google-analytics-id))
+                ("google-analytics-id" op/personal-google-analytics-id)
+                ("creator-info" org-html-creator-string)
+                ("email" (confound-email (or user-mail-address
+                                             "Unknown Email"))))))))
+     (concat tag-base-dir "index.html") 'html-mode)
     (mapc
      #'(lambda (tag-list)
-         (with-current-buffer (get-buffer-create op/temp-buffer-name)
-           (erase-buffer)
-           (insert "#+TITLE: Tag: " (car tag-list) "\n")
-           (insert "#+URI: " (op/generate-tag-uri (car tag-list)) "\n")
-           (insert "#+OPTIONS: *:nil" "\n\n")
-           (mapc #'(lambda (attr-plist)
-                     (insert " - "
-                             "@@html:<a href=\"" (plist-get attr-plist :uri) "\">"
-                             (org-element-interpret-data
-                              (plist-get attr-plist :title))
-                             "</a>@@" "\n"))
-                 (cdr tag-list))
-           (setq tag-dir (file-name-as-directory
-                          (concat tag-base-dir
-                                  (convert-string-to-path (car tag-list)))))
-           (unless (file-directory-p tag-dir)
-             (mkdir tag-dir t))
-           (string-to-file
-            (mustache-render op/page-template
-                             (op/compose-template-parameters
-                              (org-combine-plists
-                               (org-export--get-inbuffer-options 'html)
-                               (op/get-inbuffer-extra-options))
-                              (org-export-as 'html nil nil t nil)))
-            (concat tag-dir "index.html"))))
+         (setq tag-dir (file-name-as-directory
+                        (concat tag-base-dir
+                                (convert-string-to-path (car tag-list)))))
+         (unless (file-directory-p tag-dir)
+           (mkdir tag-dir t))
+         (string-to-file
+          (mustache-render
+           (op/get-cache-create
+            :container-template
+            (message "Read container.mustache from file")
+            (file-to-string (concat op/template-directory
+                                    "container.mustache")))
+           (ht ("header"
+                (op/render-header
+                 (ht ("page-title" (concat "Tag: " (car tag-list)
+                                           " - " op/site-main-title))
+                     ("author" (or user-full-name "Unknown Author")))))
+               ("nav" (op/render-navigation-bar))
+               ("content"
+                (op/render-content
+                 "tag.mustache"
+                 (ht ("tag-name" (car tag-list))
+                     ("posts"
+                      (mapcar
+                       #'(lambda (attr-plist)
+                           (ht ("post-uri" (plist-get attr-plist :uri))
+                               ("post-title" (plist-get attr-plist :title))))
+                       (cdr tag-list))))))
+               ("footer"
+                (op/render-footer
+                 (ht ("show-meta" nil)
+                     ("show-comment" nil)
+                     ("author" (or user-full-name "Unknown Author"))
+                     ("google-analytics" (boundp
+                                          'op/personal-google-analytics-id))
+                     ("google-analytics-id" op/personal-google-analytics-id)
+                     ("creator-info" org-html-creator-string)
+                     ("email" (confound-email (or user-mail-address
+                                                  "Unknown Email"))))))))
+          (concat tag-dir "index.html") 'html-mode))
      tag-alist)))
-
-;; (defun op/kill-exported-buffer (export-buf-or-file)
-;;   "Kill the exported buffer. This function is a snippet copied from
-;; `org-publish-org-to'."
-;;   (when (and (bufferp export-buf-or-file)
-;;              (buffer-live-p export-buf-or-file))
-;;     (set-buffer export-buf-or-file)
-;;     (when (buffer-modified-p) (save-buffer))
-;;     (kill-buffer export-buf-or-file)))
 
 
 (provide 'op-export)

@@ -185,12 +185,29 @@ TODO2: maybe DBCS strings should also be converted into ASCII URL path"
     (insert-file-contents file)
     (buffer-string)))
 
-(defun string-to-file (string file)
-  "Write STRING into FILE, only when FILE is writable."
+(defun string-to-file (string file &optional mode)
+  "Write STRING into FILE, only when FILE is writable. If MODE is a valid major
+mode, format the string with MODE's format settings."
   (with-temp-buffer
     (insert string)
+    (set-buffer-file-coding-system 'utf-8-unix)
+    (when (and mode (functionp mode))
+      (funcall mode)
+      (flush-lines "^[ \\t]*$" (point-min) (point-max))
+      (delete-trailing-whitespace (point-min) (point-max))
+      (indent-region (point-min) (point-max)))
     (when (file-writable-p file)
       (write-region (point-min) (point-max) file))))
+
+(defun convert-plist-to-hashtable (plist)
+  "Convert normal property list PLIST into hash table, keys of PLIST should be
+in format :key, and it will be converted into \"key\" in hash table. This is an
+alternative to `ht-from-plist'."
+  (let ((h (ht-create)))
+    (dolist (pair (ht/group-pairs plist) h)
+      (let ((key (substring (symbol-name (car pair)) 1))
+            (value (cadr pair)))
+        (ht-set h key value)))))
 
 
 (provide 'op-util)

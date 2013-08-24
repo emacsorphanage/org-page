@@ -55,10 +55,8 @@ used a new theme."
   (unless theme
     (setq theme 'mdo))
   (setq theme (symbol-name theme))
-  (setq op/page-template
-        (file-to-string
-         (concat op/load-directory
-                 (format "themes/%s/templates/template.html" theme)))))
+  (setq op/template-directory
+        (concat op/load-directory (format "themes/%s/templates/" theme))))
 
 
 (provide 'op-enhance)

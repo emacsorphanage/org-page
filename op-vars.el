@@ -109,13 +109,49 @@ presented by `op/repository-directory'."
   "Personal google analytics id."
   :group 'org-page :type 'string)
 
-(defcustom op/page-template
-  (file-to-string (concat op/load-directory
-                          (format "themes/%s/templates/template.html"
-                                  (symbol-name (or op/theme 'mdo)))))
-  "The template used to construct pages, see the template itself for detail."
+(defcustom op/template-directory
+  (concat op/load-directory
+          (format "themes/%s/templates/" (symbol-name (or op/theme 'mdo))))
+  "The directory stores templates for page rendering."
   :group 'org-page :type 'string)
 
+;;; this variable is deprecated
+(defcustom op/page-template
+  (file-to-string (concat op/template-directory "container.mustache"))
+  "The template used to render pages, see the template itself for detail."
+  :group 'org-page :type 'string)
+
+(defcustom op/retrieve-category-function 'op/get-file-category
+  "The function used to retrieve an org file's category, its parameter is the
+org file's path, if parameter is nil, it should return all categories, the
+default value is `op/get-file-category'."
+  :group 'org-page :type 'function)
+
+(defvar op/category-config-alist
+  '(("blog" ;; this is the default configuration
+    :show-meta t
+    :show-comment t
+    :uri-generator op/generate-uri
+    :uri-template "/blog/%y/%m/%d/%t/"
+    :sort-by :date     ;; how to sort the posts
+    :category-index t) ;; generate category index or not
+   ("index"
+    :show-meta nil
+    :show-comment nil
+    :uri-generator op/generate-uri
+    :uri-template "/"
+    :sort-by :date
+    :category-index nil)
+   ("about"
+    :show-meta nil
+    :show-comment nil
+    :uri-generator op/generate-uri
+    :uri-template "/about/"
+    :sort-by :date
+    :category-index nil))
+  "Configurations for different categories, can and should be customized.")
+
+;;; this variable is deprecated
 (defvar op/default-template-parameters
   (ht ("blog-uri" "/blog/")
       ("wiki-uri" "/wiki/")
@@ -134,6 +170,10 @@ presented by `op/repository-directory'."
       ("google-analytics" (if op/personal-google-analytics-id t nil))
       ("creator-info" org-html-creator-string))
   "Default template rendering parameters.")
+
+;;; testing
+(defvar op/item-cache nil
+  "The cache for general purpose.")
 
 
 (provide 'op-vars)

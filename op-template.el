@@ -28,6 +28,153 @@
 
 (require 'mustache)
 
+(defun op/get-cache-item (key)
+  "Get the item associated with KEY in `op/item-cache', if `op/item-cache' is
+nil or there is no item associated with KEY in it, return nil."
+  (and op/item-cache
+       (plist-get op/item-cache key)))
+
+(defun op/update-cache-item (key value)
+  "Update the item associated with KEY in `op/item-cache', if `op/item-cache' is
+nil, initialize it."
+  (if op/item-cache
+      (plist-put op/item-cache key value)
+    (setq op/item-cache `(,key ,value)))
+  value)
+
+(defmacro op/get-cache-create (key &rest body)
+  "Firstly get item from `op/item-cache' with KEY, if item not found, evaluate
+BODY and push the result into cache and return it."
+  `(or (op/get-cache-item ,key)
+       (op/update-cache-item ,key (funcall (lambda () ,@body)))))
+
+(defun op/render-header (&optional param-table)
+  "Render the header on each page. PARAM-TABLE is the hash table from mustache
+to render the template. If it is not set or nil, this function will try to build
+a hash table accordint to current buffer."
+  (mustache-render
+   (op/get-cache-create
+    :header-template
+    (message "Read header.mustache from file")
+    (file-to-string (concat op/template-directory "header.mustache")))
+   (or param-table
+       (ht ("page-title" (concat (or (op/read-org-option "TITLE") "Untitled")
+                                 " - " op/site-main-title))
+           ("author" (or (op/read-org-option "AUTHOR")
+                         user-full-name "Unknown Author"))
+           ("description" (op/read-org-option "DESCRIPTION"))
+           ("keywords" (op/read-org-option "KEYWORDS"))))))
+
+(defun op/render-navigation-bar (&optional param-table)
+  "Render the navigation bar on each page. it will be read firstly from
+`op/item-cache', if there is no cached content, it will be rendered
+and pushed into cache from template. PARAM-TABLE is the hash table for mustache
+to render the template. If it is not set or nil, this function will try to
+render from a default hash table."
+  (op/get-cache-create
+   :nav-bar-html
+   (message "Render navigation bar from template")
+   (mustache-render
+    (op/get-cache-create
+     :nav-bar-template
+     (message "Read nav.mustache from file")
+     (file-to-string (concat op/template-directory "nav.mustache")))
+    (or param-table
+        (ht ("site-main-title" op/site-main-title)
+            ("site-sub-title" op/site-sub-title)
+            ("nav-categories"
+             (mapcar
+              #'(lambda (cat)
+                  (ht ("category-uri"
+                       (concat "/" (convert-string-to-path cat) "/"))
+                      ("category-name" (capitalize cat))))
+              (sort (remove-if
+                     #'(lambda (cat)
+                         (or (string= cat "index")
+                             (string= cat "about")))
+                     (op/get-file-category nil))
+                    'string-lessp)))
+            ("github" op/personal-github-link)
+            ("site-domain" (if (string-match
+                                "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                op/site-domain)
+                               (match-string 1 op/site-domain)
+                             op/site-domain)))))))
+
+(defun op/render-content (&optional template param-table)
+  "Render the content on each page. TEMPLATE is the template name for rendering,
+if it is not set of nil, will use default post.mustache instead. PARAM-TABLE is
+similar to `op/render-header'."
+  (mustache-render
+   (op/get-cache-create
+    (if template
+        (intern (replace-regexp-in-string "\\.mustache$" "-template" template))
+      :post-template)
+    (message (concat "Read " (or template "post.mustache") " from file"))
+    (file-to-string (concat op/template-directory
+                            (or template "post.mustache"))))
+   (or param-table
+       (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
+           ("content" (org-export-as 'html nil nil t nil))))))
+
+(defun op/render-footer (&optional param-table)
+  "Render the footer on each page. PARAM-TABLE is similar to
+`op/render-header'."
+  (mustache-render
+   (op/get-cache-create
+    :footer-template
+    (message "Read footer.mustache from file")
+    (file-to-string (concat op/template-directory "footer.mustache")))
+   (or param-table
+       (let* ((filename (buffer-file-name))
+              (title (or (op/read-org-option "TITLE") "Untitled"))
+              (date (fix-timestamp-string
+                     (or (op/read-org-option "DATE")
+                         (format-time-string "%Y-%m-%d"))))
+              (tags (op/read-org-option "TAGS"))
+              (category (funcall (or op/retrieve-category-function
+                                     op/get-file-category)
+                                 filename))
+              (config (cdr (or (assoc category op/category-config-alist)
+                               (assoc "blog" op/category-config-alist))))
+              (uri (funcall (plist-get config :uri-generator)
+                            (plist-get config :uri-template) date title)))
+         (ht ("show-meta" (plist-get config :show-meta))
+             ("show-comment" (plist-get config :show-comment))
+             ("date" date)
+             ("mod-date" (if (not filename)
+                             (format-time-string "%Y-%m-%d")
+                           (or (op/git-last-change-date
+                                op/repository-directory
+                                filename)
+                               (format-time-string
+                                "%Y-%m-%d"
+                                (nth 5 (file-attributes filename))))))
+             ("tag-links" (if (not tags) "N/A"
+                            (mapconcat
+                             #'(lambda (tag-name)
+                                 (mustache-render
+                                  "<a href=\"{{link}}\">{{name}}</a>"
+                                  (ht ("link" (op/generate-tag-uri tag-name))
+                                      ("name" tag-name))))
+                             (delete "" (mapcar
+                                         'trim-string
+                                         (split-string tags "[:,]+" t))) ", ")))
+             ("author" (or (op/read-org-option "AUTHOR")
+                           user-full-name
+                           "Unknown Author"))
+             ("disqus-id" uri)
+             ("disqus-url" (concat (replace-regexp-in-string
+                                    "/?$" "" op/site-domain) uri))
+             ("disqus-shortname" op/personal-disqus-shortname)
+             ("google-analytics" (boundp 'op/personal-google-analytics-id))
+             ("google-analytics-id" op/personal-google-analytics-id)
+             ("creator-info" org-html-creator-string)
+             ("email" (confound-email (or (op/read-org-option "EMAIL")
+                                          user-mail-address
+                                          "Unknown Email"))))))))
+
+;;; this function is deprecated
 (defun op/update-default-template-parameters ()
   "Update the default template parameters. It is only needed when user did some
 customization to relevant variables."
@@ -45,6 +192,7 @@ customization to relevant variables."
        ("google-analytics" (if op/personal-google-analytics-id t nil))))
   op/default-template-parameters)
 
+;;; this function is deprecated
 (defun op/compose-template-parameters (attr-plist content)
   "Compose parameters for org file represented in current buffer.
 ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of

@@ -1,4 +1,4 @@
-;;; org-page.el --- static page generator based on org mode
+;;; org-page.el --- static site generator based on org mode
 
 ;; Copyright (C) 2012, 2013 Kelvin Hu
 
