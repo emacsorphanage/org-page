@@ -217,7 +217,8 @@ If COMPONENT-TABLE is nil, the publication will be skipped."
                       (file-to-string (concat op/template-directory
                                               "container.mustache")))
                      component-table)
-                    (concat pub-dir "index.html") 'html-mode)))
+                    (concat pub-dir "index.html") ;; 'html-mode ;; do NOT indent the code
+                    )))
 
 (defun op/handle-deleted-file (org-file-path)
   "TODO: add logic for this function, maybe a little complex."
