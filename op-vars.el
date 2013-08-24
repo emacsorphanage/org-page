@@ -149,7 +149,6 @@ default value is `op/get-file-category'."
       ("creator-info" org-html-creator-string))
   "Default template rendering parameters.")
 
-;;; testing
 (defvar op/item-cache nil
   "The cache for general purpose.")
 
