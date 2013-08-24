@@ -72,6 +72,5 @@
      + =:show-meta=: show post meta info at the bottom of post?
      + =:uri-generator=: the function used to generate uri for posts under that category (however, it is not recommended to customize except you are an expert)
      + =:uri-template=: the template used to generate uri
-     + =:sort-by=: how to sort posts on category index page, b
-y =:date= or by =:mod-date= (:mod-date is last modification date)?
+     + =:sort-by=: how to sort posts on category index page, by =:date= or by =:mod-date= (:mod-date is last modification date)?
      + =:category-index=: generate an index page for this category?
