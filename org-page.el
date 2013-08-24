@@ -33,7 +33,6 @@
 (require 'op-git)
 (require 'op-enhance)
 (require 'op-export)
-;; TODO remove this (require 'op-hack)
 
 
 (defun op/do-publication (&optional force-all
