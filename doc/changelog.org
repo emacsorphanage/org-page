@@ -1,0 +1,39 @@
+#+TITLE:       Change Log
+#+AUTHOR:      Kelvin Hu
+#+EMAIL:       ini.kelvin@gmail.com
+#+DATE:        2013-08-24 Sat
+
+
+* v0.4
+
+  - Improved publication process.
+  - Improved templating system.
+  - Introduced a simple cache system to improve publication performance.
+  - Introduced category back according to issue #66 on github.
+  - Theme /gray/ is now deprecated, and /mdo/ is now the default theme.
+
+* v0.3
+
+  - Introduced *git* to manage org source files.
+  - Introduced *mustache* as rendering engine, to replace =format-spec=.
+  - Introduced *google analytics* as site visiting tracking system.
+  - Incremental publication support.
+  - Org mode v8.0 is now supported, and earlier versions are not supported at the same time.
+  - Developed a new theme /mdo/.
+  - Reduced category complexity, only two predefined categories "blog" and "wiki".
+
+* v0.2
+
+  - Introduced *disqus* as the commenting system.
+  - Reduced dependencies (mainly org mode publication process).
+  - Did a little hack on org html exporting feature to fit the request.
+  - Removed support of htmlized org source, it is unusefulness.
+
+* v0.1
+
+  - Initial version, it's more likely a configuration based on emacs org mode and its publication process.
+  - Category support.
+  - Tags support.
+  - Theme suport.
+  - Search engine support.
+  - Htmlized org source support.

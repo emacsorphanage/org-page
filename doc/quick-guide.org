@@ -1,0 +1,77 @@
+#+TITLE:       Quick Guide for Org-page
+#+AUTHOR:      Kelvin Hu
+#+EMAIL:       ini.kelvin@gmail.com
+#+DATE:        2013-08-24 Sat
+
+
+* Installation
+
+  Currently org-page has not been added to any elpa repos yet, so you could install org-page through cloning git repository:
+
+  : git clone https://github.com/kelvinh/org-page.it
+
+  The installation now is done.
+
+* Configuration
+
+  The *required configuration* of org-page is very little, as below:
+
+  : (add-to-list 'load-path "path/to/org-page")                  ;; add org-page to load-path
+  : (require 'org-page)
+  : (setq op/repository-directory "path/to/your/org/repository") ;; the repository location
+  : (setq op/site-domain "http://your.personal.site.com/")       ;; your domain
+  : (setq op/personal-disqus-shortname "your_disqus_shortname")  ;; your disqus commenting system
+
+* Publication
+
+  You could re-publish all org source files, or just publish the files you modified since your last publication.
+
+  To publish all files, evaluate the following line:
+
+  : (op/do-publication t nil nil t)
+
+  To publish files in your last commit, evaluate the following line:
+
+  : (op/do-publication)
+
+  it is recommended to execute this command through =M-x=, then you will see the detail options.
+
+* Helpful features
+
+  1. Find that Initializing a repository manually is too much trouble? Command =op/new-repository= can simplify this.
+
+  2. Want to make starting a post with essential properties much easier? Use command =op/insert-options-template=.
+
+  3. The default slogan is so ugly? Configure a better one (will be shown on each page):
+
+     : (setq op/site-main-title "your main slogan")
+     : (setq op/site-sub-title "your sub slogan")
+
+  4. The branch you store org source files is not named "source"? It's easy, so does the published html branch:
+
+     : (setq op/repository-org-branch "your source branch name") ;; default is "source"
+     : (setq op/repository-html-branch "your html branch name")  ;; default is "master"
+
+  5. Have a github account? It's cool:
+
+     : (setq op/personal-github-link "your github link")
+
+  6. Want to do site visiting tracking with Google Analytics?
+
+     : (setq op/personal-google-analytics-id "your google analytics id")
+
+  7. Have a category named "photography", and don't want to enable commenting for posts under this category? Yeah, it can be achieved:
+
+     : (setq op/category-config-alist
+     :       (cons '("photography"
+     :               :show-comment nil)
+     :             op/category-config-alist))
+
+  8. The previous item looks interesting, is there any other items can be configured? Yeah, there are several:
+
+     + =:show-meta=: show post meta info at the bottom of post?
+     + =:uri-generator=: the function used to generate uri for posts under that category (however, it is not recommended to customize except you are an expert)
+     + =:uri-template=: the template used to generate uri
+     + =:sort-by=: how to sort posts on category index page, b
+y =:date= or by =:mod-date= (:mod-date is last modification date)?
+     + =:category-index=: generate an index page for this category?
