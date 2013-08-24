@@ -15,7 +15,7 @@
   3) category support
   4) tags support (auto generated)
   5) search engine support (auto generated)
-  6) a much more beautiful theme than the default one
+  6) a beautiful theme
   7) theme customization support
   8) commenting (implemented using disqus)
   9) site visiting tracking (implemented using google analytics)
