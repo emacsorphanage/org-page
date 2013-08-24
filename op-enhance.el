@@ -5,7 +5,6 @@
 ;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
 ;; Keywords: convenience
 ;; Homepage: https://github.com/kelvinh/org-page
-;; Version: 0.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

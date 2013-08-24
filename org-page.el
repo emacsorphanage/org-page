@@ -5,7 +5,6 @@
 ;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
 ;; Keywords: org-mode, convenience, beautify
 ;; Homepage: https://github.com/kelvinh/org-page
-;; Version: 0.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,49 +22,6 @@
 ;;; Commentary:
 
 ;; org-page.el contains the main entrance of entire program.
-;;
-;; This program can generate a complete static website based on
-;; org-mode, with only a little configuration. It provides the following
-;; features:
-;;
-;; + manage org source using git
-;; + much more beautiful theme
-;; + customized theme support
-;; + tags support (auto generated)
-;; + search engine support (auto generated)
-;; + commenting (implemented using disqus)
-;;
-;; How it works:
-;;
-;; Read org file changes from the org source branch in the git repository,
-;; and then publish the changes, to a directory if specified, or to the
-;; html branch in that repository if no out directory specified.
-;;
-;; The minimal configuration that makes org-page work:
-;;
-;; 1. `op/repository-directory': the git repository directory, where your
-;;    org files stored, and managed by git
-;; 2. `op/site-domain': the URL that search engine and disqus commenting
-;;    will base on, it should be your personal site's URL
-;; 3. `op/personal-disqus-shortname': the disqus shortname you own on
-;;    disqus website, will be used for commenting
-;;
-;; Then, the following simple code will make org-page work:
-;;
-;;    (add-to-list 'load-path "path/to/org-page")
-;;    (require 'org-page)
-;;    (setq op/repository-directory "path/to/your/repo")
-;;    (setq op/publish-site-url "http://your.personal.site.com/")
-;;    (setq op/personal-disqus-shortname "your_disqus_shortname")
-;;
-;;    (op/do-publication)
-;;
-;; The code above makes it work, but, it does only "make it work", to
-;; make org-page works as you want, maybe you need more configuration.
-;; Please visit file `op-vars.el' for other variable configurations, and
-;; visit description of `op/do-publication' for how org-page does the
-;; publication and its parameter usage.
-;;
 
 ;;; Code:
 

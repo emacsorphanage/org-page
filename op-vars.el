@@ -5,7 +5,6 @@
 ;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
 ;; Keywords: convenience
 ;; Homepage: https://github.com/kelvinh/org-page
-;; Version: 0.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,27 +22,6 @@
 ;;; Commentary:
 
 ;; op-vars.el contains almost all variable definitions and configurations.
-;;
-;; As described in `org-page.el', most variables will work with default
-;; values, but you can configure them for more customization. You could
-;; visit each variable's description for its usage.
-;;
-;; Three variables are required to configure:
-;;
-;; 1. `op/repository-directory'
-;; 2. `op/site-domain'
-;; 3. `op/personal-disqus-shortname'
-;;
-;; Six variables are recommended to do customization:
-;;
-;; 1. `op/repository-org-branch'
-;; 2. `op/repository-html-branch'
-;; 3. `op/site-main-title'
-;; 4. `op/site-sub-title'
-;; 5. `op/personal-github-link'
-;; 6. `op/personal-google-analytics-id'
-;;
-;; If you perfer another theme, you may need to change `op/theme'.
 
 ;;; Code:
 
