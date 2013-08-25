@@ -25,6 +25,10 @@
 
 ;;; Code:
 
+(require 'ox)
+(require 'ht)
+
+
 (defgroup org-page nil
   "Options for generating static pages using org-page."
   :tag "Org static page generator" :group 'org)

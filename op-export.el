@@ -26,6 +26,13 @@
 ;;; Code:
 
 (require 'format-spec)
+(require 'ox)
+(require 'ht)
+(require 'op-util)
+(require 'op-vars)
+(require 'op-git)
+(require 'op-template)
+
 
 (defun op/publish-changes (all-list change-plist pub-root-dir)
   "This function is for:

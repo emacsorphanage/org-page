@@ -42,10 +42,9 @@
 ;;; Code:
 
 (require 'ox)
-(require 'mustache)
+(require 'ht)
 (require 'op-util)
 (require 'op-vars)
-(require 'op-template)
 (require 'op-git)
 (require 'op-enhance)
 (require 'op-export)

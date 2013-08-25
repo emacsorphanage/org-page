@@ -25,6 +25,12 @@
 
 ;;; Code:
 
+(require 'ox)
+(require 'ht)
+(require 'op-util)
+(require 'op-vars)
+
+
 (defun op/verify-git-repository (repo-dir)
   "This function will verify whether REPO-DIR is a valid git repository.
 TODO: may add branch/commit verification later."
@@ -54,9 +60,9 @@ instead of pointer HEAD."
                  (concat "git ls-tree -r --name-only "
                          (or branch "HEAD"))
                  t)))
-    (delq nil (mapcar '(lambda (line)
-                         (when (string-suffix-p org-file-ext line t)
-                           (expand-file-name line repo-dir)))
+    (delq nil (mapcar #'(lambda (line)
+                          (when (string-suffix-p org-file-ext line t)
+                            (expand-file-name line repo-dir)))
                       (split-string output "\n")))))
 
 (defun op/git-branch-name (repo-dir)
@@ -130,13 +136,13 @@ only two types will work well: need to publish or need to delete.
                          base-commit " HEAD")
                  t))
         upd-list del-list)
-    (mapc '(lambda (line)
-             (if (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" line)
-                 (setq upd-list (cons (concat repo-dir (match-string 1 line))
-                                      upd-list)))
-             (if (string-match "\\`D\t\\(.*\.org\\)\\'" line)
-                 (setq del-list (cons (concat repo-dir (match-string 1 line))
-                                      del-list))))
+    (mapc #'(lambda (line)
+              (if (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" line)
+                  (setq upd-list (cons (concat repo-dir (match-string 1 line))
+                                       upd-list)))
+              (if (string-match "\\`D\t\\(.*\.org\\)\\'" line)
+                  (setq del-list (cons (concat repo-dir (match-string 1 line))
+                                       del-list))))
           (split-string output "\n"))
     (list :update upd-list :delete del-list)))
 

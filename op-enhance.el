@@ -26,6 +26,11 @@
 ;;; Code:
 
 (require 'format-spec)
+(require 'ox)
+(require 'ht)
+(require 'op-util)
+(require 'op-vars)
+
 
 (defun op/get-theme-dir (theme)
   "Return the resource storage directory of THEME."

@@ -25,7 +25,13 @@
 
 ;;; Code:
 
+(require 'ox)
 (require 'mustache)
+(require 'op-util)
+(require 'op-vars)
+(require 'op-git)
+(require 'op-export)
+
 
 (defun op/get-cache-item (key)
   "Get the item associated with KEY in `op/item-cache', if `op/item-cache' is
