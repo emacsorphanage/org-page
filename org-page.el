@@ -51,6 +51,8 @@
 (require 'op-export)
 
 
+(defconst org-page-version "0.4")
+
 (defun op/do-publication (&optional force-all
                                     base-git-commit pub-base-dir auto-commit)
   "The main entrance of org-page. The entire procedure is:
