@@ -172,36 +172,6 @@ its name and its root folder name under `op/repository-directory'."
                                                   op/repository-directory)
                               "[/\\\\]+")))))
 
-;;; this function is now deprecated
-(defun op/get-inbuffer-extra-options ()
-  "Read extra options(defined by ourselves) in current buffer, include:
-1. modification date (read from git last commit date, current date if current
-buffer is a temp buffer)
-2. tags (read from #+TAGS property)
-3. uri (read from #+URI property)
-4. category ('blog, 'wiki, 'about, 'index or 'none, distinguished by their name
-or root folder name under `op/repository-directory', 'none if current buffer is
-a temp buffer)"
-  (let* ((filename (buffer-file-name))
-         (attr-plist `(:mod-date ,(format-time-string "%Y-%m-%d") :tags ,nil))
-         tags)
-    (setq tags (op/read-org-option "TAGS"))
-    (when tags
-      (plist-put
-       attr-plist :tags (delete "" (mapcar 'trim-string
-                                           (split-string tags "[:,]+" t))))) ;; TODO customization
-    (when filename
-      (plist-put
-       attr-plist :mod-date
-       (or (op/git-last-change-date op/repository-directory filename)
-           (format-time-string "%Y-%m-%d" (nth 5 (file-attributes filename))))))
-    (plist-put attr-plist :category (op/get-file-category filename))
-    (plist-put attr-plist :uri (op/generate-uri
-                                (op/read-org-option "URI")
-                                (op/read-org-option "DATE")
-                                (op/read-org-option "TITLE")
-                                (plist-get attr-plist :category)))))
-
 (defun op/publish-modified-file (component-table pub-dir)
   "Publish org file opened in current buffer. COMPONENT-TABLE is the hash table
 used to render the template, PUB-DIR is the directory for published html file.
