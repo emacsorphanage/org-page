@@ -116,8 +116,7 @@ perfectly manipulated by org-page."
   (op/git-commit-changes repo-dir "add source index.org")
   (op/generate-about repo-dir)
   (op/git-commit-changes repo-dir "add source about.org")
-  (mkdir (expand-file-name "blog/" repo-dir) t)
-  (mkdir (expand-file-name "wiki/" repo-dir) t))
+  (mkdir (expand-file-name "blog/" repo-dir) t))
 
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:
