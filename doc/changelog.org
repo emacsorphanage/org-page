@@ -4,6 +4,11 @@
 #+DATE:        2013-08-24 Sat
 
 
+* v0.41
+
+  - Added to melpa.
+  - Fixed several bugs.
+
 * v0.4
 
   - Improved publication process.

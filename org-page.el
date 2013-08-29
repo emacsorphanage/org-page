@@ -50,7 +50,7 @@
 (require 'op-export)
 
 
-(defconst org-page-version "0.4")
+(defconst org-page-version "0.41")
 
 (defun op/do-publication (&optional force-all
                                     base-git-commit pub-base-dir auto-commit)
