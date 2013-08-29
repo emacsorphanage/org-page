@@ -172,7 +172,8 @@ similar to `op/render-header'."
              ("disqus-url" (concat (replace-regexp-in-string
                                     "/?$" "" op/site-domain) uri))
              ("disqus-shortname" op/personal-disqus-shortname)
-             ("google-analytics" (boundp 'op/personal-google-analytics-id))
+             ("google-analytics" (and (boundp 'op/personal-google-analytics-id)
+                                      op/personal-google-analytics-id))
              ("google-analytics-id" op/personal-google-analytics-id)
              ("creator-info" org-html-creator-string)
              ("email" (confound-email (or (op/read-org-option "EMAIL")

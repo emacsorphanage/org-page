@@ -300,8 +300,10 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                    (ht ("show-meta" nil)
                        ("show-comment" nil)
                        ("author" (or user-full-name "Unknown Author"))
-                       ("google-analytics" (boundp
-                                            'op/personal-google-analytics-id))
+                       ("google-analytics" (and
+                                            (boundp
+                                             'op/personal-google-analytics-id)
+                                            op/personal-google-analytics-id))
                        ("google-analytics-id" op/personal-google-analytics-id)
                        ("creator-info" org-html-creator-string)
                        ("email" (confound-email (or user-mail-address
@@ -347,8 +349,9 @@ publication directory."
             (ht ("show-meta" nil)
                 ("show-comment" nil)
                 ("author" (or user-full-name "Unknown Author"))
-                ("google-analytics" (boundp
-                                     'op/personal-google-analytics-id))
+                ("google-analytics" (and (boundp
+                                          'op/personal-google-analytics-id)
+                                         op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
                 ("creator-info" org-html-creator-string)
                 ("email" (confound-email (or user-mail-address
@@ -381,8 +384,9 @@ is the root publication directory."
             (ht ("show-meta" nil)
                 ("show-comment" nil)
                 ("author" (or user-full-name "Unknown Author"))
-                ("google-analytics" (boundp
-                                     'op/personal-google-analytics-id))
+                ("google-analytics" (and (boundp
+                                          'op/personal-google-analytics-id)
+                                         op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
                 ("creator-info" org-html-creator-string)
                 ("email" (confound-email (or user-mail-address
@@ -437,8 +441,9 @@ TODO: improve this function."
             (ht ("show-meta" nil)
                 ("show-comment" nil)
                 ("author" (or user-full-name "Unknown Author"))
-                ("google-analytics" (boundp
-                                     'op/personal-google-analytics-id))
+                ("google-analytics" (and (boundp
+                                          'op/personal-google-analytics-id)
+                                         op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
                 ("creator-info" org-html-creator-string)
                 ("email" (confound-email (or user-mail-address
@@ -479,8 +484,9 @@ TODO: improve this function."
                  (ht ("show-meta" nil)
                      ("show-comment" nil)
                      ("author" (or user-full-name "Unknown Author"))
-                     ("google-analytics" (boundp
-                                          'op/personal-google-analytics-id))
+                     ("google-analytics" (and (boundp
+                                               'op/personal-google-analytics-id)
+                                              op/personal-google-analytics-id))
                      ("google-analytics-id" op/personal-google-analytics-id)
                      ("creator-info" org-html-creator-string)
                      ("email" (confound-email (or user-mail-address
