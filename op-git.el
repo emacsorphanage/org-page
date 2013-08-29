@@ -158,6 +158,16 @@ relative."
     (when (string-match "\\`\\([0-9]+-[0-9]+-[0-9]+\\) .*\n\\'" output)
       (match-string 1 output))))
 
+(defun op/git-remote-name (repo-dir)
+  "This function will return all remote repository names of git repository
+presented by REPO-DIR, return nil if there is no remote repository."
+  (let ((repo-dir (file-name-as-directory repo-dir))
+        (output (op/shell-command
+                 repo-dir
+                 (concat "git remote")
+                 t)))
+    (delete "" (split-string output "\n"))))
+
 
 (provide 'op-git)
 
