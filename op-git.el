@@ -164,7 +164,7 @@ presented by REPO-DIR, return nil if there is no remote repository."
   (let ((repo-dir (file-name-as-directory repo-dir))
         (output (op/shell-command
                  repo-dir
-                 (concat "git remote")
+                 "git remote"
                  t)))
     (delete "" (split-string output "\n"))))
 
