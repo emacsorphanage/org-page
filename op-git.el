@@ -168,6 +168,21 @@ presented by REPO-DIR, return nil if there is no remote repository."
                  t)))
     (delete "" (split-string output "\n"))))
 
+(defun op/git-push-remote (repo-dir remote-repo branch)
+  "This function will push local branch to remote repository, REPO-DIR is the
+local git repository, REMOTE-REPO is the remote repository, BRANCH is the name
+of branch will be pushed (the branch name will be the same both in local and
+remote repository), and if there is no branch named BRANCH in remote repository,
+it will be created."
+  (let ((repo-dir (file-name-as-directory repo-dir))
+        (output (op/shell-command
+                 repo-dir
+                 (concat "git push " remote-repo " " branch ":" branch)
+                 t)))
+    (when (string-match "fatal" output)
+      (error "Failed to push branch '%s' to remote repository '%s'."
+             branch remote-repo))))
+
 
 (provide 'op-git)
 
