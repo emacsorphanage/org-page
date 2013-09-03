@@ -151,7 +151,7 @@ can contain following parameters:
                                      (fix-timestamp-string creation-date)
                                    (format-time-string "%Y-%m-%d"))
                                  "-"))
-        (encoded-title (convert-string-to-path title)))
+        (encoded-title (encode-string-to-url title)))
     (format-spec uri-template `((?y . ,(car date-list))
                                 (?m . ,(cadr date-list))
                                 (?d . ,(caddr date-list))
@@ -261,7 +261,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                                  :category-index))
            (setq cat-dir (file-name-as-directory
                           (concat (file-name-as-directory pub-base-dir)
-                                  (convert-string-to-path (car cat-list)))))
+                                  (encode-string-to-url (car cat-list)))))
            (unless (file-directory-p cat-dir)
              (mkdir cat-dir t))
            (string-to-file
@@ -399,7 +399,7 @@ is the root publication directory."
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
-  (concat "/tags/" (convert-string-to-path tag-name) "/"))
+  (concat "/tags/" (encode-string-to-url tag-name) "/"))
 
 (defun op/update-tags (file-attr-list pub-base-dir)
   "Update tag pages. FILE-ATTR-LIST is the list of all file attribute property
@@ -457,7 +457,7 @@ TODO: improve this function."
      #'(lambda (tag-list)
          (setq tag-dir (file-name-as-directory
                         (concat tag-base-dir
-                                (convert-string-to-path (car tag-list)))))
+                                (encode-string-to-url (car tag-list)))))
          (unless (file-directory-p tag-dir)
            (mkdir tag-dir t))
          (string-to-file

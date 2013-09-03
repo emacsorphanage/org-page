@@ -175,10 +175,10 @@ want to make org-page depend on other libraries, so I copied the function here,
 so do `trim-string-left' and `trim-string-right'."
   (trim-string-left (trim-string-right str)))
 
-(defun convert-string-to-path (string)
-  "Convert a string to legal URL path
-TODO: improve doc here
-TODO2: maybe DBCS strings should also be converted into ASCII URL path"
+(defun encode-string-to-url (string)
+  "Encode STRING to legal URL. Why we do not use `url-encode-url' to encode the
+string, is that `url-encode-url' will convert all not allowed characters into
+encoded ones, like %3E, but we do NOT want this kind of url."
   (downcase (replace-regexp-in-string "[ :/\\]+" "-" string)))
 
 (defun get-full-url (uri)
