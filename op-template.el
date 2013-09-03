@@ -169,8 +169,7 @@ similar to `op/render-header'."
                            user-full-name
                            "Unknown Author"))
              ("disqus-id" uri)
-             ("disqus-url" (concat (replace-regexp-in-string
-                                    "/?$" "" op/site-domain) uri))
+             ("disqus-url" (get-full-url uri))
              ("disqus-shortname" op/personal-disqus-shortname)
              ("google-analytics" (and (boundp 'op/personal-google-analytics-id)
                                       op/personal-google-analytics-id))
@@ -233,8 +232,7 @@ ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
                      (plist-get info :tags) ", "))
          (show-comment (eq category 'blog))
          (disqus-id (plist-get info :uri))
-         (disqus-url (concat (replace-regexp-in-string "/?$" "" op/site-domain)
-                             disqus-id))
+         (disqus-url (get-full-url disqus-id))
          (param-table (ht-create)))
     (ht-update param-table op/default-template-parameters)
     (ht-update

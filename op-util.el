@@ -181,6 +181,10 @@ TODO: improve doc here
 TODO2: maybe DBCS strings should also be converted into ASCII URL path"
   (downcase (replace-regexp-in-string "[ :/\\]+" "-" string)))
 
+(defun get-full-url (uri)
+  "Get the full url of URI, by joining `op/site-domain' with URI."
+  (concat (replace-regexp-in-string "/?$" "" op/site-domain) uri))
+
 (defun file-to-string (file)
   "Read the content of FILE and return it as a string."
   (with-temp-buffer

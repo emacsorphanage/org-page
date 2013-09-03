@@ -521,9 +521,7 @@ PUB-BASE-DIR is the root publication directory."
           ("description" op/site-sub-title)
           ("date" (format-time-string "%a, %d %b %Y %T %Z"))
           ("items" (--map (ht ("item-title" (plist-get it :title))
-                              ("item-link" (concat (replace-regexp-in-string
-                                                    "/?$" "" op/site-domain)
-                                                   (plist-get it :uri)))
+                              ("item-link" (get-full-url (plist-get it :uri)))
                               ("item-description" (plist-get it :description))
                               ("item-update-date" (plist-get it :mod-date)))
                           last-10-posts))))
