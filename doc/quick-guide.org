@@ -31,8 +31,7 @@
 
   The *required configuration* of org-page is very little, as below:
 
-  : (add-to-list 'load-path "path/to/org-page")                  ;; add org-page to load-path, only needed if you install org-page manually
-  :
+  : (add-to-list 'load-path "path/to/org-page")                  ;; only needed if you install org-page manually
   : (require 'org-page)
   : (setq op/repository-directory "path/to/your/org/repository") ;; the repository location
   : (setq op/site-domain "http://your.personal.site.com/")       ;; your domain
