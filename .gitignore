@@ -4,3 +4,4 @@ temp.el
 temp.org
 example/pub
 *~
+*.elc
