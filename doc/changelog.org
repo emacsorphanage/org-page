@@ -4,6 +4,13 @@
 #+DATE:        2013-08-24 Sat
 
 
+* v0.5
+
+  - Implemented RSS feature.
+  - Introduced *dash* to manipulate lists.
+  - Improved several functions.
+  - Updated docs.
+
 * v0.41
 
   - Added to melpa.

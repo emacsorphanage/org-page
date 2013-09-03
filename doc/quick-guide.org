@@ -6,17 +6,33 @@
 
 * Installation
 
-  Currently org-page has not been added to any elpa repos yet, so you could install org-page through cloning git repository:
+** The manual way (NOT recommended)
 
-  : git clone https://github.com/kelvinh/org-page.it
+   To install org-page manually, you should first install all depended libraries listed in *README.org*, then, clone the repo:
 
-  The installation now is done.
+   : git clone https://github.com/kelvinh/org-page.it
+
+   After that, please remember to add the path to your emacs' =load-path= variable so that emacs could find this package.
+
+** Through package management system (strongly recommended)
+
+   If you have never used emacs' package management system before, just add the following to your =init.el=:
+
+   : (require 'package)
+   : (package-initialize)
+   : (add-to-list 'package-archives
+   :              '("melpa" . "http://melpa.milkbox.net/packages/") t)
+
+   Now you could install org-page using the following command:
+
+   : M-x package-install org-page
 
 * Configuration
 
   The *required configuration* of org-page is very little, as below:
 
-  : (add-to-list 'load-path "path/to/org-page")                  ;; add org-page to load-path
+  : (add-to-list 'load-path "path/to/org-page")                  ;; add org-page to load-path, only needed if you install org-page manually
+  :
   : (require 'org-page)
   : (setq op/repository-directory "path/to/your/org/repository") ;; the repository location
   : (setq op/site-domain "http://your.personal.site.com/")       ;; your domain

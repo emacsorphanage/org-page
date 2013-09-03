@@ -28,16 +28,17 @@
 ;; Org-page provides following features:
 
 ;; 1) org sources and html files managed by git
-;; 2) incremental publication
+;; 2) incremental publication (according to =git diff= command)
 ;; 3) category support
 ;; 4) tags support (auto generated)
-;; 5) search engine support (auto generated)
-;; 6) a beautiful theme
-;; 7) theme customization support
-;; 8) commenting (implemented using disqus)
-;; 9) site visiting tracking (implemented using google analytics)
-;; 10) index/about page support (auto generated if no default provided)
-;; 11) highly customizable
+;; 5) RSS support (auto generated)
+;; 6) search engine support (auto generated)
+;; 7) a beautiful theme
+;; 8) theme customization support
+;; 9) commenting (implemented using disqus)
+;; 10) site visiting tracking (implemented using google analytics)
+;; 11) index/about page support (auto generated if no default provided)
+;; 12) highly customizable
 
 ;;; Code:
 
@@ -50,7 +51,7 @@
 (require 'op-export)
 
 
-(defconst org-page-version "0.41")
+(defconst org-page-version "0.5")
 
 (defun op/do-publication (&optional force-all
                                     base-git-commit pub-base-dir auto-commit)
