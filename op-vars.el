@@ -156,6 +156,30 @@ default value is `op/get-file-category'."
 (defvar op/item-cache nil
   "The cache for general purpose.")
 
+(defconst op/rss-template "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<rss version=\"2.0\">
+  <channel>
+    <title>{{title}}</title>
+    <link>{{link}}</link>
+    <description>{{description}}</description>
+    <pubDate>{{date}}</pubDate>
+    <lastBuildDate>{{date}}</lastBuildDate>
+    <docs>http://www.rssboard.org/rss-specification</docs>
+    <generator>Org-page static site generator \
+(https://github.com/kelvinh/org-page)</generator>
+    {{#items}}
+    <item>
+      <title>{{item-title}}</title>
+      <link>{{item-link}}</link>
+      <description>{{item-description}}</description>
+      <pubDate>{{item-update-date}}</pubDate>
+      <guid>{{item-link}}</guid>
+    </item>
+    {{/items}}
+  </channel>
+</rss>"
+  "Template for RSS rendering.")
+
 
 (provide 'op-vars)
 

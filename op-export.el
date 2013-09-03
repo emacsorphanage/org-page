@@ -28,6 +28,7 @@
 (require 'format-spec)
 (require 'ox)
 (require 'ht)
+(require 'dash)
 (require 'op-util)
 (require 'op-vars)
 (require 'op-git)
@@ -72,6 +73,7 @@ deleted. PUB-ROOT-DIR is the root publication directory."
                all-list)
         (op/generate-default-about pub-root-dir))
       (op/update-category-index file-attr-list pub-root-dir)
+      (op/update-rss file-attr-list pub-root-dir)
       (op/update-tags file-attr-list pub-root-dir))))
 
 (defun op/get-org-file-options (pub-root-dir do-pub)
@@ -91,7 +93,9 @@ content of the buffer will be converted into html."
                                          filename)
                                         (format-time-string
                                          "%Y-%m-%d"
-                                         (nth 5 (file-attributes filename)))))))
+                                         (nth 5 (file-attributes filename)))))
+                       :description ,(or (op/read-org-option "DESCRIPTION")
+                                         "No Description")))
          component-table tags category cat-config)
     (setq tags (op/read-org-option "TAGS"))
     (when tags
@@ -493,6 +497,37 @@ TODO: improve this function."
                                                   "Unknown Email"))))))))
           (concat tag-dir "index.html") 'html-mode))
      tag-alist)))
+
+(defun op/update-rss (file-attr-list pub-base-dir)
+  "Update RSS. FILE-ATTR-LIST is the list of all file attribute property lists.
+PUB-BASE-DIR is the root publication directory."
+  (let ((last-10-posts
+         (-take 10 (--sort (>= 0 (compare-standard-date
+                                  (fix-timestamp-string
+                                   (plist-get it :mod-date))
+                                  (fix-timestamp-string
+                                   (plist-get other :mod-date))))
+                           (--filter (not (or
+                                           (string= (plist-get it :category)
+                                                    "index")
+                                           (string= (plist-get it :category)
+                                                    "about")))
+                                     file-attr-list)))))
+    (string-to-file
+     (mustache-render
+      op/rss-template
+      (ht ("title" op/site-main-title)
+          ("link" op/site-domain)
+          ("description" op/site-sub-title)
+          ("date" (format-time-string "%a, %d %b %Y %T %Z"))
+          ("items" (--map (ht ("item-title" (plist-get it :title))
+                              ("item-link" (concat (replace-regexp-in-string
+                                                    "/?$" "" op/site-domain)
+                                                   (plist-get it :uri)))
+                              ("item-description" (plist-get it :description))
+                              ("item-update-date" (plist-get it :mod-date)))
+                          last-10-posts))))
+     (concat pub-base-dir "rss.xml"))))
 
 
 (provide 'op-export)
