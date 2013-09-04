@@ -179,7 +179,8 @@ it will be created."
                  repo-dir
                  (concat "git push " remote-repo " " branch ":" branch)
                  t)))
-    (when (string-match "fatal" output)
+    (when (or (string-match "fatal" output)
+              (string-match "error" output))
       (error "Failed to push branch '%s' to remote repository '%s'."
              branch remote-repo))))
 
