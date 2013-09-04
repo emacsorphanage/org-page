@@ -54,7 +54,8 @@
 (defconst org-page-version "0.5")
 
 (defun op/do-publication (&optional force-all
-                                    base-git-commit pub-base-dir auto-commit)
+                                    base-git-commit pub-base-dir
+                                    auto-commit auto-push)
   "The main entrance of org-page. The entire procedure is:
 1) verify configuration
 2) read changed files on branch `op/repository-org-branch' of repository
@@ -67,22 +68,27 @@ based on previous commit
 3) publish org files to html, if PUB-BASE-DIR is specified, use that directory
 to store the generated html files, otherwise html files will be stored on branch
 `op/repository-html-branch' of repository `op/repository-directory'
-4) if PUB-BASE-DIR is nil, and auto-commit is non-nil, then the changes stored
+4) if PUB-BASE-DIR is nil, and AUTO-COMMIT is non-nil, then the changes stored
 on branch `op/repository-html-branch' will be automatically committed, but be
-careful, this feature is NOT recommended, and a manual commit is much better"
+careful, this feature is NOT recommended, and a manual commit is much better
+5) if PUB-BASE-DIR is nil, AUTO-COMMIT is non-nil, and AUTO-PUSH is non-nil,
+then the branch `op/repository-html-branch' will be pushed to remote repo."
   (interactive
    (let* ((f (y-or-n-p "Publish all org files? "))
           (b (unless f (read-string "Base git commit: " "HEAD~1")))
           (p (when (y-or-n-p
                     "Publish to a directory? (to original repo if not) ")
                (read-directory-name "Publication directory: ")))
-          (a (y-or-n-p "Auto commit to repo? ")))
-     (list f b p a)))
+          (a (when (not p)
+               (y-or-n-p "Auto commit to repo? ")))
+          (u (when (and a (not p))
+               (y-or-n-p "Auto push to remote repo? "))))
+     (list f b p a u)))
   (op/verify-configuration)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
          (to-repo (not (stringp pub-base-dir)))
          (store-dir (if to-repo "~/.op-tmp/" pub-base-dir)) ; TODO customization
-         changed-files all-files)
+         changed-files all-files remote-repos)
     (op/git-change-branch op/repository-directory op/repository-org-branch)
     (op/prepare-theme store-dir)
     (setq all-files (op/git-all-files op/repository-directory))
@@ -98,6 +104,22 @@ careful, this feature is NOT recommended, and a manual commit is much better"
     (when (and to-repo auto-commit)
       (op/git-commit-changes op/repository-directory "Update published html \
 files, committed by org-page.")
+      (when auto-push
+        (setq remote-repos (op/git-remote-name op/repository-directory))
+        (if (not remote-repos)
+            (message "No valid remote repository found.")
+          (let (repo)
+            (if (> (length remote-repos) 1)
+                (setq repo (read-string
+                            (format "Which repo to push %s: "
+                                    (prin1-to-string remote-repos))
+                            (car remote-repos)))
+              (setq repo (car remote-repos)))
+            (if (not (member repo remote-repos))
+                (message "Invalid remote repository '%s'." repo)
+              (op/git-push-remote op/repository-directory
+                                  repo
+                                  op/repository-html-branch)))))
       (op/git-change-branch op/repository-directory orig-branch))
     (message "Publication finished: on branch '%s' of repository '%s'."
              op/repository-html-branch op/repository-directory)))
