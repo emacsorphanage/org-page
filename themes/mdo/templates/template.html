@@ -56,6 +56,7 @@
       <section>
         <h1>Comments</h1>
         <div id="disqus_thread"></div>
+	{{#disqus-comment}}
         <script type="text/javascript">
           //var disqus_developer = 1;
           var disqus_identifier = "{{disqus-id}}";
@@ -71,6 +72,21 @@
         </script>
         <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
         <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+	{{/disqus-comment}}
+	{{#duoshuo-comment}}
+	<div class="ds-thread"></div>
+	<script type="text/javascript">
+	  var duoshuoQuery = {short_name:'{{duoshuo-shortname}}'};
+	  (function() {
+	  var ds = document.createElement('script');
+	  ds.type = 'text/javascript';ds.async = true;
+	  ds.src = 'http://static.duoshuo.com/embed.js';
+	  ds.charset = 'UTF-8';
+	  (document.getElementsByTagName('head')[0]
+	  || document.getElementsByTagName('body')[0]).appendChild(ds);
+	  })();
+	</script>
+	{{/duoshuo-comment}}
       </section>
       {{/show-comment}}
       {{#google-analytics}}
