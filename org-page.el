@@ -144,7 +144,8 @@ perfectly manipulated by org-page."
   "Ensure all required configuration fields are properly configured, include:
 `op/repository-directory': <required>
 `op/site-domain': <required>
-`op/personal-disqus-shortname': <required>
+`op/personal-disqus-shortname': <optional>
+`op/personal-duoshuo-shortname': <optional>
 `op/repository-org-branch': [optional] (but customization recommended)
 `op/repository-html-branch': [optional] (but customization recommended)
 `op/site-main-title': [optional] (but customization recommanded)
@@ -163,9 +164,12 @@ help configure it manually, usually it should be <org-page directory>/themes/."
   (unless op/site-domain
     (error "Site domain `%s' is not properly configured."
            (symbol-name 'op/site-domain)))
-  (unless op/personal-disqus-shortname
-    (error "Disqus shortname `%s' is not properly configured."
-           (symbol-name 'op/personal-disqus-shortname)))
+  (unless (or op/personal-disqus-shortname op/personal-duoshuo-shortname)
+    (error "Disqus shortname `%s' or Duoshuo shortname `%s' must configured one."
+           (symbol-name 'op/personal-disqus-shortname) (symbol-name 'op/personal-duoshuo-shortname)))
+  (if (and op/personal-disqus-shortname op/personal-duoshuo-shortname)
+      (error "Disqus shortname `%s' and Duoshuo shortname `%s' can not configured at same time."
+	     (symbol-name 'op/personal-disqus-shortname) (symbol-name 'op/personal-duoshuo-shortname)))
 
   (setq op/repository-directory (expand-file-name op/repository-directory))
   (unless (or (string-prefix-p "http://" op/site-domain)

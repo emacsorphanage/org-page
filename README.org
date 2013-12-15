@@ -51,8 +51,9 @@
    : (require 'org-page)
    : (setq op/repository-directory "path/to/your/org/repository")
    : (setq op/site-domain "http://your.personal.site.com/")
-   : (setq op/personal-disqus-shortname "your_disqus_shortname")
    : ;;; the configuration below are optional
+   : (setq op/personal-disqus-shortname "your_disqus_shortname")
+   : (setq op/personal-duoshuo-shortname "your_duoshuo_shortname")
    : (setq op/personal-google-analytics-id "your_google_analytics_id")
 
 ** publication

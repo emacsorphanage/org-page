@@ -87,6 +87,10 @@ presented by `op/repository-directory'."
   "The personal disqus shortname."
   :group 'org-page :type 'string)
 
+(defcustom op/personal-duoshuo-shortname nil
+  "The personal duoshuo shortname."
+  :group 'org-page :type 'string)
+
 (defcustom op/personal-google-analytics-id nil
   "Personal google analytics id."
   :group 'org-page :type 'string)
@@ -148,6 +152,9 @@ default value is `op/get-file-category'."
                          (match-string 1 op/site-domain)
                        op/site-domain))
       ("disqus-shortname" op/personal-disqus-shortname)
+      ("disqus-comment" (if op/personal-disqus-shortname t nil))
+      ("duoshuo-shortname" op/personal-duoshuo-shortname)
+      ("duoshuo-comment" (if op/personal-duoshuo-shortname t nil))
       ("google-analytics-id" op/personal-google-analytics-id)
       ("google-analytics" (if op/personal-google-analytics-id t nil))
       ("creator-info" org-html-creator-string))
