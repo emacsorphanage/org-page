@@ -18,7 +18,7 @@
   6) search engine support (auto generated)
   7) a beautiful theme
   8) theme customization support
-  9) commenting (implemented using disqus)
+  9) commenting (implemented using disqus/duoshuo)
   10) site visiting tracking (implemented using google analytics)
   11) index/about page support (auto generated if no default provided)
   12) highly customizable
@@ -51,9 +51,10 @@
    : (require 'org-page)
    : (setq op/repository-directory "path/to/your/org/repository")
    : (setq op/site-domain "http://your.personal.site.com/")
-   : ;;; the configuration below are optional
+   : ;;; for commenting, you can choose either disqus or duoshuo
    : (setq op/personal-disqus-shortname "your_disqus_shortname")
    : (setq op/personal-duoshuo-shortname "your_duoshuo_shortname")
+   : ;;; the configuration below are optional
    : (setq op/personal-google-analytics-id "your_google_analytics_id")
 
 ** publication
