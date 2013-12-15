@@ -4,6 +4,11 @@
 #+DATE:        2013-08-24 Sat
 
 
+* v0.6
+
+  - Implemented Push-to-Remote-Repo feature.
+  - Introduced new commenting system: duoshuo. (thank [[https://github.com/naihe2010][naihe2010]])
+
 * v0.5
 
   - Implemented RSS feature.
