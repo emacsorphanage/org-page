@@ -277,6 +277,34 @@ month and day): " (unless (string= i "")
                "<TODO: insert your description here>"
              description))))
 
+(defun op/new-post (&optional category filename)
+  "Setup a new post.
+CATEGORY: this post belongs to
+FILENAME: the file name of this post
+Note that this function does not verify the category and filename, it is users'
+responsibility to guarantee the two parameters are valid."
+  (interactive
+   (let* ((c (read-string "Category: " "blog"))
+          (f (read-string "filename: " "new-post.org")))
+     (list c f)))
+  (if (string= category "")
+      (setq category "blog"))
+  (if (string= filename "")
+      (setq filename "new-post.org"))
+  (unless (string-suffix-p ".org" filename)
+    (setq filename (concat filename ".org")))
+  (let* ((dir (concat (file-name-as-directory op/repository-directory)
+                      (file-name-as-directory category)))
+         (path (concat dir filename)))
+    (if (file-exists-p path)
+        (error "Post `%s' already exists." path))
+    (unless (file-directory-p dir)
+      (mkdir dir t))
+    (switch-to-buffer (find-file path))
+    (op/insert-options-template)
+    (save-buffer)))
+
+
 (provide 'org-page)
 
 ;;; org-page.el ends here
