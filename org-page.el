@@ -301,7 +301,7 @@ responsibility to guarantee the two parameters are valid."
     (unless (file-directory-p dir)
       (mkdir dir t))
     (switch-to-buffer (find-file path))
-    (op/insert-options-template)
+    (call-interactively 'op/insert-options-template)
     (save-buffer)))
 
 
