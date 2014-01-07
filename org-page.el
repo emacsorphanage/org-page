@@ -283,8 +283,10 @@ month and day): " (unless (string= i "")
 
 (defun op/new-post (&optional category filename)
   "Setup a new post.
+
 CATEGORY: this post belongs to
 FILENAME: the file name of this post
+
 Note that this function does not verify the category and filename, it is users'
 responsibility to guarantee the two parameters are valid."
   (interactive
