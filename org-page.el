@@ -216,6 +216,7 @@ to save generated about.org."
 (defun op/insert-options-template (&optional title uri
                                              keywords tags description)
   "Insert a template into current buffer with information for exporting.
+
 TITLE: the title of this post
 URI: the uri of this post, usually looks like: /2013/12/27/the-post-title,
 the following parameters could be used:
@@ -223,8 +224,11 @@ the following parameters could be used:
     %m: to represent the month of creation date
     %d: to represent the day of creation date
 KEYWORDS: the keywords of this post, used by search engine
-TAGS: the tags of this post, should be separated by comma
-DESCRIPTION: "
+TAGS: the tags of this post, should be separated by comma and space
+DESCRIPTION: the description of this post, it will be displayed in RSS feed
+
+Note that this function does not verify the input parameters, it is users'
+responsibility to guarantee these parameters are valid."
   (interactive
    (let* ((i (read-string "Title: "))
           (u (read-string "URI(%y, %m and %d can be used to represent year, \
@@ -234,8 +238,8 @@ month and day): " (unless (string= i "")
                                    (?m . "%m")
                                    (?d . "%d")
                                    (?t . ,i))))))
-          (k (read-string "Keywords(separated by comma): "))
-          (a (read-string "Tags(separated by comma): "))
+          (k (read-string "Keywords(separated by comma and space [, ]): "))
+          (a (read-string "Tags(separated by comma and space [, ]): "))
           (d (read-string "Description: ")))
      (list i u k a d)))
   (if (not (bolp)) (newline))
