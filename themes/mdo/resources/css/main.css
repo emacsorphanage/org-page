@@ -135,7 +135,7 @@ blockquote p:last-child {
 }
 img {
     display: block;
-    margin: 0 0 20px;
+    margin: 0;
     border-radius: 5px;
 }
 a {
