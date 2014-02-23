@@ -1,6 +1,6 @@
 ;;; op-template.el --- templating system based on mustache, required by org-page
 
-;; Copyright (C) 2012, 2013 Kelvin Hu
+;; Copyright (C) 2012, 2013, 2014 Kelvin Hu
 
 ;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
 ;; Keywords: convenience
