@@ -4,6 +4,11 @@
 #+DATE:        2013-08-24 Sat
 
 
+* v0.7
+
+  - Improved helper function =op/insert-options-template=.
+  - Introduced new helper function =op/new-post=.
+
 * v0.6
 
   - Implemented Push-to-Remote-Repo feature.

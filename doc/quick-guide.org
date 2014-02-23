@@ -57,34 +57,36 @@
 
   1. Find that Initializing a repository manually is too much trouble? Command =op/new-repository= can simplify this.
 
-  2. Want to make starting a post with essential properties much easier? Use command =op/insert-options-template=.
+  2. Want to make starting a post with essential properties much easier? Use command =op/new-post=.
 
-  3. The default slogan is so ugly? Configure a better one (will be shown on each page):
+  3. Already in a post buffer, just want to insert essential properties? Use command =op/insert-options-template=.
+
+  4. The default slogan is so ugly? Configure a better one (will be shown on each page):
 
      : (setq op/site-main-title "your main slogan")
      : (setq op/site-sub-title "your sub slogan")
 
-  4. The branch you store org source files is not named "source"? It's easy, so does the published html branch:
+  5. The branch you store org source files is not named "source"? It's easy, so does the published html branch:
 
      : (setq op/repository-org-branch "your source branch name") ;; default is "source"
      : (setq op/repository-html-branch "your html branch name")  ;; default is "master"
 
-  5. Have a github account? It's cool:
+  6. Have a github account? It's cool:
 
      : (setq op/personal-github-link "your github link")
 
-  6. Want to do site visiting tracking with Google Analytics?
+  7. Want to do site visiting tracking with Google Analytics?
 
      : (setq op/personal-google-analytics-id "your google analytics id")
 
-  7. Have a category named "photography", and don't want to enable commenting for posts under this category? Yeah, it can be achieved:
+  8. Have a category named "photography", and don't want to enable commenting for posts under this category? Yeah, it can be achieved:
 
      : (setq op/category-config-alist
      :       (cons '("photography"
      :               :show-comment nil)
      :             op/category-config-alist))
 
-  8. The previous item looks interesting, is there any other items can be configured? Yeah, there are several:
+  9. The previous item looks interesting, is there any other items can be configured? Yeah, there are several:
 
      + =:show-meta=: show post meta info at the bottom of post?
      + =:uri-generator=: the function used to generate uri for posts under that category (however, it is not recommended to customize except you are an expert)
