@@ -96,6 +96,8 @@ content of the buffer will be converted into html."
                                          (nth 5 (file-attributes filename)))))
                        :description ,(or (op/read-org-option "DESCRIPTION")
                                          "No Description")))
+         assets-dir post-content
+         link-path link-text link-abs-path pub-abs-path converted-path
          component-table tags category cat-config)
     (setq tags (op/read-org-option "TAGS"))
     (when tags
@@ -119,9 +121,46 @@ content of the buffer will be converted into html."
                                       "\\`/" ""
                                       (plist-get attr-plist :uri)))))
     (when do-pub
+      (setq post-content (op/render-content))
+      (setq assets-dir (file-name-as-directory
+                        (concat (file-name-as-directory pub-root-dir)
+                                "assets/"
+                                (replace-regexp-in-string
+                                 "\\`" "" (plist-get attr-plist :uri)))))
+      (with-temp-buffer
+        (insert post-content)
+        (beginning-of-buffer)
+        (while (re-search-forward
+                "<a[^>]+href=\"\\([^\"]+\\)\"[^>]*>\\([^<]*\\)</a>" nil t)
+          (setq link-path (match-string 1))
+          (setq link-text (match-string 2))
+          (when (not (or (string-prefix-p "http://" link-path)
+                         (string-prefix-p "https://" link-path)
+                         (string-prefix-p "mailto:" link-path)
+                         (string-prefix-p "#" link-path)
+                         ;; TODO add more here
+                         (string-prefix-p "ftp://" link-path)))
+            (setq link-abs-path
+                  (expand-file-name link-path (file-name-directory filename)))
+            (if (not (file-exists-p link-abs-path))
+                (message "[WARN] File %s in hyper link does not exist, org \
+file: %s." link-path filename)
+              (unless (file-directory-p assets-dir)
+                (mkdir assets-dir t))
+              (copy-file link-abs-path assets-dir t t t t)
+              (setq pub-abs-path (concat assets-dir
+                                         (file-name-nondirectory link-path)))
+              (unless (string-prefix-p pub-root-dir pub-abs-path)
+                (message "[WARN] The publication root directory %s is not an \
+ancestor directory of assets directory %s." pub-root-dir assets-dir))
+              (setq converted-path
+                    (concat "/" (file-relative-name pub-abs-path pub-root-dir)))
+              (setq post-content
+                    (replace-regexp-in-string
+                     (regexp-quote link-path) converted-path post-content))))))
       (setq component-table (ht ("header" (op/render-header))
                                 ("nav" (op/render-navigation-bar))
-                                ("content" (op/render-content))
+                                ("content" post-content)
                                 ("footer" (op/render-footer)))))
     (cons attr-plist component-table)))
 
