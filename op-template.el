@@ -26,7 +26,8 @@
 ;;; Code:
 
 (require 'ox)
-(require 'mustache)
+;; (require 'mustache)
+(autoload 'mustache-render "mustache")
 (require 'op-util)
 (require 'op-vars)
 (require 'op-git)
