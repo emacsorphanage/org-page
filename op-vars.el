@@ -187,6 +187,17 @@ default value is `op/get-file-category'."
 </rss>"
   "Template for RSS rendering.")
 
+(defcustom op/html-creator-string
+  (format "<a href=\"http://www.gnu.org/software/emacs/\">Emacs</a> %s\
+ (<a href=\"http://orgmode.org\">Org mode</a> %s)"
+          (format "%s.x" emacs-major-version)
+          (if (fboundp 'org-version)
+              (replace-regexp-in-string "\\..*" ".x" (org-version))
+            "Unknown Version"))
+  "Information about the creator of the HTML document."
+  :group 'org-page
+  :type 'string)
+
 
 (provide 'op-vars)
 

@@ -180,7 +180,7 @@ similar to `op/render-header'."
              ("google-analytics" (and (boundp 'op/personal-google-analytics-id)
                                       op/personal-google-analytics-id))
              ("google-analytics-id" op/personal-google-analytics-id)
-             ("creator-info" org-html-creator-string)
+             ("creator-info" op/html-creator-string)
              ("email" (confound-email (or (op/read-org-option "EMAIL")
                                           user-mail-address
                                           "Unknown Email"))))))))
