@@ -257,6 +257,16 @@ table th.right, table td.right {
     margin-left: -1.85em;
     color: #ccc;
 }
+
+/* special for li in pre */
+.post pre li {
+    list-style-type: decimal;
+}
+
+.post pre li:before {
+    display: none;
+}
+
 /* meta info */
 .post-info {
     display: inline-block;
