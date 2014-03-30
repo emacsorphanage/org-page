@@ -351,7 +351,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                                              'op/personal-google-analytics-id)
                                             op/personal-google-analytics-id))
                        ("google-analytics-id" op/personal-google-analytics-id)
-                       ("creator-info" org-html-creator-string)
+                       ("creator-info" op/html-creator-string)
                        ("email" (confound-email (or user-mail-address
                                                     "Unknown Email"))))))))
             (concat cat-dir "index.html") 'html-mode)))
@@ -399,7 +399,7 @@ publication directory."
                                           'op/personal-google-analytics-id)
                                          op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
-                ("creator-info" org-html-creator-string)
+                ("creator-info" op/html-creator-string)
                 ("email" (confound-email (or user-mail-address
                                              "Unknown Email"))))))))
      (concat pub-base-dir "index.html") 'html-mode)))
@@ -434,7 +434,7 @@ is the root publication directory."
                                           'op/personal-google-analytics-id)
                                          op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
-                ("creator-info" org-html-creator-string)
+                ("creator-info" op/html-creator-string)
                 ("email" (confound-email (or user-mail-address
                                              "Unknown Email"))))))))
      (concat pub-dir "index.html") 'html-mode)))
@@ -491,7 +491,7 @@ TODO: improve this function."
                                           'op/personal-google-analytics-id)
                                          op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
-                ("creator-info" org-html-creator-string)
+                ("creator-info" op/html-creator-string)
                 ("email" (confound-email (or user-mail-address
                                              "Unknown Email"))))))))
      (concat tag-base-dir "index.html") 'html-mode)
@@ -534,7 +534,7 @@ TODO: improve this function."
                                                'op/personal-google-analytics-id)
                                               op/personal-google-analytics-id))
                      ("google-analytics-id" op/personal-google-analytics-id)
-                     ("creator-info" org-html-creator-string)
+                     ("creator-info" op/html-creator-string)
                      ("email" (confound-email (or user-mail-address
                                                   "Unknown Email"))))))))
           (concat tag-dir "index.html") 'html-mode))
