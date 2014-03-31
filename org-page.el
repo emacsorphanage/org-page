@@ -157,7 +157,7 @@ perfectly manipulated by org-page."
                (file-directory-p op/repository-directory))
     (error "Directory `%s' is not properly configured."
            (symbol-name 'op/repository-directory)))
-  (unless (file-directory-p (op/get-theme-dir op/theme))
+  (unless (file-directory-p (op/get-theme-dir))
     (error "Org-page cannot detect theme directory `%s' automatically, please \
 help configure it manually, usually it should be <org-page directory>/themes/."
            (symbol-name 'op/theme)))

@@ -75,6 +75,12 @@ http:// or https://, http will be considered if not assigned."
 presented by `op/repository-directory'."
   :group 'org-page :type 'string)
 
+(defcustom op/theme-root-directory
+  (concat op/load-directory "themes/")
+  "The root directory that stores themes for page rendering. By default, it
+points to the directory `themes' in org-page installation directory."
+  :group 'org-page :type 'string)
+
 (defcustom op/theme 'mdo
   "The theme used for page generation."
   :group 'org-page :type 'symbol)
@@ -96,8 +102,8 @@ presented by `op/repository-directory'."
   :group 'org-page :type 'string)
 
 (defcustom op/template-directory
-  (concat op/load-directory
-          (format "themes/%s/templates/" (symbol-name (or op/theme 'mdo))))
+  (concat (file-name-as-directory op/theme-root-directory)
+          (format "%s/templates/" (symbol-name (or op/theme 'mdo))))
   "The directory stores templates for page rendering."
   :group 'org-page :type 'string)
 

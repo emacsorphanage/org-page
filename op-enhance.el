@@ -32,22 +32,24 @@
 (require 'op-vars)
 
 
-(defun op/get-theme-dir (theme)
-  "Return the resource storage directory of THEME."
+(defun op/get-theme-dir ()
+  "Return the resource storage directory, it is determined by variable
+`op/theme-root-directory' and `op/theme'."
   (file-name-as-directory
    (expand-file-name
-    (format "themes/%s/resources" (symbol-name theme))
-    op/load-directory)))
+    (format "%s/resources" (symbol-name op/theme))
+    op/theme-root-directory)))
 
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
   (let ((pub-theme-dir (expand-file-name "media/" pub-root-dir))
-        (theme-dir (op/get-theme-dir op/theme)))
+        (theme-dir (op/get-theme-dir)))
     (unless (file-directory-p theme-dir)
       (message "Theme %s not found, use default theme `mdo' instead."
                (symbol-name op/theme))
+      (setq op/theme-root-directory (concat op/load-directory "themes/"))
       (setq op/theme 'mdo)
-      (setq theme-dir (op/get-theme-dir 'mdo)))
+      (setq theme-dir (op/get-theme-dir)))
     (op/update-theme op/theme)
     (when (file-directory-p pub-theme-dir)
       (delete-directory pub-theme-dir t))
@@ -58,9 +60,9 @@
 used a new theme."
   (unless theme
     (setq theme 'mdo))
-  (setq theme (symbol-name theme))
   (setq op/template-directory
-        (concat op/load-directory (format "themes/%s/templates/" theme))))
+        (concat (file-name-as-directory op/theme-root-directory)
+                (format "%s/templates/" (symbol-name theme)))))
 
 
 (provide 'op-enhance)
