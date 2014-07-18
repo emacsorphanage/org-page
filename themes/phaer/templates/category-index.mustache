@@ -1,10 +1,8 @@
-<div>
-  <div class="post">
-    <h1>{{cat-name}} Index</h1>
+<section id="content" role="main">
+    <h1>{{cat-name}}</h1>
     <ul class="org-ul">
       {{#posts}}
-        <li>{{date}}&nbsp;&nbsp;»&nbsp;&nbsp;<a href="{{post-uri}}">{{post-title}}</a></li>
+        <li>{{date}} &raquo; <a href="{{post-uri}}">{{post-title}}</a></li>
       {{/posts}}
     </ul>
-  </div>
-</div>
+</section>
