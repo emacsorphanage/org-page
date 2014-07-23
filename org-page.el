@@ -164,11 +164,6 @@ help configure it manually, usually it should be <org-page directory>/themes/."
   (unless op/site-domain
     (error "Site domain `%s' is not properly configured."
            (symbol-name 'op/site-domain)))
-  (unless (or op/personal-disqus-shortname op/personal-duoshuo-shortname)
-    (error "Either disqus shortname `%s' or duoshuo shortname `%s' must be \
-configured."
-           (symbol-name 'op/personal-disqus-shortname)
-           (symbol-name 'op/personal-duoshuo-shortname)))
   (if (and op/personal-disqus-shortname op/personal-duoshuo-shortname)
       (error "Disqus shortname `%s' and duoshuo shortname `%s' can not be \
 configured both."
