@@ -113,6 +113,11 @@ points to the directory `themes' in org-page installation directory."
   "The template used to render pages, see the template itself for detail."
   :group 'org-page :type 'string)
 
+(defcustom op/confound-email t
+  "This variable is used to determine whether email addresses should be
+confounded or not."
+  :group 'org-page :type 'boolean)
+
 (defcustom op/retrieve-category-function 'op/get-file-category
   "The function used to retrieve an org file's category, its parameter is the
 org file's path, if parameter is nil, it should return all categories, the

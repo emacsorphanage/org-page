@@ -144,9 +144,10 @@ T[0-9][0-9]:[0-9][0-9]" date-str)
   "Confound email to prevent spams using simple rule:
 replace . with <dot>, @ with <at>, e.g.
 name@domain.com => name <at> domain <dot> com"
-  (replace-regexp-in-string
-   " +" " " (replace-regexp-in-string
-             "@" " <at> " (replace-regexp-in-string "\\." " <dot> " email))))
+  (if (not op/confound-email) email
+    (replace-regexp-in-string
+     " +" " " (replace-regexp-in-string
+               "@" " <at> " (replace-regexp-in-string "\\." " <dot> " email)))))
 
 (defun string-suffix-p (str1 str2 &optional ignore-case)
   "Return non-nil if STR1 is a suffix of STR2.
