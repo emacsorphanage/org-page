@@ -85,6 +85,7 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
                (y-or-n-p "Auto push to remote repo? "))))
      (list f b p a u)))
   (op/verify-configuration)
+  (setq op/item-cache nil)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
          (to-repo (not (stringp pub-base-dir)))
          (store-dir (if to-repo "~/.op-tmp/" pub-base-dir)) ; TODO customization
