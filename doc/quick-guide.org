@@ -97,3 +97,8 @@
  10. Want to add an avatar to the page?
 
     : (setq op/personal-avatar "URL to an image")
+
+* Other configuration
+If you are looking for another option not described above, you can
+find a full list of configuration options by running
+=M-x customize-group= and then typing "=org-page=".
