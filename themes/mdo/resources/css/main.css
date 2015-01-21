@@ -228,6 +228,13 @@ table th.right, table td.right {
     background-color: #f9f9f9;
     width: 160px;
 }
+.masthead img.avatar {
+    position: absolute;
+    width: 200px;
+    top: 100px;
+    right: 29%;
+    background-color: #fff;
+}
 /* post */
 .post {
     position: relative;

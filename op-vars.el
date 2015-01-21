@@ -89,6 +89,10 @@ points to the directory `themes' in org-page installation directory."
   "The personal github link."
   :group 'org-page :type 'string)
 
+(defcustom op/personal-avatar nil
+  "The link to an avatar image."
+  :group 'org-page :type 'string)
+
 (defcustom op/personal-disqus-shortname nil
   "The personal disqus shortname."
   :group 'org-page :type 'string)
@@ -156,6 +160,7 @@ default value is `op/get-file-category'."
       ("about-uri" "/about/")
       ("site-main-title" op/site-main-title)
       ("site-sub-title" op/site-sub-title)
+      ("avatar" op/personal-avatar)
       ("github" op/personal-github-link)
       ("site-domain" (if (and op/site-domain
                               (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"

@@ -93,3 +93,12 @@
      + =:uri-template=: the template used to generate uri
      + =:sort-by=: how to sort posts on category index page, by =:date= or by =:mod-date= (:mod-date is last modification date)?
      + =:category-index=: generate an index page for this category?
+
+ 10. Want to add an avatar to the page?
+
+    : (setq op/personal-avatar "URL to an image")
+
+* Other configuration
+If you are looking for another option not described above, you can
+find a full list of configuration options by running
+=M-x customize-group= and then typing "=org-page=".
