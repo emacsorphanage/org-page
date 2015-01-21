@@ -8,28 +8,32 @@
 
 ** The manual way (NOT recommended)
 
-   To install org-page manually, you should first install all depended libraries listed in *README.org*, then, clone the repo:
+   To install org-page manually you should first install all
+   dependencies listed in *README.org*. Once this has been completed,
+   clone the repo:
 
    : git clone https://github.com/kelvinh/org-page.it
 
-   After that, please remember to add the path to your emacs' =load-path= variable so that emacs could find this package.
+   After that, please remember to add this location to your emacs'
+   =load-path= variable so that emacs can find the package.
 
 ** Through package management system (strongly recommended)
 
-   If you have never used emacs' package management system before, just add the following to your =init.el=:
+   If you have never used emacs' package management system before,
+   just add the following to your =init.el=:
 
    : (require 'package)
    : (package-initialize)
    : (add-to-list 'package-archives
    :              '("melpa" . "http://melpa.milkbox.net/packages/") t)
 
-   Now you could install org-page using the following command:
+   Now you can install org-page using the following command:
 
    : M-x package-install org-page
 
 * Configuration
 
-  The *required configuration* of org-page is very little, as below:
+  The *required configuration* of org-page is very simple, as shown below:
 
   : (add-to-list 'load-path "path/to/org-page")                    ;; only needed if you install org-page manually
   : (require 'org-page)
@@ -41,32 +45,37 @@
 
 * Publication
 
-  You could re-publish all org source files, or just publish the files you modified since your last publication.
+  You can re-publish all org source files, or just publish the files you modified since your last publication.
 
   To publish all files, evaluate the following line:
 
   : (op/do-publication t nil nil t)
 
-  To publish files in your last commit, evaluate the following line:
+  To publish files in your latest commit, evaluate the following line:
 
   : (op/do-publication)
 
-  it is recommended to execute this command through =M-x=, then you will see the detail options.
+  it is recommended to execute this command via =M-x= since you
+  will see more detailed options.
 
 * Helpful features
 
-  1. Find that Initializing a repository manually is too much trouble? Command =op/new-repository= can simplify this.
+  1. Do you find that initializing a repository manually is too much trouble?
+     The =op/new-repository= command can simplify this.
 
-  2. Want to make starting a post with essential properties much easier? Use command =op/new-post=.
+  2. Want to make starting a post with essential properties much
+     easier? Use the =op/new-post= command.
 
-  3. Already in a post buffer, just want to insert essential properties? Use command =op/insert-options-template=.
+  3. Already in a post buffer and just want to insert essential
+     properties? Use the =op/insert-options-template= command.
 
-  4. The default slogan is so ugly? Configure a better one (will be shown on each page):
+  4. Is the default slogan is too ugly? Configure a better one (will be shown on each page):
 
      : (setq op/site-main-title "your main slogan")
      : (setq op/site-sub-title "your sub slogan")
 
-  5. The branch you store org source files is not named "source"? It's easy, so does the published html branch:
+  5. Is the branch you store org source files on not named "source"? It's
+     easy to override the default branch names:
 
      : (setq op/repository-org-branch "your source branch name") ;; default is "source"
      : (setq op/repository-html-branch "your html branch name")  ;; default is "master"
@@ -75,23 +84,27 @@
 
      : (setq op/personal-github-link "your github link")
 
-  7. Want to do site visiting tracking with Google Analytics?
+  7. Want to do site traffic analytics with Google Analytics?
 
      : (setq op/personal-google-analytics-id "your google analytics id")
 
-  8. Have a category named "photography", and don't want to enable commenting for posts under this category? Yeah, it can be achieved:
+  8. Do you want to disable commenting for posts under certain
+     categories? Yeah, it can be achieved:
 
      : (setq op/category-config-alist
-     :       (cons '("photography"
+     :       (cons '("photography" ;; category name goes here
      :               :show-comment nil)
      :             op/category-config-alist))
 
-  9. The previous item looks interesting, is there any other items can be configured? Yeah, there are several:
+  9. Are there any other items that can be configured? Yeah, there are several:
 
      + =:show-meta=: show post meta info at the bottom of post?
-     + =:uri-generator=: the function used to generate uri for posts under that category (however, it is not recommended to customize except you are an expert)
+     + =:uri-generator=: the function used to generate uri for posts
+       under that category (however, it is not recommended to
+       customize except you are an expert)
      + =:uri-template=: the template used to generate uri
-     + =:sort-by=: how to sort posts on category index page, by =:date= or by =:mod-date= (:mod-date is last modification date)?
+     + =:sort-by=: how to sort posts on category index page, by
+       =:date= or by =:mod-date=  (:mod-date is last modification date)?
      + =:category-index=: generate an index page for this category?
 
   10. Want to add an avatar to the page?
