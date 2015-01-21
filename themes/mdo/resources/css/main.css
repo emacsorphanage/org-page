@@ -232,7 +232,8 @@ table th.right, table td.right {
     position: absolute;
     width: 200px;
     top: 100px;
-    right: 30.4%;
+    right: 29%;
+    background-color: #fff;
 }
 /* post */
 .post {
