@@ -101,7 +101,7 @@ render from a default hash table."
                      (op/get-file-category nil))
                     'string-lessp)))
             ("github" op/personal-github-link)
-	    ("avatar" op/personal-avatar)
+            ("avatar" op/personal-avatar)
             ("site-domain" (if (string-match
                                 "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
                                 op/site-domain)
