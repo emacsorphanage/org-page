@@ -83,19 +83,20 @@ content of the buffer will be converted into html."
   (let* ((filename (buffer-file-name))
          (attr-plist `(:title ,(or (op/read-org-option "TITLE")
                                    "Untitled")
-                              :date ,(fix-timestamp-string
-                                      (or (op/read-org-option "DATE")
-                                          (format-time-string "%Y-%m-%d")))
-                              :mod-date ,(if (not filename)
-                                             (format-time-string "%Y-%m-%d")
-                                           (or (op/git-last-change-date
-                                                op/repository-directory
-                                                filename)
-                                               (format-time-string
-                                                "%Y-%m-%d"
-                                                (nth 5 (file-attributes filename)))))
-                              :description ,(or (op/read-org-option "DESCRIPTION")
-                                                "No Description")))
+                       :date ,(fix-timestamp-string
+                               (or (op/read-org-option "DATE")
+                                   (format-time-string "%Y-%m-%d")))
+                       :mod-date ,(if (not filename)
+                                      (format-time-string "%Y-%m-%d")
+                                    (or (op/git-last-change-date
+                                         op/repository-directory
+                                         filename)
+                                        (format-time-string
+                                         "%Y-%m-%d"
+                                         (nth 5 (file-attributes filename)))))
+                       :description ,(or (op/read-org-option "DESCRIPTION")
+                                         "No Description")
+                       :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
          component-table tags category cat-config)
@@ -121,6 +122,7 @@ content of the buffer will be converted into html."
                                       "\\`/" ""
                                       (plist-get attr-plist :uri)))))
     (when do-pub
+      (princ attr-plist)
       (setq post-content (op/render-content))
       (setq assets-dir (file-name-as-directory
                         (concat (file-name-as-directory pub-root-dir)
@@ -388,7 +390,13 @@ publication directory."
                                         (ht ("post-uri"
                                              (plist-get plist :uri))
                                             ("post-title"
-                                             (plist-get plist :title))))
+                                             (plist-get plist :title))
+                                            ("post-desc"
+                                             (plist-get plist :description))
+                                            ("post-date"
+                                             (plist-get plist :date))
+                                            ("post-thumb"
+                                             (or (plist-get plist :thumb) ""))))
                                     (cdr cell)))))
                   sort-alist)))))
           ("footer"
