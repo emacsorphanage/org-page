@@ -83,19 +83,19 @@ content of the buffer will be converted into html."
   (let* ((filename (buffer-file-name))
          (attr-plist `(:title ,(or (op/read-org-option "TITLE")
                                    "Untitled")
-                       :date ,(fix-timestamp-string
-                               (or (op/read-org-option "DATE")
-                                   (format-time-string "%Y-%m-%d")))
-                       :mod-date ,(if (not filename)
-                                      (format-time-string "%Y-%m-%d")
-                                    (or (op/git-last-change-date
-                                         op/repository-directory
-                                         filename)
-                                        (format-time-string
-                                         "%Y-%m-%d"
-                                         (nth 5 (file-attributes filename)))))
-                       :description ,(or (op/read-org-option "DESCRIPTION")
-                                         "No Description")))
+                              :date ,(fix-timestamp-string
+                                      (or (op/read-org-option "DATE")
+                                          (format-time-string "%Y-%m-%d")))
+                              :mod-date ,(if (not filename)
+                                             (format-time-string "%Y-%m-%d")
+                                           (or (op/git-last-change-date
+                                                op/repository-directory
+                                                filename)
+                                               (format-time-string
+                                                "%Y-%m-%d"
+                                                (nth 5 (file-attributes filename)))))
+                              :description ,(or (op/read-org-option "DESCRIPTION")
+                                                "No Description")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
          component-table tags category cat-config)
@@ -210,6 +210,7 @@ its name and its root folder name under `op/repository-directory'."
              (when (and (not (equal f "."))
                         (not (equal f ".."))
                         (not (equal f ".git"))
+                        (not (member f op/category-ignore-list))
                         (not (equal f "blog"))
                         (file-directory-p
                          (expand-file-name f op/repository-directory)))
