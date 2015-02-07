@@ -154,7 +154,7 @@ default value is `op/get-file-category'."
 
 (defvar op/category-ignore-list
   '("themes" "assets")
-  "Ignore files in these subdirs/categories")
+  "Ignore these subdirs/categories for navigation")
 
 ;;; this variable is deprecated
 (defvar op/default-template-parameters
