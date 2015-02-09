@@ -142,6 +142,12 @@ similar to `op/render-header'."
                      (or (op/read-org-option "DATE")
                          (format-time-string "%Y-%m-%d"))))
               (tags (op/read-org-option "TAGS"))
+              (tags (if tags
+                        (mapcar
+                         #'(lambda (tag-name)
+                             (ht ("link" (op/generate-tag-uri tag-name))
+                                 ("name" tag-name)))
+                         (delete "" (mapcar 'trim-string (split-string tags "[:,]+" t))))))
               (category (funcall (or op/retrieve-category-function
                                      op/get-file-category)
                                  filename))
@@ -160,16 +166,13 @@ similar to `op/render-header'."
                                (format-time-string
                                 "%Y-%m-%d"
                                 (nth 5 (file-attributes filename))))))
+             ("tags" tags)
              ("tag-links" (if (not tags) "N/A"
                             (mapconcat
-                             #'(lambda (tag-name)
+                             #'(lambda (tag)
                                  (mustache-render
-                                  "<a href=\"{{link}}\">{{name}}</a>"
-                                  (ht ("link" (op/generate-tag-uri tag-name))
-                                      ("name" tag-name))))
-                             (delete "" (mapcar
-                                         'trim-string
-                                         (split-string tags "[:,]+" t))) ", ")))
+                                  "<a href=\"{{link}}\">{{name}}</a>" tag))
+                             tags " ")))
              ("author" (or (op/read-org-option "AUTHOR")
                            user-full-name
                            "Unknown Author"))

@@ -152,6 +152,10 @@ default value is `op/get-file-category'."
     :category-index nil))
   "Configurations for different categories, can and should be customized.")
 
+(defvar op/category-ignore-list
+  '("themes" "assets")
+  "Ignore these subdirs/categories for navigation")
+
 ;;; this variable is deprecated
 (defvar op/default-template-parameters
   (ht ("blog-uri" "/blog/")

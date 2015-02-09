@@ -95,7 +95,8 @@ content of the buffer will be converted into html."
                                          "%Y-%m-%d"
                                          (nth 5 (file-attributes filename)))))
                        :description ,(or (op/read-org-option "DESCRIPTION")
-                                         "No Description")))
+                                         "No Description")
+                       :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
          component-table tags category cat-config)
@@ -121,6 +122,7 @@ content of the buffer will be converted into html."
                                       "\\`/" ""
                                       (plist-get attr-plist :uri)))))
     (when do-pub
+      (princ attr-plist)
       (setq post-content (op/render-content))
       (setq assets-dir (file-name-as-directory
                         (concat (file-name-as-directory pub-root-dir)
@@ -210,6 +212,7 @@ its name and its root folder name under `op/repository-directory'."
              (when (and (not (equal f "."))
                         (not (equal f ".."))
                         (not (equal f ".git"))
+                        (not (member f op/category-ignore-list))
                         (not (equal f "blog"))
                         (file-directory-p
                          (expand-file-name f op/repository-directory)))
@@ -387,7 +390,13 @@ publication directory."
                                         (ht ("post-uri"
                                              (plist-get plist :uri))
                                             ("post-title"
-                                             (plist-get plist :title))))
+                                             (plist-get plist :title))
+                                            ("post-desc"
+                                             (plist-get plist :description))
+                                            ("post-date"
+                                             (plist-get plist :date))
+                                            ("post-thumb"
+                                             (or (plist-get plist :thumb) ""))))
                                     (cdr cell)))))
                   sort-alist)))))
           ("footer"
