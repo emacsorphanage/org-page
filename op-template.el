@@ -122,9 +122,9 @@ similar to `op/render-header'."
                             (or template "post.mustache"))))
    (or param-table
        (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
-           ("content" (flet ((org-html-fontify-code
-                              (code lang)
-                              (when code (org-html-encode-plain-text code))))
+           ("content" (cl-flet ((org-html-fontify-code
+                                 (code lang)
+                                 (when code (org-html-encode-plain-text code))))
                         (org-export-as 'html nil nil t nil)))))))
 
 (defun op/render-footer (&optional param-table)
