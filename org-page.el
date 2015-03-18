@@ -122,8 +122,10 @@ files, committed by org-page.")
                                   repo
                                   op/repository-html-branch)))))
       (op/git-change-branch op/repository-directory orig-branch))
-    (message "Publication finished: on branch '%s' of repository '%s'."
-             op/repository-html-branch op/repository-directory)))
+    (if to-repo
+        (message "Publication finished: on branch '%s' of repository '%s'."
+             op/repository-html-branch op/repository-directory)
+      (message "Publication finished, output directory: %s." pub-base-dir))))
 
 (defun op/new-repository (repo-dir)
   "Generate a new git repository in directory REPO-DIR, which can be
