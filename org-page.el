@@ -297,6 +297,10 @@ responsibility to guarantee the two parameters are valid."
       (setq filename "new-post.org"))
   (unless (string-suffix-p ".org" filename)
     (setq filename (concat filename ".org")))
+  (op/new-post-1 category filename))
+
+(defun op/new-post-1 (category filename)
+  "Internal function used by `op/new-post'."
   (let* ((dir (concat (file-name-as-directory op/repository-directory)
                       (file-name-as-directory category)))
          (path (concat dir filename)))
