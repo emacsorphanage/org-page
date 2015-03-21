@@ -105,16 +105,13 @@ points to the directory `themes' in org-page installation directory."
   "Personal google analytics id."
   :group 'org-page :type 'string)
 
-(defcustom op/template-directory
-  (concat (file-name-as-directory op/theme-root-directory)
-          (format "%s/templates/" (symbol-name (or op/theme 'mdo))))
-  "The directory stores templates for page rendering."
-  :group 'org-page :type 'string)
+(defcustom op/template-directory nil
+  "The directory stores templates for page rendering.
 
-;;; this variable is deprecated
-(defcustom op/page-template
-  (file-to-string (concat op/template-directory "container.mustache"))
-  "The template used to render pages, see the template itself for detail."
+By default, org-page use `op/theme' and `op/theme-root-directory'
+to determine the template directory.
+
+DON'T set this variable if you know what you are doing!"
   :group 'org-page :type 'string)
 
 (defcustom op/confound-email t

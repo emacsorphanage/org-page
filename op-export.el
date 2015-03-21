@@ -239,7 +239,7 @@ If COMPONENT-TABLE is nil, the publication will be skipped."
                      (op/get-cache-create
                       :container-template
                       (message "Read container.mustache from file")
-                      (file-to-string (concat op/template-directory
+                      (file-to-string (concat (op/get-template-dir)
                                               "container.mustache")))
                      component-table)
                     (concat pub-dir "index.html") ;; 'html-mode ;; do NOT indent the code
@@ -314,7 +314,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
              (op/get-cache-create
               :container-template
               (message "Read container.mustache from file")
-              (file-to-string (concat op/template-directory
+              (file-to-string (concat (op/get-template-dir)
                                       "container.mustache")))
              (ht ("header"
                   (op/render-header
@@ -371,7 +371,7 @@ publication directory."
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (concat op/template-directory "container.mustache")))
+       (file-to-string (concat (op/get-template-dir) "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "Index - " op/site-main-title))
@@ -424,7 +424,7 @@ is the root publication directory."
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (concat op/template-directory "container.mustache")))
+       (file-to-string (concat (op/get-template-dir) "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "About - " op/site-main-title))
@@ -475,7 +475,7 @@ TODO: improve this function."
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (concat op/template-directory "container.mustache")))
+       (file-to-string (concat (op/get-template-dir) "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "Tag Index - " op/site-main-title))
@@ -516,7 +516,7 @@ TODO: improve this function."
            (op/get-cache-create
             :container-template
             (message "Read container.mustache from file")
-            (file-to-string (concat op/template-directory
+            (file-to-string (concat (op/get-template-dir)
                                     "container.mustache")))
            (ht ("header"
                 (op/render-header
