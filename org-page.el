@@ -165,11 +165,11 @@ help configure it manually, usually it should be <org-page directory>/themes/."
   (unless op/site-domain
     (error "Site domain `%s' is not properly configured."
            (symbol-name 'op/site-domain)))
-  (if (and op/personal-disqus-shortname op/personal-duoshuo-shortname)
-      (error "Disqus shortname `%s' and duoshuo shortname `%s' can not be \
+  ;;(if (and op/personal-disqus-shortname op/personal-duoshuo-shortname)
+  ;;    (error "Disqus shortname `%s' and duoshuo shortname `%s' can not be \
 configured both."
-             (symbol-name 'op/personal-disqus-shortname)
-             (symbol-name 'op/personal-duoshuo-shortname)))
+  ;;           (symbol-name 'op/personal-disqus-shortname)
+  ;;           (symbol-name 'op/personal-duoshuo-shortname)))
 
   (setq op/repository-directory (expand-file-name op/repository-directory))
   (unless (or (string-prefix-p "http://" op/site-domain)
