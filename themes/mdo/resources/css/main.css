@@ -289,12 +289,12 @@ table th.right, table td.right {
     margin-top: -1px;
     color: #ccc;
 }
+
 /* table of content */
 #table-of-contents {
     position: fixed;
     right: 0em;
     top: 0em;
-    background: black;
     border:1px solid #e1e1e8;
     -webkit-box-shadow: 0 0 1em #777777;
     -moz-box-shadow: 0 0 1em #777777;
@@ -303,21 +303,20 @@ table th.right, table td.right {
     text-align: right;
     /* ensure doesn't flow off the screen when expanded */
     max-height: 80%;
-    overflow: auto; 
+    overflow: auto;
     z-index: 200;
 }
 
 #table-of-contents h2 {
-    
     max-width: 20em;
     font-weight: normal;
     padding-left: 0.5em;
     padding-top: 0.05em;
-    padding-bottom: 0.05em; 
+    padding-bottom: 0.05em;
 }
 
 #table-of-contents ul {
-    margin-left: 14pt; 
+    margin-left: 14pt;
     margin-bottom: 10pt;
     padding: 0
 }
@@ -340,7 +339,7 @@ table th.right, table td.right {
 #table-of-contents:hover #text-table-of-contents {
     display: block;
     padding: 0.5em;
-    margin-top: -1.5em; 
+    margin-top: -1.5em;
 }
 
 /* footer */
