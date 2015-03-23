@@ -84,6 +84,14 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
           (u (when (and a (not p))
                (y-or-n-p "Auto push to remote repo? "))))
      (list f b p a u)))
+  (op/do-publication-1 force-all
+                       base-git-commit pub-base-dir
+                       auto-commit auto-push))
+
+(defun op/do-publication-1 (force-all
+                            base-git-commit pub-base-dir
+                            auto-commit auto-push)
+  "Internal function used by `op/do-publication'"
   (op/verify-configuration)
   (setq op/item-cache nil)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
@@ -124,7 +132,7 @@ files, committed by org-page.")
       (op/git-change-branch op/repository-directory orig-branch))
     (if to-repo
         (message "Publication finished: on branch '%s' of repository '%s'."
-             op/repository-html-branch op/repository-directory)
+                 op/repository-html-branch op/repository-directory)
       (message "Publication finished, output directory: %s." pub-base-dir))))
 
 (defun op/new-repository (repo-dir)
@@ -292,6 +300,10 @@ responsibility to guarantee the two parameters are valid."
       (setq filename "new-post.org"))
   (unless (string-suffix-p ".org" filename)
     (setq filename (concat filename ".org")))
+  (op/new-post-1 category filename))
+
+(defun op/new-post-1 (category filename)
+  "Internal function used by `op/new-post'."
   (let* ((dir (concat (file-name-as-directory op/repository-directory)
                       (file-name-as-directory category)))
          (path (concat dir filename)))
