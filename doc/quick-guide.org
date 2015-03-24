@@ -111,6 +111,10 @@
 
      : (setq op/personal-avatar "URL to an image")
 
+  11. Do not want to publish some categories?
+
+     : (setq op/category-ignore-list '("category1" "category2"))
+
 * Other configuration
 
   If you are looking for an option not described above, you can find a full
