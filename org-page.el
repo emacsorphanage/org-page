@@ -160,10 +160,9 @@ perfectly manipulated by org-page."
                (file-directory-p op/repository-directory))
     (error "Directory `%s' is not properly configured."
            (symbol-name 'op/repository-directory)))
-  (unless (file-directory-p (op/get-theme-dir))
-    (error "Org-page cannot detect theme directory `%s' automatically, please \
-help configure it manually, usually it should be <org-page directory>/themes/."
-           (symbol-name 'op/theme)))
+  (unless (op/get-theme-dirs op/theme-root-directory op/theme)
+    (error "Org-page cannot detect theme directory automatically, please \
+help configure it manually, usually it should be <org-page directory>/themes/."))
   (unless op/site-domain
     (error "Site domain `%s' is not properly configured."
            (symbol-name 'op/site-domain)))
@@ -171,9 +170,7 @@ help configure it manually, usually it should be <org-page directory>/themes/."
   (setq op/repository-directory (expand-file-name op/repository-directory))
   (unless (or (string-prefix-p "http://" op/site-domain)
               (string-prefix-p "https://" op/site-domain))
-    (setq op/site-domain (concat "http://" op/site-domain)))
-  (unless op/theme
-    (setq op/theme 'mdo)))
+    (setq op/site-domain (concat "http://" op/site-domain))))
 
 (defun op/generate-readme (save-dir)
   "Generate README for `op/new-repository'. SAVE-DIR is the directory where to

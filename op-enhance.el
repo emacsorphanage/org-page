@@ -31,28 +31,63 @@
 (require 'op-util)
 (require 'op-vars)
 
+(defun op/join-to-list (a1 &optional a2)
+  "Conbine `a1' and `a2' to a list."
+  (let ((list1 (if (listp a1) a1 (list a1)))
+        (list2 (if (listp a2) a2 (list a2))))
+    (append list1 list2)))
 
-(defun op/get-theme-dir ()
-  "Return the resource storage directory, it is determined by variable
-`op/theme-root-directory' and `op/theme'."
-  (file-name-as-directory
-   (expand-file-name
-    (format "%s/resources" (symbol-name op/theme))
-    op/theme-root-directory)))
+(defun op/get-theme-dirs (&optional root-dir theme type)
+  "Get org-page theme type path.
+
+org-page organizes its themes by directory:
+
+| Directory           |  Argument   |  Value                 |
++---------------------+-------------+------------------------+
+| /path/to/directory  |  <root-dir> | \"/path/to/directory\" |
+|  \--mdo             |  <theme>    | 'mdo                   |
+|      |-- templates  |  <type>     | 'templates             |
+|       \- resources  |  <type>     | 'resources             |
+
+`root-dir' and `theme' can be lists, for example:
+
+  `(\"path/to/dir1\" \"path/to/dir2\" \"path/to/dir3\")'
+  `(theme1 theme2 theme3)'
+
+At this time, `op/get-theme-dirs' will find *all possible*
+<type> directorys by permutation way and return a list with
+multi path."
+  (let* ((fallback-theme 'mdo)
+         (fallback-theme-root (concat op/load-directory "themes/"))
+         (themes (delete-dups
+                  (or (op/join-to-list theme)
+                      (op/join-to-list op/theme fallback-theme))))
+         (theme-root-dirs
+          (delete-dups
+           (or (op/join-to-list root-dir)
+               (op/join-to-list op/theme-root-directory
+                                fallback-theme-root))))
+         theme-dir theme-dirs)
+    (dolist (theme themes)
+      (dolist (root-dir theme-root-dirs)
+        (setq theme-dir
+              (file-name-as-directory
+               (expand-file-name
+                (format "%s/%s" (symbol-name theme)
+                        (if type (symbol-name type) ""))
+                root-dir)))
+        (when (file-directory-p theme-dir)
+          (push theme-dir theme-dirs))))
+    (reverse theme-dirs)))
 
 (defun op/prepare-theme (pub-root-dir)
   "Copy theme files to PUB-ROOT-DIR."
   (let ((pub-theme-dir (expand-file-name "media/" pub-root-dir))
-        (theme-dir (op/get-theme-dir)))
-    (unless (file-directory-p theme-dir)
-      (message "Theme %s not found, use default theme `mdo' instead."
-               (symbol-name op/theme))
-      (setq op/theme-root-directory (concat op/load-directory "themes/"))
-      (setq op/theme 'mdo)
-      (setq theme-dir (op/get-theme-dir)))
+        (theme-dirs (reverse (op/get-theme-dirs nil nil 'resources))))
     (when (file-directory-p pub-theme-dir)
       (delete-directory pub-theme-dir t))
-    (copy-directory theme-dir pub-theme-dir t t t)))
+    (dolist (theme-dir theme-dirs)
+      (copy-directory theme-dir pub-theme-dir t t t))))
 
 
 (provide 'op-enhance)

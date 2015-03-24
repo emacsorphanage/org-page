@@ -31,16 +31,18 @@
 (require 'op-util)
 (require 'op-vars)
 (require 'op-git)
+(require 'op-enhance)
 
 
-(defun op/get-template-dir ()
-  "Return the template directory, it is determined by variable
-`op/theme-root-directory' with `op/theme' or `op/template-directory'."
-  (or op/template-directory
-      (file-name-as-directory
-       (expand-file-name
-        (format "%s/templates" (symbol-name op/theme))
-        op/theme-root-directory))))
+(defun op/get-template-file (template-file-name)
+  "Get path of template file which name is `template-file-name'."
+  (car (remove nil (mapcar
+                    #'(lambda (dir)
+                        (let ((file (concat (file-name-as-directory dir)
+                                            template-file-name)))
+                          (when (file-exists-p file)
+                            file)))
+                    (op/get-theme-dirs nil nil 'templates)))))
 
 (defun op/get-cache-item (key)
   "Get the item associated with KEY in `op/item-cache', if `op/item-cache' is
@@ -70,7 +72,7 @@ a hash table accordint to current buffer."
    (op/get-cache-create
     :header-template
     (message "Read header.mustache from file")
-    (file-to-string (concat (op/get-template-dir) "header.mustache")))
+    (file-to-string (op/get-template-file "header.mustache")))
    (or param-table
        (ht ("page-title" (concat (or (op/read-org-option "TITLE") "Untitled")
                                  " - " op/site-main-title))
@@ -92,7 +94,7 @@ render from a default hash table."
     (op/get-cache-create
      :nav-bar-template
      (message "Read nav.mustache from file")
-     (file-to-string (concat (op/get-template-dir) "nav.mustache")))
+     (file-to-string (op/get-template-file "nav.mustache")))
     (or param-table
         (ht ("site-main-title" op/site-main-title)
             ("site-sub-title" op/site-sub-title)
@@ -126,8 +128,8 @@ similar to `op/render-header'."
         (intern (replace-regexp-in-string "\\.mustache$" "-template" template))
       :post-template)
     (message (concat "Read " (or template "post.mustache") " from file"))
-    (file-to-string (concat (op/get-template-dir)
-                            (or template "post.mustache"))))
+    (file-to-string (op/get-template-file
+                     (or template "post.mustache"))))
    (or param-table
        (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
            ("content" (cl-flet ((org-html-fontify-code
@@ -142,7 +144,7 @@ similar to `op/render-header'."
    (op/get-cache-create
     :footer-template
     (message "Read footer.mustache from file")
-    (file-to-string (concat (op/get-template-dir) "footer.mustache")))
+    (file-to-string (op/get-template-file "footer.mustache")))
    (or param-table
        (let* ((filename (buffer-file-name))
               (title (or (op/read-org-option "TITLE") "Untitled"))
