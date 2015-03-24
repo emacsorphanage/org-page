@@ -84,14 +84,6 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
           (u (when (and a (not p))
                (y-or-n-p "Auto push to remote repo? "))))
      (list f b p a u)))
-  (op/do-publication-1 force-all
-                       base-git-commit pub-base-dir
-                       auto-commit auto-push))
-
-(defun op/do-publication-1 (force-all
-                            base-git-commit pub-base-dir
-                            auto-commit auto-push)
-  "Internal function used by `op/do-publication'"
   (op/verify-configuration)
   (setq op/item-cache nil)
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
@@ -300,10 +292,6 @@ responsibility to guarantee the two parameters are valid."
       (setq filename "new-post.org"))
   (unless (string-suffix-p ".org" filename)
     (setq filename (concat filename ".org")))
-  (op/new-post-1 category filename))
-
-(defun op/new-post-1 (category filename)
-  "Internal function used by `op/new-post'."
   (let* ((dir (concat (file-name-as-directory op/repository-directory)
                       (file-name-as-directory category)))
          (path (concat dir filename)))
@@ -312,7 +300,13 @@ responsibility to guarantee the two parameters are valid."
     (unless (file-directory-p dir)
       (mkdir dir t))
     (switch-to-buffer (find-file path))
-    (call-interactively 'op/insert-options-template)
+    (if (called-interactively-p 'any)
+        (call-interactively 'op/insert-options-template)
+      (op/insert-options-template "<Insert Your Title Here>"
+                                  "/%y/%m/%d/%t/"
+                                  "add, keywords, here"
+                                  "add, tags, here"
+                                  "add description here"))
     (save-buffer)))
 
 
