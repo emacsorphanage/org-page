@@ -32,9 +32,10 @@
 (require 'op-vars)
 (require 'op-git)
 
+
 (defun op/get-template-dir ()
   "Return the template directory, it is determined by variable
-`op/theme-root-directory' with `op/theme' or `op/template-directory'"
+`op/theme-root-directory' with `op/theme' or `op/template-directory'."
   (or op/template-directory
       (file-name-as-directory
        (expand-file-name

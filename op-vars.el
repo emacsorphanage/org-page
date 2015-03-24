@@ -106,12 +106,9 @@ points to the directory `themes' in org-page installation directory."
   :group 'org-page :type 'string)
 
 (defcustom op/template-directory nil
-  "The directory stores templates for page rendering.
-
-By default, org-page use `op/theme' and `op/theme-root-directory'
-to determine the template directory.
-
-DON'T set this variable if you know what you are doing!"
+  "The directory stores templates for page rendering. By default, org-page uses
+`op/theme' and `op/theme-root-directory' to determine the template directory.
+DON'T set this variable unless you know what you are doing!"
   :group 'org-page :type 'string)
 
 (defcustom op/confound-email t
