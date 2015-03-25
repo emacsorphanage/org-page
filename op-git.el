@@ -61,7 +61,7 @@ instead of pointer HEAD."
                          (or branch "HEAD"))
                  t)))
     (delq nil (mapcar #'(lambda (line)
-                          (when (string-suffix-p org-file-ext line t)
+                          (when (op/string-suffix-p org-file-ext line t)
                             (expand-file-name line repo-dir)))
                       (split-string output "\n")))))
 

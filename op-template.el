@@ -72,7 +72,7 @@ a hash table accordint to current buffer."
    (op/get-cache-create
     :header-template
     (message "Read header.mustache from file")
-    (file-to-string (op/get-template-file "header.mustache")))
+    (op/file-to-string (op/get-template-file "header.mustache")))
    (or param-table
        (ht ("page-title" (concat (or (op/read-org-option "TITLE") "Untitled")
                                  " - " op/site-main-title))
@@ -94,7 +94,7 @@ render from a default hash table."
     (op/get-cache-create
      :nav-bar-template
      (message "Read nav.mustache from file")
-     (file-to-string (op/get-template-file "nav.mustache")))
+     (op/file-to-string (op/get-template-file "nav.mustache")))
     (or param-table
         (ht ("site-main-title" op/site-main-title)
             ("site-sub-title" op/site-sub-title)
@@ -102,7 +102,7 @@ render from a default hash table."
              (mapcar
               #'(lambda (cat)
                   (ht ("category-uri"
-                       (concat "/" (encode-string-to-url cat) "/"))
+                       (concat "/" (op/encode-string-to-url cat) "/"))
                       ("category-name" (capitalize cat))))
               (sort (remove-if
                      #'(lambda (cat)
@@ -128,7 +128,7 @@ similar to `op/render-header'."
         (intern (replace-regexp-in-string "\\.mustache$" "-template" template))
       :post-template)
     (message (concat "Read " (or template "post.mustache") " from file"))
-    (file-to-string (op/get-template-file
+    (op/file-to-string (op/get-template-file
                      (or template "post.mustache"))))
    (or param-table
        (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
@@ -144,11 +144,11 @@ similar to `op/render-header'."
    (op/get-cache-create
     :footer-template
     (message "Read footer.mustache from file")
-    (file-to-string (op/get-template-file "footer.mustache")))
+    (op/file-to-string (op/get-template-file "footer.mustache")))
    (or param-table
        (let* ((filename (buffer-file-name))
               (title (or (op/read-org-option "TITLE") "Untitled"))
-              (date (fix-timestamp-string
+              (date (op/fix-timestamp-string
                      (or (op/read-org-option "DATE")
                          (format-time-string "%Y-%m-%d"))))
               (tags (op/read-org-option "TAGS"))
@@ -157,7 +157,7 @@ similar to `op/render-header'."
                          #'(lambda (tag-name)
                              (ht ("link" (op/generate-tag-uri tag-name))
                                  ("name" tag-name)))
-                         (delete "" (mapcar 'trim-string (split-string tags "[:,]+" t))))))
+                         (delete "" (mapcar 'op/trim-string (split-string tags "[:,]+" t))))))
               (category (funcall (or op/retrieve-category-function
                                      op/get-file-category)
                                  filename))
@@ -187,7 +187,7 @@ similar to `op/render-header'."
                            user-full-name
                            "Unknown Author"))
              ("disqus-id" uri)
-             ("disqus-url" (get-full-url uri))
+             ("disqus-url" (op/get-full-url uri))
              ("disqus-comment" (and (boundp 'op/personal-disqus-shortname)
                                     op/personal-disqus-shortname))
              ("disqus-shortname" op/personal-disqus-shortname)
@@ -198,7 +198,7 @@ similar to `op/render-header'."
                                       op/personal-google-analytics-id))
              ("google-analytics-id" op/personal-google-analytics-id)
              ("creator-info" op/html-creator-string)
-             ("email" (confound-email (or (op/read-org-option "EMAIL")
+             ("email" (op/confound-email-address (or (op/read-org-option "EMAIL")
                                           user-mail-address
                                           "Unknown Email"))))))))
 
@@ -235,7 +235,7 @@ ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
          (title (org-element-interpret-data (plist-get info :title)))
          (author (org-element-interpret-data
                   (or (plist-get info :author) user-full-name)))
-         (email (confound-email (or (plist-get info :email)
+         (email (op/confound-email-address (or (plist-get info :email)
                                     user-mail-address)))
          (description (or (plist-get info :description) nil))
          (keywords (or (plist-get info :keywords) nil))
@@ -244,7 +244,7 @@ ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
                               (not (eq category 'about))
                               (not (eq category 'none))))
          (creation-date (if (plist-get info :date)
-                            (fix-timestamp-string
+                            (op/fix-timestamp-string
                              (org-element-interpret-data
                               (plist-get info :date)))
                           "N/A"))
@@ -258,7 +258,7 @@ ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
                      (plist-get info :tags) ", "))
          (show-comment (eq category 'blog))
          (disqus-id (plist-get info :uri))
-         (disqus-url (get-full-url disqus-id))
+         (disqus-url (op/get-full-url disqus-id))
          (param-table (ht-create)))
     (ht-update param-table op/default-template-parameters)
     (ht-update

@@ -83,7 +83,7 @@ content of the buffer will be converted into html."
   (let* ((filename (buffer-file-name))
          (attr-plist `(:title ,(or (op/read-org-option "TITLE")
                                    "Untitled")
-                       :date ,(fix-timestamp-string
+                       :date ,(op/fix-timestamp-string
                                (or (op/read-org-option "DATE")
                                    (format-time-string "%Y-%m-%d")))
                        :mod-date ,(if (not filename)
@@ -103,7 +103,7 @@ content of the buffer will be converted into html."
     (setq tags (op/read-org-option "TAGS"))
     (when tags
       (plist-put
-       attr-plist :tags (delete "" (mapcar 'trim-string
+       attr-plist :tags (delete "" (mapcar 'op/trim-string
                                            (split-string tags "[:,]+" t)))))
     (setq category (funcall (or op/retrieve-category-function
                                 op/get-file-category)
@@ -192,10 +192,10 @@ can contain following parameters:
   (let ((uri-template (or (op/read-org-option "URI")
                           default-uri-template))
         (date-list (split-string (if creation-date
-                                     (fix-timestamp-string creation-date)
+                                     (op/fix-timestamp-string creation-date)
                                    (format-time-string "%Y-%m-%d"))
                                  "-"))
-        (encoded-title (encode-string-to-url title)))
+        (encoded-title (op/encode-string-to-url title)))
     (format-spec uri-template `((?y . ,(car date-list))
                                 (?m . ,(cadr date-list))
                                 (?d . ,(caddr date-list))
@@ -235,11 +235,11 @@ If COMPONENT-TABLE is nil, the publication will be skipped."
   (when component-table
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
-    (string-to-file (mustache-render
+    (op/string-to-file (mustache-render
                      (op/get-cache-create
                       :container-template
                       (message "Read container.mustache from file")
-                      (file-to-string (op/get-template-file "container.mustache")))
+                      (op/file-to-string (op/get-template-file "container.mustache")))
                      component-table)
                     (concat pub-dir "index.html") ;; 'html-mode ;; do NOT indent the code
                     )))
@@ -269,8 +269,8 @@ the default 'blog' category will be used. For sorting, later lies headmost."
           cell
           (sort (cdr cell)
                 #'(lambda (plist1 plist2)
-                    (<= (compare-standard-date
-                         (fix-timestamp-string
+                    (<= (op/compare-standard-date
+                         (op/fix-timestamp-string
                           (plist-get
                            plist1
                            (plist-get
@@ -279,7 +279,7 @@ the default 'blog' category will be used. For sorting, later lies headmost."
                                      (assoc "blog"
                                             op/category-config-alist)))
                             :sort-by)))
-                         (fix-timestamp-string
+                         (op/fix-timestamp-string
                           (plist-get
                            plist2
                            (plist-get
@@ -305,15 +305,15 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                                  :category-index))
            (setq cat-dir (file-name-as-directory
                           (concat (file-name-as-directory pub-base-dir)
-                                  (encode-string-to-url (car cat-list)))))
+                                  (op/encode-string-to-url (car cat-list)))))
            (unless (file-directory-p cat-dir)
              (mkdir cat-dir t))
-           (string-to-file
+           (op/string-to-file
             (mustache-render
              (op/get-cache-create
               :container-template
               (message "Read container.mustache from file")
-              (file-to-string (op/get-template-file "container.mustache")))
+              (op/file-to-string (op/get-template-file "container.mustache")))
              (ht ("header"
                   (op/render-header
                    (ht ("page-title" (concat (capitalize (car cat-list))
@@ -353,7 +353,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                                             op/personal-google-analytics-id))
                        ("google-analytics-id" op/personal-google-analytics-id)
                        ("creator-info" op/html-creator-string)
-                       ("email" (confound-email (or user-mail-address
+                       ("email" (op/confound-email-address (or user-mail-address
                                                     "Unknown Email"))))))))
             (concat cat-dir "index.html") 'html-mode)))
      sort-alist)))
@@ -364,12 +364,12 @@ is the list of all file attribute property lists. PUB-BASE-DIR is the root
 publication directory."
   (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
         (id 0))
-    (string-to-file
+    (op/string-to-file
      (mustache-render
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (op/get-template-file "container.mustache")))
+       (op/file-to-string (op/get-template-file "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "Index - " op/site-main-title))
@@ -407,7 +407,7 @@ publication directory."
                                          op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
                 ("creator-info" op/html-creator-string)
-                ("email" (confound-email (or user-mail-address
+                ("email" (op/confound-email-address (or user-mail-address
                                              "Unknown Email"))))))))
      (concat pub-base-dir "index.html") 'html-mode)))
 
@@ -417,12 +417,12 @@ is the root publication directory."
   (let ((pub-dir (expand-file-name "about/" pub-base-dir)))
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
-    (string-to-file
+    (op/string-to-file
      (mustache-render
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (op/get-template-file "container.mustache")))
+       (op/file-to-string (op/get-template-file "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "About - " op/site-main-title))
@@ -442,13 +442,13 @@ is the root publication directory."
                                          op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
                 ("creator-info" op/html-creator-string)
-                ("email" (confound-email (or user-mail-address
+                ("email" (op/confound-email-address (or user-mail-address
                                              "Unknown Email"))))))))
      (concat pub-dir "index.html") 'html-mode)))
 
 (defun op/generate-tag-uri (tag-name)
   "Generate tag uri based on TAG-NAME."
-  (concat "/tags/" (encode-string-to-url tag-name) "/"))
+  (concat "/tags/" (op/encode-string-to-url tag-name) "/"))
 
 (defun op/update-tags (file-attr-list pub-base-dir)
   "Update tag pages. FILE-ATTR-LIST is the list of all file attribute property
@@ -468,12 +468,12 @@ TODO: improve this function."
      file-attr-list)
     (unless (file-directory-p tag-base-dir)
       (mkdir tag-base-dir t))
-    (string-to-file
+    (op/string-to-file
      (mustache-render
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (op/get-template-file "container.mustache")))
+       (op/file-to-string (op/get-template-file "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "Tag Index - " op/site-main-title))
@@ -499,22 +499,22 @@ TODO: improve this function."
                                          op/personal-google-analytics-id))
                 ("google-analytics-id" op/personal-google-analytics-id)
                 ("creator-info" op/html-creator-string)
-                ("email" (confound-email (or user-mail-address
+                ("email" (op/confound-email-address (or user-mail-address
                                              "Unknown Email"))))))))
      (concat tag-base-dir "index.html") 'html-mode)
     (mapc
      #'(lambda (tag-list)
          (setq tag-dir (file-name-as-directory
                         (concat tag-base-dir
-                                (encode-string-to-url (car tag-list)))))
+                                (op/encode-string-to-url (car tag-list)))))
          (unless (file-directory-p tag-dir)
            (mkdir tag-dir t))
-         (string-to-file
+         (op/string-to-file
           (mustache-render
            (op/get-cache-create
             :container-template
             (message "Read container.mustache from file")
-            (file-to-string (op/get-template-file "container.mustache")))
+            (op/file-to-string (op/get-template-file "container.mustache")))
            (ht ("header"
                 (op/render-header
                  (ht ("page-title" (concat "Tag: " (car tag-list)
@@ -541,7 +541,7 @@ TODO: improve this function."
                                               op/personal-google-analytics-id))
                      ("google-analytics-id" op/personal-google-analytics-id)
                      ("creator-info" op/html-creator-string)
-                     ("email" (confound-email (or user-mail-address
+                     ("email" (op/confound-email-address (or user-mail-address
                                                   "Unknown Email"))))))))
           (concat tag-dir "index.html") 'html-mode))
      tag-alist)))
@@ -550,10 +550,10 @@ TODO: improve this function."
   "Update RSS. FILE-ATTR-LIST is the list of all file attribute property lists.
 PUB-BASE-DIR is the root publication directory."
   (let ((last-10-posts
-         (-take 10 (--sort (>= 0 (compare-standard-date
-                                  (fix-timestamp-string
+         (-take 10 (--sort (>= 0 (op/compare-standard-date
+                                  (op/fix-timestamp-string
                                    (plist-get it :mod-date))
-                                  (fix-timestamp-string
+                                  (op/fix-timestamp-string
                                    (plist-get other :mod-date))))
                            (--filter (not (or
                                            (string= (plist-get it :category)
@@ -561,7 +561,7 @@ PUB-BASE-DIR is the root publication directory."
                                            (string= (plist-get it :category)
                                                     "about")))
                                      file-attr-list)))))
-    (string-to-file
+    (op/string-to-file
      (mustache-render
       op/rss-template
       (ht ("title" op/site-main-title)
@@ -569,7 +569,7 @@ PUB-BASE-DIR is the root publication directory."
           ("description" op/site-sub-title)
           ("date" (format-time-string "%a, %d %b %Y %T %Z"))
           ("items" (--map (ht ("item-title" (plist-get it :title))
-                              ("item-link" (get-full-url (plist-get it :uri)))
+                              ("item-link" (op/get-full-url (plist-get it :uri)))
                               ("item-description" (plist-get it :description))
                               ("item-update-date" (plist-get it :mod-date)))
                           last-10-posts))))
