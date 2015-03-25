@@ -61,6 +61,8 @@
 2) read changed files on branch `op/repository-org-branch' of repository
 `op/repository-directory', the definition of 'changed files' is:
    1. if FORCE-ALL is non-nil, then all files will be published
+   2. if FORCE-ALL is a list of files, then all files in this list
+      will be published.
    2. if FORCE-ALL is nil, the changed files will be obtained based on
 BASE-GIT-COMMIT
    3. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
@@ -92,7 +94,10 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
          changed-files all-files remote-repos)
     (op/git-change-branch op/repository-directory op/repository-org-branch)
     (op/prepare-theme store-dir)
-    (setq all-files (op/git-all-files op/repository-directory))
+    (setq all-files
+          (if (listp force-all)
+              force-all
+            (op/git-all-files op/repository-directory)))
     (setq changed-files (if force-all
                             `(:update ,all-files :delete nil)
                           (op/git-files-changed op/repository-directory
