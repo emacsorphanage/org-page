@@ -81,8 +81,7 @@ deleted. PUB-ROOT-DIR is the root publication directory."
 PUB-ROOT-DIR is the root directory of published files, if DO-PUB is t, the
 content of the buffer will be converted into html."
   (let* ((filename (buffer-file-name))
-         (attr-plist `(:title ,(or (op/read-org-option "TITLE")
-                                   "Untitled")
+         (attr-plist `(:title ,(funcall op/get-title-function)
                        :date ,(op/fix-timestamp-string
                                (or (op/read-org-option "DATE")
                                    (format-time-string "%Y-%m-%d")))

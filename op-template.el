@@ -44,6 +44,11 @@
                             file)))
                     (op/get-theme-dirs nil nil 'templates)))))
 
+(defun op/get-title ()
+  "Get the title of org file."
+  (or (op/read-org-option "TITLE")
+      (file-name-sans-extension (buffer-name))))
+
 (defun op/get-cache-item (key)
   "Get the item associated with KEY in `op/item-cache', if `op/item-cache' is
 nil or there is no item associated with KEY in it, return nil."
@@ -74,8 +79,7 @@ a hash table accordint to current buffer."
     (message "Read header.mustache from file")
     (op/file-to-string (op/get-template-file "header.mustache")))
    (or param-table
-       (ht ("page-title" (concat (or (op/read-org-option "TITLE") "Untitled")
-                                 " - " op/site-main-title))
+       (ht ("page-title" (concat (funcall op/get-title-function) " - " op/site-main-title))
            ("author" (or (op/read-org-option "AUTHOR")
                          user-full-name "Unknown Author"))
            ("description" (op/read-org-option "DESCRIPTION"))
@@ -131,7 +135,7 @@ similar to `op/render-header'."
     (op/file-to-string (op/get-template-file
                      (or template "post.mustache"))))
    (or param-table
-       (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
+       (ht ("title" (funcall op/get-title-function))
            ("content" (cl-flet ((org-html-fontify-code
                                  (code lang)
                                  (when code (org-html-encode-plain-text code))))
@@ -147,7 +151,7 @@ similar to `op/render-header'."
     (op/file-to-string (op/get-template-file "footer.mustache")))
    (or param-table
        (let* ((filename (buffer-file-name))
-              (title (or (op/read-org-option "TITLE") "Untitled"))
+              (title (funcall op/get-title-function))
               (date (op/fix-timestamp-string
                      (or (op/read-org-option "DATE")
                          (format-time-string "%Y-%m-%d"))))

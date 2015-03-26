@@ -116,6 +116,11 @@ DON'T set this variable unless you know what you are doing!"
 confounded or not."
   :group 'org-page :type 'boolean)
 
+(defcustom op/get-title-function 'op/get-title
+  "The function used to get an org file's title, it has no parameter,
+the default value is `op/get-file-category'."
+  :group 'org-page :type 'function)
+
 (defcustom op/retrieve-category-function 'op/get-file-category
   "The function used to retrieve an org file's category, its parameter is the
 org file's path, if parameter is nil, it should return all categories, the
