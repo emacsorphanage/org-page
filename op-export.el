@@ -532,7 +532,8 @@ TODO: improve this function."
                       (mapcar
                        #'(lambda (attr-plist)
                            (ht ("post-uri" (plist-get attr-plist :uri))
-                               ("post-title" (plist-get attr-plist :title))))
+                               ("post-title" (plist-get attr-plist :title))
+                               ("post-date" (plist-get attr-plist :date))))
                        (cdr tag-list))))))
                ("footer"
                 (op/render-footer
