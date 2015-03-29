@@ -384,7 +384,7 @@ publication directory."
                  (mapcar
                   #'(lambda (cell)
                       (ht ("id" (setq id (+ id 1)))
-                          ("category" (car cell))
+                          ("category" (capitalize (car cell)))
                           ("posts" (mapcar
                                     #'(lambda (plist)
                                         (ht ("post-uri"
@@ -398,7 +398,10 @@ publication directory."
                                             ("post-thumb"
                                              (or (plist-get plist :thumb) ""))))
                                     (cdr cell)))))
-                  sort-alist)))))
+                  (remove-if
+                   #'(lambda (cell)
+                       (string= (car cell) "about"))
+                   sort-alist))))))
           ("footer"
            (op/render-footer
             (ht ("show-meta" nil)
