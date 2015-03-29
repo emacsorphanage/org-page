@@ -29,6 +29,7 @@
 (require 'ht)
 (require 'op-util)
 (require 'op-vars)
+(require 'op-config)
 
 
 (defun op/verify-git-repository (repo-dir)

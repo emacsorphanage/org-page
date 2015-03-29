@@ -30,8 +30,8 @@
 (autoload 'mustache-render "mustache")
 (require 'op-util)
 (require 'op-vars)
+(require 'op-config)
 (require 'op-git)
-(require 'op-enhance)
 
 
 (defun op/get-template-file (template-file-name)
@@ -79,7 +79,8 @@ a hash table accordint to current buffer."
     (message "Read header.mustache from file")
     (op/file-to-string (op/get-template-file "header.mustache")))
    (or param-table
-       (ht ("page-title" (concat (funcall op/get-title-function) " - " op/site-main-title))
+       (ht ("page-title" (concat (funcall (op/get-config-option :get-title-function))
+                                 " - " (op/get-config-option :site-main-title)))
            ("author" (or (op/read-org-option "AUTHOR")
                          user-full-name "Unknown Author"))
            ("description" (op/read-org-option "DESCRIPTION"))
@@ -91,36 +92,37 @@ a hash table accordint to current buffer."
 and pushed into cache from template. PARAM-TABLE is the hash table for mustache
 to render the template. If it is not set or nil, this function will try to
 render from a default hash table."
-  (op/get-cache-create
-   :nav-bar-html
-   (message "Render navigation bar from template")
-   (mustache-render
+  (let ((site-domain (op/get-site-domain)))
     (op/get-cache-create
-     :nav-bar-template
-     (message "Read nav.mustache from file")
-     (op/file-to-string (op/get-template-file "nav.mustache")))
-    (or param-table
-        (ht ("site-main-title" op/site-main-title)
-            ("site-sub-title" op/site-sub-title)
-            ("nav-categories"
-             (mapcar
-              #'(lambda (cat)
-                  (ht ("category-uri"
-                       (concat "/" (op/encode-string-to-url cat) "/"))
-                      ("category-name" (capitalize cat))))
-              (sort (remove-if
-                     #'(lambda (cat)
-                         (or (string= cat "index")
-                             (string= cat "about")))
-                     (op/get-file-category nil))
-                    'string-lessp)))
-            ("github" op/personal-github-link)
-            ("avatar" op/personal-avatar)
-            ("site-domain" (if (string-match
-                                "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                op/site-domain)
-                               (match-string 1 op/site-domain)
-                             op/site-domain)))))))
+     :nav-bar-html
+     (message "Render navigation bar from template")
+     (mustache-render
+      (op/get-cache-create
+       :nav-bar-template
+       (message "Read nav.mustache from file")
+       (op/file-to-string (op/get-template-file "nav.mustache")))
+      (or param-table
+          (ht ("site-main-title" (op/get-config-option :site-main-title))
+              ("site-sub-title" (op/get-config-option :site-sub-title))
+              ("nav-categories"
+               (mapcar
+                #'(lambda (cat)
+                    (ht ("category-uri"
+                         (concat "/" (op/encode-string-to-url cat) "/"))
+                        ("category-name" (capitalize cat))))
+                (sort (remove-if
+                       #'(lambda (cat)
+                           (or (string= cat "index")
+                               (string= cat "about")))
+                       (op/get-file-category nil))
+                      'string-lessp)))
+              ("github" (op/get-config-option :personal-github-link))
+              ("avatar" (op/get-config-option :personal-avatar))
+              ("site-domain" (if (string-match
+                                  "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                  site-domain)
+                                 (match-string 1 site-domain)
+                               site-domain))))))))
 
 (defun op/render-content (&optional template param-table)
   "Render the content on each page. TEMPLATE is the template name for rendering,
@@ -135,7 +137,7 @@ similar to `op/render-header'."
     (op/file-to-string (op/get-template-file
                      (or template "post.mustache"))))
    (or param-table
-       (ht ("title" (funcall op/get-title-function))
+       (ht ("title" (funcall (op/get-config-option :get-title-function)))
            ("content" (cl-flet ((org-html-fontify-code
                                  (code lang)
                                  (when code (org-html-encode-plain-text code))))
@@ -151,7 +153,7 @@ similar to `op/render-header'."
     (op/file-to-string (op/get-template-file "footer.mustache")))
    (or param-table
        (let* ((filename (buffer-file-name))
-              (title (funcall op/get-title-function))
+              (title (funcall (op/get-config-option :get-title-function)))
               (date (op/fix-timestamp-string
                      (or (op/read-org-option "DATE")
                          (format-time-string "%Y-%m-%d"))))
@@ -162,7 +164,7 @@ similar to `op/render-header'."
                              (ht ("link" (op/generate-tag-uri tag-name))
                                  ("name" tag-name)))
                          (delete "" (mapcar 'op/trim-string (split-string tags "[:,]+" t))))))
-              (category (funcall (or op/retrieve-category-function
+              (category (funcall (or (op/get-config-option :retrieve-category-function)
                                      op/get-file-category)
                                  filename))
               (config (cdr (or (assoc category op/category-config-alist)
@@ -175,7 +177,7 @@ similar to `op/render-header'."
              ("mod-date" (if (not filename)
                              (format-time-string "%Y-%m-%d")
                            (or (op/git-last-change-date
-                                op/repository-directory
+                                (op/get-repository-directory)
                                 filename)
                                (format-time-string
                                 "%Y-%m-%d"
@@ -192,40 +194,37 @@ similar to `op/render-header'."
                            "Unknown Author"))
              ("disqus-id" uri)
              ("disqus-url" (op/get-full-url uri))
-             ("disqus-comment" (and (boundp 'op/personal-disqus-shortname)
-                                    op/personal-disqus-shortname))
-             ("disqus-shortname" op/personal-disqus-shortname)
-             ("duoshuo-comment" (and (boundp 'op/personal-duoshuo-shortname)
-                                     op/personal-duoshuo-shortname))
-             ("duoshuo-shortname" op/personal-duoshuo-shortname)
-             ("google-analytics" (and (boundp 'op/personal-google-analytics-id)
-                                      op/personal-google-analytics-id))
-             ("google-analytics-id" op/personal-google-analytics-id)
-             ("creator-info" op/html-creator-string)
+             ("disqus-comment" (op/get-config-option :personal-disqus-shortname))
+             ("disqus-shortname" (op/get-config-option :personal-disqus-shortname))
+             ("duoshuo-comment" (op/get-config-option :personal-duoshuo-shortname))
+             ("duoshuo-shortname" (op/get-config-option :personal-duoshuo-shortname))
+             ("google-analytics" (op/get-config-option :personal-google-analytics-id))
+             ("google-analytics-id" (op/get-config-option :personal-google-analytics-id))
+             ("creator-info" (op/get-html-creator-string))
              ("email" (op/confound-email-address (or (op/read-org-option "EMAIL")
-                                          user-mail-address
-                                          "Unknown Email"))))))))
+                                                     user-mail-address
+                                                     "Unknown Email"))))))))
 
 ;;; this function is deprecated
 (defun op/update-default-template-parameters ()
   "Update the default template parameters. It is only needed when user did some
 customization to relevant variables."
-  (ht-update
-   op/default-template-parameters
-   (ht ("site-main-title" op/site-main-title)
-       ("site-sub-title" op/site-sub-title)
-       ("github" op/personal-github-link)
-       ("site-domain" (if (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                        op/site-domain)
-                          (match-string 1 op/site-domain)
-                        op/site-domain))
-       ("disqus-shortname" op/personal-disqus-shortname)
-       ("disqus-comment" (if op/personal-disqus-shortname t nil))
-       ("duoshuo-shortname" op/personal-duoshuo-shortname)
-       ("duoshuo-comment" (if op/personal-duoshuo-shortname t nil))
-       ("google-analytics-id" op/personal-google-analytics-id)
-       ("google-analytics" (if op/personal-google-analytics-id t nil))))
-  op/default-template-parameters)
+  (let ((site-domain (op/get-site-domain)))
+    (ht-update
+     op/default-template-parameters
+     (ht ("site-main-title" (op/get-config-option :site-main-title))
+         ("site-sub-title" (op/get-config-option :site-sub-title))
+         ("github" (op/get-config-option :personal-github-link))
+         ("site-domain" (if (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                          site-domain)
+                            (match-string 1 site-domain)
+                          site-domain))
+         ("disqus-shortname" (op/get-config-option :personal-disqus-shortname))
+         ("disqus-comment" (if (op/get-config-option :personal-disqus-shortname) t nil))
+         ("duoshuo-shortname" (op/get-config-option :personal-duoshuo-shortname))
+         ("duoshuo-comment" (if (op/get-config-option :personal-duoshuo-shortname) t nil))
+         ("google-analytics-id" (op/get-config-option :personal-google-analytics-id))
+         ("google-analytics" (if (op/get-config-option :personal-google-analytics-id) t nil))))))
 
 ;;; this function is deprecated
 (defun op/compose-template-parameters (attr-plist content)
@@ -267,7 +266,7 @@ ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
     (ht-update param-table op/default-template-parameters)
     (ht-update
      param-table
-     (ht ("page-title"        (concat title " - " op/site-main-title))
+     (ht ("page-title"        (concat title " - " (op/get-config-option :site-main-title)))
          ("author"            author)
          ("description"       description)
          ("keywords"          keywords)

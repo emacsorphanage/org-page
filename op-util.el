@@ -26,6 +26,8 @@
 ;;; Code:
 
 (require 'ht)
+(require 'op-vars)
+(require 'op-config)
 
 
 (defun op/compare-standard-date (date1 date2)
@@ -144,7 +146,7 @@ T[0-9][0-9]:[0-9][0-9]" date-str)
   "Confound email to prevent spams using simple rule:
 replace . with <dot>, @ with <at>, e.g.
 name@domain.com => name <at> domain <dot> com"
-  (if (not op/confound-email) email
+  (if (not (op/get-config-option :confound-email)) email
     (replace-regexp-in-string
      " +" " " (replace-regexp-in-string
                "@" " <at> " (replace-regexp-in-string "\\." " <dot> " email)))))
@@ -183,8 +185,8 @@ encoded ones, like %3E, but we do NOT want this kind of url."
   (downcase (replace-regexp-in-string "[ :/\\]+" "-" string)))
 
 (defun op/get-full-url (uri)
-  "Get the full url of URI, by joining `op/site-domain' with URI."
-  (concat (replace-regexp-in-string "/?$" "" op/site-domain) uri))
+  "Get the full url of URI, by joining site-domain with URI."
+  (concat (replace-regexp-in-string "/?$" "" (op/get-site-domain)) uri))
 
 (defun op/file-to-string (file)
   "Read the content of FILE and return it as a string."
@@ -215,6 +217,12 @@ alternative to `ht-from-plist'."
       (let ((key (substring (symbol-name (car pair)) 1))
             (value (cadr pair)))
         (ht-set h key value)))))
+
+(defun op/join-to-list (a1 &optional a2)
+  "Conbine `a1' and `a2' to a list."
+  (let ((list1 (if (listp a1) a1 (list a1)))
+        (list2 (if (listp a2) a2 (list a2))))
+    (append list1 list2)))
 
 
 (provide 'op-util)

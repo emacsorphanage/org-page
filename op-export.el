@@ -31,6 +31,7 @@
 (require 'dash)
 (require 'op-util)
 (require 'op-vars)
+(require 'op-config)
 (require 'op-git)
 (require 'op-template)
 
@@ -44,7 +45,8 @@
 ALL-LIST contains paths of all org files, CHANGE-PLIST contains two properties,
 one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
-  (let* ((upd-list (plist-get change-plist :update))
+  (let* ((repo-dir (op/get-repository-directory))
+         (upd-list (plist-get change-plist :update))
          (del-list (plist-get change-plist :delete))
          visiting file-buffer attr-cell file-attr-list)
     (when (or upd-list del-list)
@@ -65,11 +67,11 @@ deleted. PUB-ROOT-DIR is the root publication directory."
            (or visiting (kill-buffer file-buffer)))
        all-list)
       (unless (member
-               (expand-file-name "index.org" op/repository-directory)
+               (expand-file-name "index.org" repo-dir)
                all-list)
         (op/generate-default-index file-attr-list pub-root-dir))
       (unless (member
-               (expand-file-name "about.org" op/repository-directory)
+               (expand-file-name "about.org" repo-dir)
                all-list)
         (op/generate-default-about pub-root-dir))
       (op/update-category-index file-attr-list pub-root-dir)
@@ -80,22 +82,23 @@ deleted. PUB-ROOT-DIR is the root publication directory."
   "Retrieve all needed options for org file opened in current buffer.
 PUB-ROOT-DIR is the root directory of published files, if DO-PUB is t, the
 content of the buffer will be converted into html."
-  (let* ((filename (buffer-file-name))
-         (attr-plist `(:title ,(funcall op/get-title-function)
-                       :date ,(op/fix-timestamp-string
-                               (or (op/read-org-option "DATE")
-                                   (format-time-string "%Y-%m-%d")))
-                       :mod-date ,(if (not filename)
-                                      (format-time-string "%Y-%m-%d")
-                                    (or (op/git-last-change-date
-                                         op/repository-directory
-                                         filename)
-                                        (format-time-string
-                                         "%Y-%m-%d"
-                                         (nth 5 (file-attributes filename)))))
-                       :description ,(or (op/read-org-option "DESCRIPTION")
-                                         "No Description")
-                       :thumb ,(op/read-org-option "THUMBNAIL")))
+  (let* ((repo-dir (op/get-repository-directory))
+         (filename (buffer-file-name))
+         (attr-plist `(:title ,(funcall (op/get-config-option :get-title-function))
+                              :date ,(op/fix-timestamp-string
+                                      (or (op/read-org-option "DATE")
+                                          (format-time-string "%Y-%m-%d")))
+                              :mod-date ,(if (not filename)
+                                             (format-time-string "%Y-%m-%d")
+                                           (or (op/git-last-change-date
+                                                repo-dir
+                                                filename)
+                                               (format-time-string
+                                                "%Y-%m-%d"
+                                                (nth 5 (file-attributes filename)))))
+                              :description ,(or (op/read-org-option "DESCRIPTION")
+                                                "No Description")
+                              :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
          component-table tags category cat-config)
@@ -104,7 +107,7 @@ content of the buffer will be converted into html."
       (plist-put
        attr-plist :tags (delete "" (mapcar 'op/trim-string
                                            (split-string tags "[:,]+" t)))))
-    (setq category (funcall (or op/retrieve-category-function
+    (setq category (funcall (or (op/get-config-option :retrieve-category-function)
                                 op/get-file-category)
                             filename))
     (plist-put attr-plist :category category)
@@ -203,29 +206,31 @@ can contain following parameters:
 (defun op/get-file-category (org-file)
   "Get org file category presented by ORG-FILE, return all categories if
 ORG-FILE is nil. This is the default function used to get a file's category,
-see `op/retrieve-category-function'. How to judge a file's category is based on
-its name and its root folder name under `op/repository-directory'."
-  (cond ((not org-file)
-         (let ((cat-list '("index" "about" "blog"))) ;; 3 default categories
-           (dolist (f (directory-files op/repository-directory))
-             (when (and (not (equal f "."))
-                        (not (equal f ".."))
-                        (not (equal f ".git"))
-                        (not (member f op/category-ignore-list))
-                        (not (equal f "blog"))
-                        (file-directory-p
-                         (expand-file-name f op/repository-directory)))
-               (setq cat-list (cons f cat-list))))
-           cat-list))
-        ((string= (expand-file-name "index.org" op/repository-directory)
-                  (expand-file-name org-file)) "index")
-        ((string= (expand-file-name "about.org" op/repository-directory)
-                  (expand-file-name org-file)) "about")
-        ((string= (file-name-directory (expand-file-name org-file))
-                  op/repository-directory) "blog")
-        (t (car (split-string (file-relative-name (expand-file-name org-file)
-                                                  op/repository-directory)
-                              "[/\\\\]+")))))
+see org-page config option 'retrieve-category-function. How to judge a
+file's category is based on its name and its root folder name."
+  (let ((repo-dir (op/get-repository-directory))
+        (category-ignore-list (op/get-config-option :category-ignore-list)))
+    (cond ((not org-file)
+           (let ((cat-list '("index" "about" "blog"))) ;; 3 default categories
+             (dolist (f (directory-files repo-dir))
+               (when (and (not (equal f "."))
+                          (not (equal f ".."))
+                          (not (equal f ".git"))
+                          (not (member f category-ignore-list))
+                          (not (equal f "blog"))
+                          (file-directory-p
+                           (expand-file-name f repo-dir)))
+                 (setq cat-list (cons f cat-list))))
+             cat-list))
+          ((string= (expand-file-name "index.org" repo-dir)
+                    (expand-file-name org-file)) "index")
+          ((string= (expand-file-name "about.org" repo-dir)
+                    (expand-file-name org-file)) "about")
+          ((string= (file-name-directory (expand-file-name org-file))
+                    repo-dir) "blog")
+          (t (car (split-string (file-relative-name
+                                 (expand-file-name org-file) repo-dir)
+                                "[/\\\\]+"))))))
 
 (defun op/publish-modified-file (component-table pub-dir)
   "Publish org file opened in current buffer. COMPONENT-TABLE is the hash table
@@ -317,7 +322,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                   (op/render-header
                    (ht ("page-title" (concat (capitalize (car cat-list))
                                              " Index - "
-                                             op/site-main-title))
+                                             (op/get-config-option :site-main-title)))
                        ("author" (or user-full-name "Unknown Author")))))
                  ("nav" (op/render-navigation-bar))
                  ("content"
@@ -346,14 +351,11 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                    (ht ("show-meta" nil)
                        ("show-comment" nil)
                        ("author" (or user-full-name "Unknown Author"))
-                       ("google-analytics" (and
-                                            (boundp
-                                             'op/personal-google-analytics-id)
-                                            op/personal-google-analytics-id))
-                       ("google-analytics-id" op/personal-google-analytics-id)
-                       ("creator-info" op/html-creator-string)
+                       ("google-analytics" (op/get-config-option :personal-google-analytics-id))
+                       ("google-analytics-id" (op/get-config-option :personal-google-analytics-id))
+                       ("creator-info" (op/get-html-creator-string))
                        ("email" (op/confound-email-address (or user-mail-address
-                                                    "Unknown Email"))))))))
+                                                               "Unknown Email"))))))))
             (concat cat-dir "index.html") 'html-mode)))
      sort-alist)))
 
@@ -371,7 +373,7 @@ publication directory."
        (op/file-to-string (op/get-template-file "container.mustache")))
       (ht ("header"
            (op/render-header
-            (ht ("page-title" (concat "Index - " op/site-main-title))
+            (ht ("page-title" (concat "Index - " (op/get-config-option :site-main-title)))
                 ("author" (or user-full-name "Unknown Author")))))
           ("nav" (op/render-navigation-bar))
           ("content"
@@ -401,13 +403,11 @@ publication directory."
             (ht ("show-meta" nil)
                 ("show-comment" nil)
                 ("author" (or user-full-name "Unknown Author"))
-                ("google-analytics" (and (boundp
-                                          'op/personal-google-analytics-id)
-                                         op/personal-google-analytics-id))
-                ("google-analytics-id" op/personal-google-analytics-id)
-                ("creator-info" op/html-creator-string)
+                ("google-analytics" (op/get-config-option :personal-google-analytics-id))
+                ("google-analytics-id" (op/get-config-option :personal-google-analytics-id))
+                ("creator-info" (op/get-html-creator-string))
                 ("email" (op/confound-email-address (or user-mail-address
-                                             "Unknown Email"))))))))
+                                                        "Unknown Email"))))))))
      (concat pub-base-dir "index.html") 'html-mode)))
 
 (defun op/generate-default-about (pub-base-dir)
@@ -424,7 +424,7 @@ is the root publication directory."
        (op/file-to-string (op/get-template-file "container.mustache")))
       (ht ("header"
            (op/render-header
-            (ht ("page-title" (concat "About - " op/site-main-title))
+            (ht ("page-title" (concat "About - " (op/get-config-option :site-main-title)))
                 ("author" (or user-full-name "Unknown Author")))))
           ("nav" (op/render-navigation-bar))
           ("content"
@@ -436,13 +436,11 @@ is the root publication directory."
             (ht ("show-meta" nil)
                 ("show-comment" nil)
                 ("author" (or user-full-name "Unknown Author"))
-                ("google-analytics" (and (boundp
-                                          'op/personal-google-analytics-id)
-                                         op/personal-google-analytics-id))
-                ("google-analytics-id" op/personal-google-analytics-id)
-                ("creator-info" op/html-creator-string)
+                ("google-analytics" (op/get-config-option :personal-google-analytics-id))
+                ("google-analytics-id" (op/get-config-option :personal-google-analytics-id))
+                ("creator-info" (op/get-html-creator-string))
                 ("email" (op/confound-email-address (or user-mail-address
-                                             "Unknown Email"))))))))
+                                                        "Unknown Email"))))))))
      (concat pub-dir "index.html") 'html-mode)))
 
 (defun op/generate-tag-uri (tag-name)
@@ -475,7 +473,7 @@ TODO: improve this function."
        (op/file-to-string (op/get-template-file "container.mustache")))
       (ht ("header"
            (op/render-header
-            (ht ("page-title" (concat "Tag Index - " op/site-main-title))
+            (ht ("page-title" (concat "Tag Index - " (op/get-config-option :site-main-title)))
                 ("author" (or user-full-name "Unknown Author")))))
           ("nav" (op/render-navigation-bar))
           ("content"
@@ -493,13 +491,11 @@ TODO: improve this function."
             (ht ("show-meta" nil)
                 ("show-comment" nil)
                 ("author" (or user-full-name "Unknown Author"))
-                ("google-analytics" (and (boundp
-                                          'op/personal-google-analytics-id)
-                                         op/personal-google-analytics-id))
-                ("google-analytics-id" op/personal-google-analytics-id)
-                ("creator-info" op/html-creator-string)
+                ("google-analytics" (op/get-config-option :personal-google-analytics-id))
+                ("google-analytics-id" (op/get-config-option :personal-google-analytics-id))
+                ("creator-info" (op/get-html-creator-string))
                 ("email" (op/confound-email-address (or user-mail-address
-                                             "Unknown Email"))))))))
+                                                        "Unknown Email"))))))))
      (concat tag-base-dir "index.html") 'html-mode)
     (mapc
      #'(lambda (tag-list)
@@ -517,7 +513,7 @@ TODO: improve this function."
            (ht ("header"
                 (op/render-header
                  (ht ("page-title" (concat "Tag: " (car tag-list)
-                                           " - " op/site-main-title))
+                                           " - " (op/get-config-option :site-main-title)))
                      ("author" (or user-full-name "Unknown Author")))))
                ("nav" (op/render-navigation-bar))
                ("content"
@@ -535,13 +531,11 @@ TODO: improve this function."
                  (ht ("show-meta" nil)
                      ("show-comment" nil)
                      ("author" (or user-full-name "Unknown Author"))
-                     ("google-analytics" (and (boundp
-                                               'op/personal-google-analytics-id)
-                                              op/personal-google-analytics-id))
-                     ("google-analytics-id" op/personal-google-analytics-id)
-                     ("creator-info" op/html-creator-string)
+                     ("google-analytics" (op/get-config-option :personal-google-analytics-id))
+                     ("google-analytics-id" (op/get-config-option :personal-google-analytics-id))
+                     ("creator-info" (op/get-html-creator-string))
                      ("email" (op/confound-email-address (or user-mail-address
-                                                  "Unknown Email"))))))))
+                                                             "Unknown Email"))))))))
           (concat tag-dir "index.html") 'html-mode))
      tag-alist)))
 
@@ -563,9 +557,9 @@ PUB-BASE-DIR is the root publication directory."
     (op/string-to-file
      (mustache-render
       op/rss-template
-      (ht ("title" op/site-main-title)
-          ("link" op/site-domain)
-          ("description" op/site-sub-title)
+      (ht ("title" (op/get-config-option :site-main-title))
+          ("link" (op/get-site-domain))
+          ("description" (op/get-config-option :site-sub-title))
           ("date" (format-time-string "%a, %d %b %Y %T %Z"))
           ("items" (--map (ht ("item-title" (plist-get it :title))
                               ("item-link" (op/get-full-url (plist-get it :uri)))

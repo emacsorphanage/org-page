@@ -1,10 +1,10 @@
-;;; op-enhance.el --- HTML page customization required by org-page
+;;; op-config.el --- Functions dealing with org-page configure
 
-;; Copyright (C) 2012, 2013, 2014 Kelvin Hu
+;; Copyright (C)  2015 Feng Shu
 
-;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
+;; Author: Feng Shu <tumashu AT 163 DOT com>
 ;; Keywords: convenience
-;; Homepage: https://github.com/kelvinh/org-page
+;; Homepage: https://github.com/tumashu/org-page
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -21,21 +21,40 @@
 
 ;;; Commentary:
 
-;; Improve generated html page display effect
+;; op-config.el contains functions used to deal with org-page configure.
 
 ;;; Code:
 
-(require 'format-spec)
-(require 'ox)
-(require 'ht)
-(require 'op-util)
 (require 'op-vars)
 
-(defun op/join-to-list (a1 &optional a2)
-  "Conbine `a1' and `a2' to a list."
-  (let ((list1 (if (listp a1) a1 (list a1)))
-        (list2 (if (listp a2) a2 (list a2))))
-    (append list1 list2)))
+(defun op/get-config-option (option)
+  (when (functionp op/get-config-option-function)
+    (funcall op/get-config-option-function option)))
+
+(defun op/get-config-option-from-file (option)
+  (eval (plist-get (op/read-config-file) option)))
+
+(defun op/read-config-file ()
+  "Read and return the Lisp data stored in FILE-NAME, or nil if no such file exists."
+  (when (and op/config-file
+             (file-exists-p op/config-file))
+    (cdr (car (read-from-string
+               (with-temp-buffer
+                 (insert-file-contents op/config-file)
+                 (buffer-substring-no-properties (point-min) (point-max))))))))
+
+(defun op/get-repository-directory ()
+  (let ((dir (op/get-config-option :repository-directory)))
+    (when dir
+      (expand-file-name dir))))
+
+(defun op/get-site-domain ()
+  (let ((site-domain (op/get-config-option :site-domain)))
+    (when site-domain
+      (if (or (string-prefix-p "http://"  site-domain)
+              (string-prefix-p "https://" site-domain))
+          site-domain
+        (concat "http://" site-domain)))))
 
 (defun op/get-theme-dirs (&optional root-dir theme type)
   "Get org-page theme type path.
@@ -57,15 +76,15 @@ org-page organizes its themes by directory:
 At this time, `op/get-theme-dirs' will find *all possible*
 <type> directorys by permutation way and return a list with
 multi path."
-  (let* ((fallback-theme 'mdo)
-         (fallback-theme-root (concat op/load-directory "themes/"))
+  (let* ((fallback-theme '(default))
+         (fallback-theme-root (list (concat op/load-directory "themes/")))
          (themes (delete-dups
                   (or (op/join-to-list theme)
-                      (op/join-to-list op/theme fallback-theme))))
+                      (op/join-to-list (op/get-config-option :theme) fallback-theme))))
          (theme-root-dirs
           (delete-dups
            (or (op/join-to-list root-dir)
-               (op/join-to-list op/theme-root-directory
+               (op/join-to-list (op/get-config-option :theme-root-directory)
                                 fallback-theme-root))))
          theme-dir theme-dirs)
     (dolist (theme themes)
@@ -80,16 +99,15 @@ multi path."
           (push theme-dir theme-dirs))))
     (reverse theme-dirs)))
 
-(defun op/prepare-theme (pub-root-dir)
-  "Copy theme files to PUB-ROOT-DIR."
-  (let ((pub-theme-dir (expand-file-name "media/" pub-root-dir))
-        (theme-dirs (reverse (op/get-theme-dirs nil nil 'resources))))
-    (when (file-directory-p pub-theme-dir)
-      (delete-directory pub-theme-dir t))
-    (dolist (theme-dir theme-dirs)
-      (copy-directory theme-dir pub-theme-dir t t t))))
+(defun op/get-html-creator-string ()
+  (or (op/get-config-option :html-creator-string)
+      (format "<a href=\"http://www.gnu.org/software/emacs/\">Emacs</a> %s\
+ (<a href=\"http://orgmode.org\">Org mode</a> %s)"
+              (format "%s.x" emacs-major-version)
+              (if (fboundp 'org-version)
+                  (replace-regexp-in-string "\\..*" ".x" (org-version))
+                "Unknown Version"))))
 
+(provide 'op-config)
 
-(provide 'op-enhance)
-
-;;; op-enhance.el ends here
+;;; op-config.el ends here

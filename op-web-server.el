@@ -25,6 +25,8 @@
 
 ;;; Code:
 (require 'web-server)
+(require op-vars)
+(require op-config)
 
 (defvar op/web-server nil)
 (defvar op/web-server-docroot nil)

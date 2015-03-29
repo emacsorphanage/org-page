@@ -31,7 +31,19 @@
 
 (defgroup org-page nil
   "Options for generating static pages using org-page."
-  :tag "Org static page generator" :group 'org)
+  :tag "Org static page generator"
+  :group 'org)
+
+(defcustom op/config-file nil
+  "The path of org-page config file"
+  :group 'org-page
+  :type 'file)
+
+(defcustom op/get-config-option-function
+  'op/get-config-option-from-file
+  "The function used to get config option."
+  :group 'org-page
+  :type 'function)
 
 (defconst op/temp-buffer-name "*Org Page Output*"
   "Name of the temporary buffer used by org-page.")
@@ -46,138 +58,29 @@
    (t nil))
   "The directory where org-page is loaded from.")
 
-(defcustom op/repository-directory nil
-  "The git repository directory, where org files stored on branch
-`op/repository-org-branch', and generated html files stored on branch
-`op/repository-html-branch'."
-  :group 'org-page :type 'string)
-
-(defcustom op/site-domain nil
-  "The domain name of entire site, it is recommended to assign with prefix
-http:// or https://, http will be considered if not assigned."
-  :group 'org-page :type 'string)
-
-(defcustom op/site-main-title "org-page"
-  "The main title of entire site."
-  :group 'org-page :type 'string)
-
-(defcustom op/site-sub-title "static site generator"
-  "The subtitle of entire site."
-  :group 'org-page :type 'string)
-
-(defcustom op/repository-org-branch "source"
-  "The branch where org files stored on, it is within repository presented by
-`op/repository-directory'."
-  :group 'org-page :type 'string)
-
-(defcustom op/repository-html-branch "master"
-  "The branch where generated html files stored on, it is within repository
-presented by `op/repository-directory'."
-  :group 'org-page :type 'string)
-
-(defcustom op/theme-root-directory
-  (concat op/load-directory "themes/")
-  "The root directory that stores themes for page rendering. By default, it
-points to the directory `themes' in org-page installation directory."
-  :group 'org-page :type 'string)
-
-(defcustom op/theme 'mdo
-  "The theme used for page generation."
-  :group 'org-page :type 'symbol)
-
-(defcustom op/personal-github-link "https://github.com/kelvinh/org-page"
-  "The personal github link."
-  :group 'org-page :type 'string)
-
-(defcustom op/personal-avatar nil
-  "The link to an avatar image."
-  :group 'org-page :type 'string)
-
-(defcustom op/personal-disqus-shortname nil
-  "The personal disqus shortname."
-  :group 'org-page :type 'string)
-
-(defcustom op/personal-duoshuo-shortname nil
-  "The personal duoshuo shortname."
-  :group 'org-page :type 'string)
-
-(defcustom op/personal-google-analytics-id nil
-  "Personal google analytics id."
-  :group 'org-page :type 'string)
-
-(defcustom op/template-directory nil
-  "The directory stores templates for page rendering. By default, org-page uses
-`op/theme' and `op/theme-root-directory' to determine the template directory.
-DON'T set this variable unless you know what you are doing!"
-  :group 'org-page :type 'string)
-
-(defcustom op/confound-email t
-  "This variable is used to determine whether email addresses should be
-confounded or not."
-  :group 'org-page :type 'boolean)
-
-(defcustom op/get-title-function 'op/get-title
-  "The function used to get an org file's title, it has no parameter,
-the default value is `op/get-file-category'."
-  :group 'org-page :type 'function)
-
-(defcustom op/retrieve-category-function 'op/get-file-category
-  "The function used to retrieve an org file's category, its parameter is the
-org file's path, if parameter is nil, it should return all categories, the
-default value is `op/get-file-category'."
-  :group 'org-page :type 'function)
-
 (defvar op/category-config-alist
   '(("blog" ;; this is the default configuration
-    :show-meta t
-    :show-comment t
-    :uri-generator op/generate-uri
-    :uri-template "/blog/%y/%m/%d/%t/"
-    :sort-by :date     ;; how to sort the posts
-    :category-index t) ;; generate category index or not
-   ("index"
-    :show-meta nil
-    :show-comment nil
-    :uri-generator op/generate-uri
-    :uri-template "/"
-    :sort-by :date
-    :category-index nil)
-   ("about"
-    :show-meta nil
-    :show-comment nil
-    :uri-generator op/generate-uri
-    :uri-template "/about/"
-    :sort-by :date
-    :category-index nil))
+     :show-meta t
+     :show-comment t
+     :uri-generator op/generate-uri
+     :uri-template "/blog/%y/%m/%d/%t/"
+     :sort-by :date     ;; how to sort the posts
+     :category-index t) ;; generate category index or not
+    ("index"
+     :show-meta nil
+     :show-comment nil
+     :uri-generator op/generate-uri
+     :uri-template "/"
+     :sort-by :date
+     :category-index nil)
+    ("about"
+     :show-meta nil
+     :show-comment nil
+     :uri-generator op/generate-uri
+     :uri-template "/about/"
+     :sort-by :date
+     :category-index nil))
   "Configurations for different categories, can and should be customized.")
-
-(defvar op/category-ignore-list
-  '("themes" "assets")
-  "Ignore these subdirs/categories for navigation")
-
-;;; this variable is deprecated
-(defvar op/default-template-parameters
-  (ht ("blog-uri" "/blog/")
-      ("wiki-uri" "/wiki/")
-      ("tags-uri" "/tags/")
-      ("about-uri" "/about/")
-      ("site-main-title" op/site-main-title)
-      ("site-sub-title" op/site-sub-title)
-      ("avatar" op/personal-avatar)
-      ("github" op/personal-github-link)
-      ("site-domain" (if (and op/site-domain
-                              (string-match "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                            op/site-domain))
-                         (match-string 1 op/site-domain)
-                       op/site-domain))
-      ("disqus-shortname" op/personal-disqus-shortname)
-      ("disqus-comment" (if op/personal-disqus-shortname t nil))
-      ("duoshuo-shortname" op/personal-duoshuo-shortname)
-      ("duoshuo-comment" (if op/personal-duoshuo-shortname t nil))
-      ("google-analytics-id" op/personal-google-analytics-id)
-      ("google-analytics" (if op/personal-google-analytics-id t nil))
-      ("creator-info" org-html-creator-string))
-  "Default template rendering parameters.")
 
 (defvar op/item-cache nil
   "The cache for general purpose.")
@@ -205,17 +108,6 @@ default value is `op/get-file-category'."
   </channel>
 </rss>"
   "Template for RSS rendering.")
-
-(defcustom op/html-creator-string
-  (format "<a href=\"http://www.gnu.org/software/emacs/\">Emacs</a> %s\
- (<a href=\"http://orgmode.org\">Org mode</a> %s)"
-          (format "%s.x" emacs-major-version)
-          (if (fboundp 'org-version)
-              (replace-regexp-in-string "\\..*" ".x" (org-version))
-            "Unknown Version"))
-  "Information about the creator of the HTML document."
-  :group 'org-page
-  :type 'string)
 
 
 (provide 'op-vars)
