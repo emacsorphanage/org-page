@@ -63,9 +63,9 @@
    1. if FORCE-ALL is non-nil, then all files will be published
    2. if FORCE-ALL is a list of files, then all files in this list
       will be published.
-   2. if FORCE-ALL is nil, the changed files will be obtained based on
+   3. if FORCE-ALL is nil, the changed files will be obtained based on
 BASE-GIT-COMMIT
-   3. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
+   4. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
 based on previous commit
 3) publish org files to html, if PUB-BASE-DIR is specified, use that directory
 to store the generated html files, otherwise html files will be stored on branch
