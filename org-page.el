@@ -96,9 +96,8 @@ then the \"html-branch\"  will be pushed to remote repo."
 
   (setq op/current-project-name project-name)
 
-  (when (and test-publish
-             (op/get-web-server-docroot))
-    (setq pub-base-dir (op/get-web-server-docroot)
+  (when test-publish
+    (setq pub-base-dir (op/get-config-option :web-server-docroot)
           auto-commit nil
           auto-push  nil))
 
@@ -107,6 +106,7 @@ then the \"html-branch\"  will be pushed to remote repo."
   (let* ((repo-dir (op/get-repository-directory))
          (org-branch (op/get-config-option :repository-org-branch))
          (html-branch (op/get-config-option :repository-html-branch))
+         (repo-files-function (op/get-config-option :repo-files-function))
          (orig-branch (op/git-branch-name repo-dir))
          (to-repo (not (stringp pub-base-dir)))
          (store-dir (if to-repo "~/.op-tmp/" pub-base-dir)) ; TODO customization
@@ -114,8 +114,8 @@ then the \"html-branch\"  will be pushed to remote repo."
     (op/git-change-branch repo-dir org-branch)
     (op/prepare-theme-resources store-dir)
     (setq all-files
-          (when (functionp op/repo-files-function)
-            (funcall op/repo-files-function repo-dir)))
+          (when (functionp repo-files-function)
+            (funcall repo-files-function repo-dir)))
     (setq changed-files (if force-all
                             `(:update ,all-files :delete nil)
                           (op/git-files-changed repo-dir (or base-git-commit "HEAD~1"))))

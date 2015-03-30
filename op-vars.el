@@ -127,6 +127,20 @@ org file's path, if parameter is nil, it should return all categories.
 
 Information about the creator of the HTML document.
 
+  `:repo-files-function'
+
+The function used to get all org files exported.
+
+  `:web-server-docroot'
+
+org-page can start a web server to test publish, this
+set the server document root.
+
+  `:web-server-port'
+
+org-page can start a web server to test publish, this
+set the server port.
+
 You can see fallback value of above option in `op/config-fallback'"
   :group 'org-page
   :type 'alist)
@@ -136,19 +150,6 @@ You can see fallback value of above option in `op/config-fallback'"
   "The function used to get config option."
   :group 'org-page
   :type 'function)
-
-(defcustom op/repo-files-function 'op/git-all-files
-  "The function used to get all org files exported."
-  :group 'org-page
-  :type 'function)
-
-(defcustom op/web-server-root "~/.emacs.d/org-page-server"
-  "org-page can start a web server to test publish.
-project 'profile1' will use the below path as docroot.
-
-   <op/web-server-root>/profile1"
-  :group 'org-page
-  :type 'string)
 
 (defconst op/temp-buffer-name "*Org Page Output*"
   "Name of the temporary buffer used by org-page.")
@@ -234,6 +235,9 @@ project 'profile1' will use the below path as docroot.
         :confound-email t
         :get-title-function op/get-title
         :retrieve-category-function op/get-file-category
+        :repo-files-function op/git-all-files
+        :web-server-docroot "~/.emacs.d/org-page-server/default"
+        :web-server-port 9876
         :html-creator-string (format "<a href=\"http://www.gnu.org/software/emacs/\">Emacs</a> %s\
 (<a href=\"http://orgmode.org\">Org mode</a> %s)"
 (format "%s.x" emacs-major-version)

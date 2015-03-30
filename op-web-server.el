@@ -29,33 +29,26 @@
 (require 'op-config)
 
 (defvar op/web-server nil)
-(defvar op/web-server-port 9876)
 
 (defun op/web-server-get-url ()
   (file-name-as-directory
    (format "http://localhost:%s"
-           (number-to-string op/web-server-port))))
-
-(defun op/get-web-server-docroot ()
-  "Return web server document root, which is different with
-`op/web-server-root'"
-  (when op/current-project-name
-    (file-name-as-directory
-     (concat (file-name-as-directory op/web-server-root)
-             op/current-project-name))))
+           (number-to-string
+            (op/get-config-option :web-server-port)))))
 
 (defun op/web-server-start ()
   (interactive)
-  (lexical-let ((docroot (expand-file-name
-                          (op/get-web-server-docroot)))
-                (port op/web-server-port))
+  (lexical-let ((docroot
+                 (expand-file-name
+                  (op/get-config-option :web-server-docroot)))
+                (port (op/get-config-option :web-server-port)))
     (when (and (not op/web-server)
                docroot port)
       (setq op/web-server
             (ws-start
              (lambda (request)
                (with-slots (process headers) request
-                 (let* ((path (substring (cdr (assoc :GET headers)) 1))
+                 (let* ((path (substring (cdr (assoc :GET headers)) 1)) ;; Can't deal chinese char
                         (path-expand (expand-file-name path docroot))
                         (path-index-file (concat (file-name-as-directory path-expand)
                                                  "index.html")))
@@ -68,7 +61,8 @@
                               (not (file-directory-p path-expand)))
                          (ws-send-file process path-expand))
                         (t (ws-send-404 process)))
-                     (ws-send-404 process))))) port)))))
+                     (ws-send-404 process)))))
+             (op/get-config-option :web-server-port))))))
 
 (defun op/web-server-stop ()
   (interactive)
