@@ -24,6 +24,7 @@
 ;; op-web-server.el is a web server used to test org-page.
 
 ;;; Code:
+(require 'url-util)
 (require 'web-server)
 (require 'op-vars)
 (require 'op-config)
@@ -48,7 +49,9 @@
             (ws-start
              (lambda (request)
                (with-slots (process headers) request
-                 (let* ((path (substring (cdr (assoc :GET headers)) 1)) ;; Can't deal chinese char
+                 (let* ((path (substring (decode-coding-string
+                                          (url-unhex-string (cdr (assoc :GET headers)))
+                                          'utf-8) 1))
                         (path-expand (expand-file-name path docroot))
                         (path-index-file (concat (file-name-as-directory path-expand)
                                                  "index.html")))
