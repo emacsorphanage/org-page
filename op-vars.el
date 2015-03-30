@@ -218,13 +218,13 @@ You can see fallback value of above option in `op/config-fallback'"
   "Template for RSS rendering.")
 
 (defvar op/config-fallback
-      '(:repository-directory nil
+      `(:repository-directory nil
         :site-domain nil
         :site-main-title "org-page"
         :site-sub-title "static site generator"
         :repository-org-branch "source"
         :repository-html-branch "master"
-        :theme-root-directory (list (concat op/load-directory "themes/"))
+        :theme-root-directory ,(list (concat op/load-directory "themes/"))
         :theme (default)
         :personal-github-link "https://github.com/tumashu/org-page"
         :personal-avatar nil
@@ -238,7 +238,7 @@ You can see fallback value of above option in `op/config-fallback'"
         :repo-files-function op/git-all-files
         :web-server-docroot "~/.emacs.d/org-page-server/default"
         :web-server-port 9876
-        :html-creator-string (format "<a href=\"http://www.gnu.org/software/emacs/\">Emacs</a> %s\
+        :html-creator-string ,(format "<a href=\"http://www.gnu.org/software/emacs/\">Emacs</a> %s\
 (<a href=\"http://orgmode.org\">Org mode</a> %s)"
 (format "%s.x" emacs-major-version)
 (if (fboundp 'org-version)
