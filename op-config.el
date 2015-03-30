@@ -31,17 +31,12 @@
   (when (functionp op/get-config-option-function)
     (funcall op/get-config-option-function option)))
 
-(defun op/get-config-option-from-file (option)
-  (eval (plist-get (op/read-config-file) option)))
-
-(defun op/read-config-file ()
-  "Read and return the Lisp data stored in FILE-NAME, or nil if no such file exists."
-  (when (and op/config-file
-             (file-exists-p op/config-file))
-    (cdr (car (read-from-string
-               (with-temp-buffer
-                 (insert-file-contents op/config-file)
-                 (buffer-substring-no-properties (point-min) (point-max))))))))
+(defun op/get-config-option-from-alist (option)
+  (let ((project-plist (cdr (assoc op/current-project-name
+                                   op/project-config-alist))))
+    (if (plist-member project-plist option)
+        (plist-get project-plist option)
+      (plist-get op/config-fallback option))))
 
 (defun op/get-repository-directory ()
   (let ((dir (op/get-config-option :repository-directory)))

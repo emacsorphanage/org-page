@@ -34,13 +34,105 @@
   :tag "Org static page generator"
   :group 'org)
 
-(defcustom op/config-file nil
-  "The path of org-page config file"
+(defcustom op/project-config-alist nil
+  "Association list to control org-page publishing behavior.
+
+Each element of the alist is a org-page 'project.'  The CAR of
+each element is a string, uniquely identifying the project.  The
+CDR of each element is a well-formed property list with an even
+number of elements, alternating keys and values, specifying
+parameters for the publishing process.
+
+  \(:property value :property value ... )
+
+Most properties are optional, but some should always be set:
+
+  `:repository-directory'
+
+The git repository directory, where org files stored on branch
+`:repository-org-branch', and generated html files stored on branch
+`:repository-html-branch'.
+
+  `:site-domain'
+
+The domain name of entire site, it is recommended to assign with prefix
+http:// or https://, http will be considered if not assigned.
+
+  `:site-main-title'
+
+The main title of entire site.
+
+  `:site-sub-title'
+
+The subtitle of entire site.
+
+  `:repository-org-branch'
+
+The branch where org files stored on, it is within repository presented by
+`:repository-directory'.
+
+  `:repository-html-branch'
+
+The branch where generated html files stored on, it is within repository
+presented by `:repository-directory'.
+
+  `:theme-root-directory'
+
+The root directory list that stores themes for page rendering. By default, it
+points to the directory `themes' in org-page installation directory.
+
+  `:theme'
+
+The theme used for page generation.
+
+  `:personal-github-link'
+
+The personal github link.
+
+  `:personal-avatar'
+
+The link to an avatar image.
+
+  `:personal-disqus-shortname'
+
+The personal disqus shortname.
+
+  `:personal-duoshuo-shortname'
+
+The personal duoshuo shortname.
+
+  `:personal-google-analytics-id'
+
+Personal google analytics id.
+
+  `:confound-email'
+
+Determine whether email addresses should be confounded or not.
+
+  `:category-ignore-list'
+
+Ignore subdirs/categories for navigation
+
+  `:get-title-function'
+
+A function used to retrieve an org file's Title, it has no parameter and
+run org file buffer.
+
+  `:retrieve-category-function'
+
+A function used to retrieve an org file's category, its parameter is the
+org file's path, if parameter is nil, it should return all categories.
+
+  `:html-creator-string'
+
+Information about the creator of the HTML document.
+
+You can see fallback value of above option in `op/config-fallback'"
   :group 'org-page
-  :type 'file)
+  :type 'alist)
 
 (defcustom op/get-config-option-function
-  'op/get-config-option-from-file
+  'op/get-config-option-from-alist
   "The function used to get config option."
   :group 'org-page
   :type 'function)
@@ -87,6 +179,8 @@
      :category-index nil))
   "Configurations for different categories, can and should be customized.")
 
+(defvar op/current-project-name nil)
+
 (defvar op/item-cache nil
   "The cache for general purpose.")
 
@@ -101,18 +195,44 @@
     <docs>http://www.rssboard.org/rss-specification</docs>
     <generator>Org-page static site generator \
 (https://github.com/kelvinh/org-page)</generator>
-    {{#items}}
-    <item>
-      <title>{{item-title}}</title>
-      <link>{{item-link}}</link>
-      <description>{{item-description}}</description>
-      <pubDate>{{item-update-date}}</pubDate>
-      <guid>{{item-link}}</guid>
-    </item>
-    {{/items}}
-  </channel>
+{{#items}}
+<item>
+<title>{{item-title}}</title>
+<link>{{item-link}}</link>
+<description>{{item-description}}</description>
+<pubDate>{{item-update-date}}</pubDate>
+<guid>{{item-link}}</guid>
+</item>
+{{/items}}
+</channel>
 </rss>"
   "Template for RSS rendering.")
+
+(defvar op/config-fallback
+      '(:repository-directory nil
+        :site-domain nil
+        :site-main-title "org-page"
+        :site-sub-title "static site generator"
+        :repository-org-branch "source"
+        :repository-html-branch "master"
+        :theme-root-directory (list (concat op/load-directory "themes/"))
+        :theme (default)
+        :personal-github-link "https://github.com/tumashu/org-page"
+        :personal-avatar nil
+        :personal-disqus-shortname nil
+        :personal-duoshuo-shortname nil
+        :personal-google-analytics-id nil
+        :category-ignore-list ("themes" "assets")
+        :confound-email t
+        :get-title-function op/get-title
+        :retrieve-category-function op/get-file-category
+        :html-creator-string (format "<a href=\"http://www.gnu.org/software/emacs/\">Emacs</a> %s\
+(<a href=\"http://orgmode.org\">Org mode</a> %s)"
+(format "%s.x" emacs-major-version)
+(if (fboundp 'org-version)
+    (replace-regexp-in-string "\\..*" ".x" (org-version))
+  "Unknown Version"))
+"If User don't set an option, org-page will use fallback value of this option."))
 
 
 (provide 'op-vars)

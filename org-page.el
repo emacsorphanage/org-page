@@ -54,7 +54,8 @@
 
 (defconst org-page-version "0.5")
 
-(defun op/do-publication (&optional force-all
+(defun op/do-publication (&optional project-name
+                                    force-all
                                     base-git-commit pub-base-dir
                                     auto-commit auto-push)
   "The main entrance of org-page. The entire procedure is:
@@ -76,7 +77,9 @@ NOT recommended, and a manual commit is much better
 5) if PUB-BASE-DIR is nil, AUTO-COMMIT is non-nil, and AUTO-PUSH is non-nil,
 then the \"html-branch\"  will be pushed to remote repo."
   (interactive
-   (let* ((f (y-or-n-p "Publish all org files? "))
+   (let* ((j (completing-read "Which project do you want to publish? "
+                              (mapcar 'car op/project-config-alist)))
+          (f (y-or-n-p "Publish all org files? "))
           (b (unless f (read-string "Base git commit: " "HEAD~1")))
           (p (when (y-or-n-p
                     "Publish to a directory? (to original repo if not) ")
@@ -85,7 +88,8 @@ then the \"html-branch\"  will be pushed to remote repo."
                (y-or-n-p "Auto commit to repo? ")))
           (u (when (and a (not p))
                (y-or-n-p "Auto push to remote repo? "))))
-     (list f b p a u)))
+     (list j f b p a u)))
+  (setq op/current-project-name project-name)
   (op/verify-configuration)
   (setq op/item-cache nil)
   (let* ((repo-dir (op/get-repository-directory))
@@ -151,17 +155,20 @@ perfectly manipulated by org-page."
 
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:
-1.  \"repository-directory\": <required>
-2.  \"site-domain\": <required>
-3.  \"personal-disqus-shortname\": <optional>
-4.  \"personal-duoshuo-shortname\": <optional>
-5.  \"repository-org-branch\": [optional] (but customization recommended)
-6.  \"repository-html-branch\": [optional] (but customization recommended)
-7.  \"site-main-title\": [optional] (but customization recommanded)
-8.  \"site-sub-title\": [optional] (but customization recommanded)
-9.  \"personal-github-link\": [optional] (but customization recommended)
-10. \"personal-google-analytics-id\": [optional] (but customization recommended)
-11. \"theme\": [optional]"
+1.  `:repository-directory': <required>
+2.  `:site-domain': <required>
+3.  `:personal-disqus-shortname': <optional>
+4.  `:personal-duoshuo-shortname': <optional>
+5.  `:repository-org-branch': [optional] (but customization recommended)
+6.  `:repository-html-branch': [optional] (but customization recommended)
+7.  `:site-main-title': [optional] (but customization recommanded)
+8.  `:site-sub-title': [optional] (but customization recommanded)
+9.  `:personal-github-link': [optional] (but customization recommended)
+10. `:personal-google-analytics-id': [optional] (but customization recommended)
+11. `:theme': [optional]"
+  (unless (member op/current-project-name
+                  (mapcar 'car op/project-config-alist))
+    (error "Can't find project: \"%s\"" op/current-project-name))
   (let ((repo-dir (op/get-repository-directory))
         (site-domain (op/get-site-domain)))
     (unless (and repo-dir (file-directory-p repo-dir))
@@ -268,7 +275,7 @@ month and day): " (unless (string= i "")
                "<TODO: insert your description here>"
              description))))
 
-(defun op/new-post (&optional category filename)
+(defun op/new-post (&optional project-name category filename)
   "Setup a new post.
 
 CATEGORY: this post belongs to
@@ -277,9 +284,12 @@ FILENAME: the file name of this post
 Note that this function does not verify the category and filename, it is users'
 responsibility to guarantee the two parameters are valid."
   (interactive
-   (let* ((c (read-string "Category: " "blog"))
+   (let* ((j (completing-read "Which project do you want post? "
+                              (mapcar 'car op/project-config-alist)))
+          (c (read-string "Category: " "blog"))
           (f (read-string "filename: " "new-post.org")))
-     (list c f)))
+     (list j c f)))
+  (setq op/current-project-name project-name)
   (if (string= category "")
       (setq category "blog"))
   (if (string= filename "")
