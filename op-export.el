@@ -408,12 +408,13 @@ publication directory."
                 ("creator-info" (op/get-html-creator-string))
                 ("email" (op/confound-email-address (or user-mail-address
                                                         "Unknown Email"))))))))
-     (concat pub-base-dir "index.html") 'html-mode)))
+     (concat (file-name-as-directory pub-base-dir) "index.html") 'html-mode)))
 
 (defun op/generate-default-about (pub-base-dir)
   "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
 is the root publication directory."
-  (let ((pub-dir (expand-file-name "about/" pub-base-dir)))
+  (let ((pub-dir (file-name-as-directory
+                  (expand-file-name "about/" pub-base-dir))))
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
     (op/string-to-file
@@ -566,7 +567,7 @@ PUB-BASE-DIR is the root publication directory."
                               ("item-description" (plist-get it :description))
                               ("item-update-date" (plist-get it :mod-date)))
                           last-10-posts))))
-     (concat pub-base-dir "rss.xml"))))
+     (concat (file-name-as-directory pub-base-dir) "rss.xml"))))
 
 
 (provide 'op-export)
