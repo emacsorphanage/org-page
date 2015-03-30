@@ -142,6 +142,14 @@ You can see fallback value of above option in `op/config-fallback'"
   :group 'org-page
   :type 'function)
 
+(defcustom op/web-server-root "~/.emacs.d/org-page-server"
+  "org-page can start a web server to test publish.
+project 'profile1' will use the below path as docroot.
+
+   <op/web-server-root>/profile1"
+  :group 'org-page
+  :type 'string)
+
 (defconst op/temp-buffer-name "*Org Page Output*"
   "Name of the temporary buffer used by org-page.")
 

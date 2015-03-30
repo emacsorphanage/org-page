@@ -50,11 +50,13 @@
 (require 'op-git)
 (require 'op-resource)
 (require 'op-export)
+(require 'op-web-server)
 
 
 (defconst org-page-version "0.5")
 
 (defun op/do-publication (&optional project-name
+                                    test-publish
                                     force-all
                                     base-git-commit pub-base-dir
                                     auto-commit auto-push)
@@ -79,17 +81,27 @@ then the \"html-branch\"  will be pushed to remote repo."
   (interactive
    (let* ((j (completing-read "Which project do you want to publish? "
                               (mapcar 'car op/project-config-alist)))
+          (test (y-or-n-p "Test publish? "))
           (f (y-or-n-p "Publish all org files? "))
           (b (unless f (read-string "Base git commit: " "HEAD~1")))
-          (p (when (y-or-n-p
-                    "Publish to a directory? (to original repo if not) ")
+          (p (when (and (not test)
+                        (y-or-n-p
+                         "Publish to a directory? (to original repo if not) "))
                (read-directory-name "Publication directory: ")))
-          (a (when (not p)
+          (a (when (and (not p) (not test))
                (y-or-n-p "Auto commit to repo? ")))
-          (u (when (and a (not p))
+          (u (when (and a (not p) (not test))
                (y-or-n-p "Auto push to remote repo? "))))
-     (list j f b p a u)))
+     (list j test f b p a u)))
+
   (setq op/current-project-name project-name)
+
+  (when (and test-publish
+             (op/get-web-server-docroot))
+    (setq pub-base-dir (op/get-web-server-docroot)
+          auto-commit nil
+          auto-push  nil))
+
   (op/verify-configuration)
   (setq op/item-cache nil)
   (let* ((repo-dir (op/get-repository-directory))
@@ -135,7 +147,10 @@ files, committed by org-page.")
     (if to-repo
         (message "Publication finished: on branch '%s' of repository '%s'."
                  html-branch repo-dir)
-      (message "Publication finished, output directory: %s." pub-base-dir))))
+      (message "Publication finished, output directory: %s." pub-base-dir))
+
+    (when test-publish (op/web-server-browse))
+    (setq op/current-project-name nil)))
 
 (defun op/new-repository (repo-dir)
   "Generate a new git repository in directory REPO-DIR, which can be

@@ -29,19 +29,25 @@
 (require 'op-config)
 
 (defvar op/web-server nil)
-(defvar op/web-server-docroot nil)
-(defvar op/web-server-port nil)
+(defvar op/web-server-port 9876)
 
 (defun op/web-server-get-url ()
   (file-name-as-directory
    (format "http://localhost:%s"
            (number-to-string op/web-server-port))))
 
+(defun op/get-web-server-docroot ()
+  "Return web server document root, which is different with
+`op/web-server-root'"
+  (when op/current-project-name
+    (file-name-as-directory
+     (concat (file-name-as-directory op/web-server-root)
+             op/current-project-name))))
+
 (defun op/web-server-start ()
   (interactive)
-  (lexical-let ((docroot (file-name-as-directory
-                          (expand-file-name
-                           op/web-server-docroot)))
+  (lexical-let ((docroot (expand-file-name
+                          (op/get-web-server-docroot)))
                 (port op/web-server-port))
     (when (and (not op/web-server)
                docroot port)
