@@ -45,6 +45,11 @@
   :group 'org-page
   :type 'function)
 
+(defcustom op/repo-files-function 'op/git-all-files
+  "The function used to get all org files exported."
+  :group 'org-page
+  :type 'function)
+
 (defconst op/temp-buffer-name "*Org Page Output*"
   "Name of the temporary buffer used by org-page.")
 

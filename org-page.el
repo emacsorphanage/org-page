@@ -62,11 +62,10 @@
 2) read changed files on \"org branch\" of \"repository directory\",
    the definition of 'changed files' is:
 1. if FORCE-ALL is non-nil, then all files will be published
-2. if FORCE-ALL is a list of files, then all files in this list
 will be published.
-3. if FORCE-ALL is nil, the changed files will be obtained based on
+2. if FORCE-ALL is nil, the changed files will be obtained based on
 BASE-GIT-COMMIT
-4. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
+3. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
 based on previous commit
 3) publish org files to html, if PUB-BASE-DIR is specified, use that directory
 to store the generated html files, otherwise html files will be stored on \"html-branch\"
@@ -99,9 +98,8 @@ then the \"html-branch\"  will be pushed to remote repo."
     (op/git-change-branch repo-dir org-branch)
     (op/prepare-theme-resources store-dir)
     (setq all-files
-          (if (listp force-all)
-              force-all
-            (op/git-all-files repo-dir)))
+          (when (functionp op/repo-files-function)
+            (funcall op/repo-files-function repo-dir)))
     (setq changed-files (if force-all
                             `(:update ,all-files :delete nil)
                           (op/git-files-changed repo-dir (or base-git-commit "HEAD~1"))))
