@@ -80,7 +80,8 @@ NOT recommended, and a manual commit is much better
 then the \"html-branch\"  will be pushed to remote repo."
   (interactive
    (let* ((j (completing-read "Which project do you want to publish? "
-                              (mapcar 'car op/project-config-alist)))
+                              (delete-dups
+                               (mapcar 'car op/project-config-alist))))
           (test (y-or-n-p "Test publish? "))
           (f (y-or-n-p "Publish all org files? "))
           (b (unless f (read-string "Base git commit: " "HEAD~1")))
@@ -300,7 +301,8 @@ Note that this function does not verify the category and filename, it is users'
 responsibility to guarantee the two parameters are valid."
   (interactive
    (let* ((j (completing-read "Which project do you want post? "
-                              (mapcar 'car op/project-config-alist)))
+                              (delete-dups
+                               (mapcar 'car op/project-config-alist))))
           (c (read-string "Category: " "blog"))
           (f (read-string "filename: " "new-post.org")))
      (list j c f)))
