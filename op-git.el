@@ -29,6 +29,7 @@
 (require 'ht)
 (require 'op-util)
 (require 'op-vars)
+(require 'op-config)
 
 
 (defun op/verify-git-repository (repo-dir)
@@ -54,16 +55,39 @@ command to be executed."
   "This function will return a list contains all org files in git repository
 presented by REPO-DIR, if optional BRANCH is offered, will check that branch
 instead of pointer HEAD."
-  (let ((org-file-ext ".org")
-        (output (op/shell-command
+  (let ((output (op/shell-command
                  repo-dir
                  (concat "git ls-tree -r --name-only "
                          (or branch "HEAD"))
                  t)))
     (delq nil (mapcar #'(lambda (line)
-                          (when (string-suffix-p org-file-ext line t)
+                          (when (op/string-suffix-p ".org" line t)
                             (expand-file-name line repo-dir)))
                       (split-string output "\n")))))
+
+(defun op/repo-all-files (repos-dir)
+  (op/directory-files repo-dir 'file "\\.org$"))
+
+(defun op/directory-files (directory &optional type regexp)
+  "recursively list all the files in a directory"
+  (let* ((directory (or directory default-directory))
+         (regexp  (if regexp regexp ".*"))
+         (predfunc (case type
+                     (dir 'file-directory-p)
+                     (file 'file-regular-p)
+                     (otherwise 'identity)))
+         (files (cl-delete-if
+                 (lambda (s)
+                   (string-match (rx bol (repeat 1 2 ".") eol)
+                                 (file-name-nondirectory s)))
+                 (directory-files directory t nil t))))
+    (cl-loop for file in files
+             when (and (funcall predfunc file)
+                       (string-match regexp (file-name-nondirectory file)))
+             collect file into ret
+             when (file-directory-p file)
+             nconc (eh-directory-files-recursively file type regexp) into ret
+             finally return ret)))
 
 (defun op/git-branch-name (repo-dir)
   "Return name of current branch of git repository presented by REPO-DIR."

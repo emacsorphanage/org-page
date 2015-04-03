@@ -46,67 +46,90 @@
 (require 'ht)
 (require 'op-util)
 (require 'op-vars)
+(require 'op-config)
 (require 'op-git)
-(require 'op-enhance)
+(require 'op-resource)
 (require 'op-export)
+(require 'op-web-server)
 
 
 (defconst org-page-version "0.5")
 
-(defun op/do-publication (&optional force-all
+(defun op/do-publication (&optional project-name
+                                    test-publish
+                                    force-all
                                     base-git-commit pub-base-dir
                                     auto-commit auto-push)
   "The main entrance of org-page. The entire procedure is:
 1) verify configuration
-2) read changed files on branch `op/repository-org-branch' of repository
-`op/repository-directory', the definition of 'changed files' is:
-   1. if FORCE-ALL is non-nil, then all files will be published
-   2. if FORCE-ALL is nil, the changed files will be obtained based on
+2) read changed files on \"org branch\" of \"repository directory\",
+   the definition of 'changed files' is:
+1. if FORCE-ALL is non-nil, then all files will be published
+will be published.
+2. if FORCE-ALL is nil, the changed files will be obtained based on
 BASE-GIT-COMMIT
-   3. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
+3. if BASE-GIT-COMMIT is nil or omitted, the changed files will be obtained
 based on previous commit
 3) publish org files to html, if PUB-BASE-DIR is specified, use that directory
-to store the generated html files, otherwise html files will be stored on branch
-`op/repository-html-branch' of repository `op/repository-directory'
+to store the generated html files, otherwise html files will be stored on \"html-branch\"
+of \"repository directory\".
 4) if PUB-BASE-DIR is nil, and AUTO-COMMIT is non-nil, then the changes stored
-on branch `op/repository-html-branch' will be automatically committed, but be
-careful, this feature is NOT recommended, and a manual commit is much better
+on \"html-branch\" will be automatically committed, but be careful, this feature is
+NOT recommended, and a manual commit is much better
 5) if PUB-BASE-DIR is nil, AUTO-COMMIT is non-nil, and AUTO-PUSH is non-nil,
-then the branch `op/repository-html-branch' will be pushed to remote repo."
+then the \"html-branch\"  will be pushed to remote repo."
   (interactive
-   (let* ((f (y-or-n-p "Publish all org files? "))
+   (let* ((j (completing-read "Which project do you want to publish? "
+                              (delete-dups
+                               (mapcar 'car op/project-config-alist))))
+          (test (y-or-n-p "Test publish? "))
+          (f (y-or-n-p "Publish all org files? "))
           (b (unless f (read-string "Base git commit: " "HEAD~1")))
-          (p (when (y-or-n-p
-                    "Publish to a directory? (to original repo if not) ")
+          (p (when (and (not test)
+                        (y-or-n-p
+                         "Publish to a directory? (to original repo if not) "))
                (read-directory-name "Publication directory: ")))
-          (a (when (not p)
+          (a (when (and (not p) (not test))
                (y-or-n-p "Auto commit to repo? ")))
-          (u (when (and a (not p))
+          (u (when (and a (not p) (not test))
                (y-or-n-p "Auto push to remote repo? "))))
-     (list f b p a u)))
+     (list j test f b p a u)))
+
+  (setq op/current-project-name project-name)
+
+  (when test-publish
+    (setq pub-base-dir (op/get-config-option :web-server-docroot)
+          auto-commit nil
+          auto-push  nil))
+
   (op/verify-configuration)
   (setq op/item-cache nil)
-  (let* ((orig-branch (op/git-branch-name op/repository-directory))
+  (let* ((repo-dir (op/get-repository-directory))
+         (org-branch (op/get-config-option :repository-org-branch))
+         (html-branch (op/get-config-option :repository-html-branch))
+         (repo-files-function (op/get-config-option :repo-files-function))
+         (orig-branch (op/git-branch-name repo-dir))
          (to-repo (not (stringp pub-base-dir)))
          (store-dir (if to-repo "~/.op-tmp/" pub-base-dir)) ; TODO customization
          changed-files all-files remote-repos)
-    (op/git-change-branch op/repository-directory op/repository-org-branch)
-    (op/prepare-theme store-dir)
-    (setq all-files (op/git-all-files op/repository-directory))
+    (op/git-change-branch repo-dir org-branch)
+    (op/prepare-theme-resources store-dir)
+    (setq all-files
+          (when (functionp repo-files-function)
+            (funcall repo-files-function repo-dir)))
     (setq changed-files (if force-all
                             `(:update ,all-files :delete nil)
-                          (op/git-files-changed op/repository-directory
-                                                (or base-git-commit "HEAD~1"))))
+                          (op/git-files-changed repo-dir (or base-git-commit "HEAD~1"))))
     (op/publish-changes all-files changed-files store-dir)
     (when to-repo
-      (op/git-change-branch op/repository-directory op/repository-html-branch)
-      (copy-directory store-dir op/repository-directory t t t)
+      (op/git-change-branch repo-dir html-branch)
+      (copy-directory store-dir repo-dir t t t)
       (delete-directory store-dir t))
     (when (and to-repo auto-commit)
-      (op/git-commit-changes op/repository-directory "Update published html \
+      (op/git-commit-changes repo-dir "Update published html \
 files, committed by org-page.")
       (when auto-push
-        (setq remote-repos (op/git-remote-name op/repository-directory))
+        (setq remote-repos (op/git-remote-name repo-dir))
         (if (not remote-repos)
             (message "No valid remote repository found.")
           (let (repo)
@@ -118,14 +141,17 @@ files, committed by org-page.")
               (setq repo (car remote-repos)))
             (if (not (member repo remote-repos))
                 (message "Invalid remote repository '%s'." repo)
-              (op/git-push-remote op/repository-directory
+              (op/git-push-remote repo-dir
                                   repo
-                                  op/repository-html-branch)))))
-      (op/git-change-branch op/repository-directory orig-branch))
+                                  html-branch)))))
+      (op/git-change-branch repo-dir orig-branch))
     (if to-repo
         (message "Publication finished: on branch '%s' of repository '%s'."
-                 op/repository-html-branch op/repository-directory)
-      (message "Publication finished, output directory: %s." pub-base-dir))))
+                 html-branch repo-dir)
+      (message "Publication finished, output directory: %s." pub-base-dir))
+
+    (when test-publish (op/web-server-browse))
+    (setq op/current-project-name nil)))
 
 (defun op/new-repository (repo-dir)
   "Generate a new git repository in directory REPO-DIR, which can be
@@ -136,7 +162,7 @@ perfectly manipulated by org-page."
   (op/git-init-repo repo-dir)
   (op/generate-readme repo-dir)
   (op/git-commit-changes repo-dir "initial commit")
-  (op/git-new-branch repo-dir op/repository-org-branch)
+  (op/git-new-branch repo-dir (op/get-config-option :repository-org-branch))
   (op/generate-index repo-dir)
   (op/git-commit-changes repo-dir "add source index.org")
   (op/generate-about repo-dir)
@@ -145,40 +171,31 @@ perfectly manipulated by org-page."
 
 (defun op/verify-configuration ()
   "Ensure all required configuration fields are properly configured, include:
-`op/repository-directory': <required>
-`op/site-domain': <required>
-`op/personal-disqus-shortname': <optional>
-`op/personal-duoshuo-shortname': <optional>
-`op/repository-org-branch': [optional] (but customization recommended)
-`op/repository-html-branch': [optional] (but customization recommended)
-`op/site-main-title': [optional] (but customization recommanded)
-`op/site-sub-title': [optional] (but customization recommanded)
-`op/personal-github-link': [optional] (but customization recommended)
-`op/personal-google-analytics-id': [optional] (but customization recommended)
-`op/theme': [optional]"
-  (unless (and op/repository-directory
-               (file-directory-p op/repository-directory))
-    (error "Directory `%s' is not properly configured."
-           (symbol-name 'op/repository-directory)))
-  (unless (file-directory-p (op/get-theme-dir))
-    (error "Org-page cannot detect theme directory `%s' automatically, please \
-help configure it manually, usually it should be <org-page directory>/themes/."
-           (symbol-name 'op/theme)))
-  (unless op/site-domain
-    (error "Site domain `%s' is not properly configured."
-           (symbol-name 'op/site-domain)))
-
-  (setq op/repository-directory (expand-file-name op/repository-directory))
-  (unless (or (string-prefix-p "http://" op/site-domain)
-              (string-prefix-p "https://" op/site-domain))
-    (setq op/site-domain (concat "http://" op/site-domain)))
-  (unless op/theme
-    (setq op/theme 'mdo)))
+1.  `:repository-directory': <required>
+2.  `:site-domain': <required>
+3.  `:personal-disqus-shortname': <optional>
+4.  `:personal-duoshuo-shortname': <optional>
+5.  `:repository-org-branch': [optional] (but customization recommended)
+6.  `:repository-html-branch': [optional] (but customization recommended)
+7.  `:site-main-title': [optional] (but customization recommanded)
+8.  `:site-sub-title': [optional] (but customization recommanded)
+9.  `:personal-github-link': [optional] (but customization recommended)
+10. `:personal-google-analytics-id': [optional] (but customization recommended)
+11. `:theme': [optional]"
+  (unless (member op/current-project-name
+                  (mapcar 'car op/project-config-alist))
+    (error "Can't find project: \"%s\"" op/current-project-name))
+  (let ((repo-dir (op/get-repository-directory))
+        (site-domain (op/get-site-domain)))
+    (unless (and repo-dir (file-directory-p repo-dir))
+      (error "Repository directory is not properly configured."))
+    (unless site-domain
+      (error "Site domain is not properly configured."))))
 
 (defun op/generate-readme (save-dir)
   "Generate README for `op/new-repository'. SAVE-DIR is the directory where to
 save generated README."
-  (string-to-file
+  (op/string-to-file
    (concat
     (format "Personal site of %s, managed by emacs, org mode, git and org-page."
             (or user-full-name "[Author]"))
@@ -191,7 +208,7 @@ structure are organized by org-page.")
 (defun op/generate-index (save-dir)
   "Generate index.org for `op/new-repository'. SAVE-DIR is the directory where
 to save generated index.org."
-  (string-to-file
+  (op/string-to-file
    (concat "#+TITLE: Index" "\n\n"
            (format "This is the home page of %s."
                    (or user-full-name "[Author]")))
@@ -200,7 +217,7 @@ to save generated index.org."
 (defun op/generate-about (save-dir)
   "Generate about.org for `op/new-repository'. SAVE-DIR is the directory where
 to save generated about.org."
-  (string-to-file
+  (op/string-to-file
    (concat "#+TITLE: About" "\n\n"
            (format "* About %s" (or user-full-name "[Author]")) "\n\n"
            "  This file is automatically generated by org-page.")
@@ -230,7 +247,7 @@ month and day): " (unless (string= i "")
                                  `((?y . "%y")
                                    (?m . "%m")
                                    (?d . "%d")
-                                   (?t . ,(encode-string-to-url i)))))))
+                                   (?t . ,(op/encode-string-to-url i)))))))
           (k (read-string "Keywords(separated by comma and space [, ]): "))
           (a (read-string "Tags(separated by comma and space [, ]): "))
           (d (read-string "Description: ")))
@@ -274,7 +291,7 @@ month and day): " (unless (string= i "")
                "<TODO: insert your description here>"
              description))))
 
-(defun op/new-post (&optional category filename)
+(defun op/new-post (&optional project-name category filename)
   "Setup a new post.
 
 CATEGORY: this post belongs to
@@ -283,16 +300,21 @@ FILENAME: the file name of this post
 Note that this function does not verify the category and filename, it is users'
 responsibility to guarantee the two parameters are valid."
   (interactive
-   (let* ((c (read-string "Category: " "blog"))
+   (let* ((j (completing-read "Which project do you want post? "
+                              (delete-dups
+                               (mapcar 'car op/project-config-alist))))
+          (c (read-string "Category: " "blog"))
           (f (read-string "filename: " "new-post.org")))
-     (list c f)))
+     (list j c f)))
+  (setq op/current-project-name project-name)
   (if (string= category "")
       (setq category "blog"))
   (if (string= filename "")
       (setq filename "new-post.org"))
-  (unless (string-suffix-p ".org" filename)
+  (unless (op/string-suffix-p ".org" filename)
     (setq filename (concat filename ".org")))
-  (let* ((dir (concat (file-name-as-directory op/repository-directory)
+  (let* ((repo-dir (op/get-repository-directory))
+         (dir (concat (file-name-as-directory repo-dir)
                       (file-name-as-directory category)))
          (path (concat dir filename)))
     (if (file-exists-p path)
