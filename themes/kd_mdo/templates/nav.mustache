@@ -1,0 +1,22 @@
+    <div>{{! nav }}
+      <header class="masthead">
+        <h1 class="masthead-title"><a href="/">{{site-main-title}}</a></h1>
+        <p>{{site-sub-title}}</p>
+        <ul>
+          {{#nav-categories}}
+          <li><a href="{{category-uri}}">{{category-name}}</a></li>
+          {{/nav-categories}}
+          <li><a href="/tags/">Tags</a></li>
+          <li><a href="/about/">About</a></li>
+          <li><a href="{{github}}">GitHub</a></li>
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+        <form method="get" id="searchform" action="http://www.gfsoso.com/search">
+          <input type="text" class="field" name="q" id="s" placeholder="Search">
+          <input type="hidden" name="as_sitesearch" value="{{site-domain}}">
+        </form>
+        {{#avatar}}
+        <img class="avatar" src="{{avatar}}" />
+        {{/avatar}}
+      </header>
+    </div>
