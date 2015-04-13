@@ -69,7 +69,7 @@
   3. Already in a post buffer and just want to insert essential
      properties? Use the =op/insert-options-template= command.
 
-  4. Is the default slogan is too ugly? Configure a better one (will be shown on each page):
+  4. Is the default slogan too ugly? Configure a better one (will be shown on each page):
 
      : (setq op/site-main-title "your main slogan")
      : (setq op/site-sub-title "your sub slogan")
@@ -110,6 +110,10 @@
   10. Want to add an avatar to the page?
 
      : (setq op/personal-avatar "URL to an image")
+
+  11. Do not want to publish some categories?
+
+     : (setq op/category-ignore-list '("category1" "category2"))
 
 * Other configuration
 

@@ -239,7 +239,7 @@ If COMPONENT-TABLE is nil, the publication will be skipped."
                      (op/get-cache-create
                       :container-template
                       (message "Read container.mustache from file")
-                      (file-to-string (concat op/template-directory
+                      (file-to-string (concat (op/get-template-dir)
                                               "container.mustache")))
                      component-table)
                     (concat pub-dir "index.html") ;; 'html-mode ;; do NOT indent the code
@@ -314,7 +314,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
              (op/get-cache-create
               :container-template
               (message "Read container.mustache from file")
-              (file-to-string (concat op/template-directory
+              (file-to-string (concat (op/get-template-dir)
                                       "container.mustache")))
              (ht ("header"
                   (op/render-header
@@ -371,7 +371,7 @@ publication directory."
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (concat op/template-directory "container.mustache")))
+       (file-to-string (concat (op/get-template-dir) "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "Index - " op/site-main-title))
@@ -384,7 +384,7 @@ publication directory."
                  (mapcar
                   #'(lambda (cell)
                       (ht ("id" (setq id (+ id 1)))
-                          ("category" (car cell))
+                          ("category" (capitalize (car cell)))
                           ("posts" (mapcar
                                     #'(lambda (plist)
                                         (ht ("post-uri"
@@ -398,7 +398,10 @@ publication directory."
                                             ("post-thumb"
                                              (or (plist-get plist :thumb) ""))))
                                     (cdr cell)))))
-                  sort-alist)))))
+                  (remove-if
+                   #'(lambda (cell)
+                       (string= (car cell) "about"))
+                   sort-alist))))))
           ("footer"
            (op/render-footer
             (ht ("show-meta" nil)
@@ -424,7 +427,7 @@ is the root publication directory."
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (concat op/template-directory "container.mustache")))
+       (file-to-string (concat (op/get-template-dir) "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "About - " op/site-main-title))
@@ -475,7 +478,7 @@ TODO: improve this function."
       (op/get-cache-create
        :container-template
        (message "Read container.mustache from file")
-       (file-to-string (concat op/template-directory "container.mustache")))
+       (file-to-string (concat (op/get-template-dir) "container.mustache")))
       (ht ("header"
            (op/render-header
             (ht ("page-title" (concat "Tag Index - " op/site-main-title))
@@ -516,7 +519,7 @@ TODO: improve this function."
            (op/get-cache-create
             :container-template
             (message "Read container.mustache from file")
-            (file-to-string (concat op/template-directory
+            (file-to-string (concat (op/get-template-dir)
                                     "container.mustache")))
            (ht ("header"
                 (op/render-header
@@ -532,7 +535,8 @@ TODO: improve this function."
                       (mapcar
                        #'(lambda (attr-plist)
                            (ht ("post-uri" (plist-get attr-plist :uri))
-                               ("post-title" (plist-get attr-plist :title))))
+                               ("post-title" (plist-get attr-plist :title))
+                               ("post-date" (plist-get attr-plist :date))))
                        (cdr tag-list))))))
                ("footer"
                 (op/render-footer

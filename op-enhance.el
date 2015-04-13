@@ -50,19 +50,9 @@
       (setq op/theme-root-directory (concat op/load-directory "themes/"))
       (setq op/theme 'mdo)
       (setq theme-dir (op/get-theme-dir)))
-    (op/update-theme op/theme)
     (when (file-directory-p pub-theme-dir)
       (delete-directory pub-theme-dir t))
     (copy-directory theme-dir pub-theme-dir t t t)))
-
-(defun op/update-theme (theme)
-  "Update theme related variable(s), to make it(them) take effect after user
-used a new theme."
-  (unless theme
-    (setq theme 'mdo))
-  (setq op/template-directory
-        (concat (file-name-as-directory op/theme-root-directory)
-                (format "%s/templates/" (symbol-name theme)))))
 
 
 (provide 'op-enhance)

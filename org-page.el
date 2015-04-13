@@ -122,8 +122,10 @@ files, committed by org-page.")
                                   repo
                                   op/repository-html-branch)))))
       (op/git-change-branch op/repository-directory orig-branch))
-    (message "Publication finished: on branch '%s' of repository '%s'."
-             op/repository-html-branch op/repository-directory)))
+    (if to-repo
+        (message "Publication finished: on branch '%s' of repository '%s'."
+                 op/repository-html-branch op/repository-directory)
+      (message "Publication finished, output directory: %s." pub-base-dir))))
 
 (defun op/new-repository (repo-dir)
   "Generate a new git repository in directory REPO-DIR, which can be
@@ -165,11 +167,6 @@ help configure it manually, usually it should be <org-page directory>/themes/."
   (unless op/site-domain
     (error "Site domain `%s' is not properly configured."
            (symbol-name 'op/site-domain)))
-  ;;(if (and op/personal-disqus-shortname op/personal-duoshuo-shortname)
-  ;;    (error "Disqus shortname `%s' and duoshuo shortname `%s' can not be \
-configured both."
-  ;;           (symbol-name 'op/personal-disqus-shortname)
-  ;;           (symbol-name 'op/personal-duoshuo-shortname)))
 
   (setq op/repository-directory (expand-file-name op/repository-directory))
   (unless (or (string-prefix-p "http://" op/site-domain)
@@ -303,7 +300,13 @@ responsibility to guarantee the two parameters are valid."
     (unless (file-directory-p dir)
       (mkdir dir t))
     (switch-to-buffer (find-file path))
-    (call-interactively 'op/insert-options-template)
+    (if (called-interactively-p 'any)
+        (call-interactively 'op/insert-options-template)
+      (op/insert-options-template "<Insert Your Title Here>"
+                                  "/%y/%m/%d/%t/"
+                                  "add, keywords, here"
+                                  "add, tags, here"
+                                  "add description here"))
     (save-buffer)))
 
 
