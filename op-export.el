@@ -136,7 +136,7 @@ content of the buffer will be converted into html."
                 ;;; TODO: not only links need to convert, but also inline
                 ;;; images, may add others later
                 ;; "<a[^>]+href=\"\\([^\"]+\\)\"[^>]*>\\([^<]*\\)</a>" nil t)
-                "<[a-zA-Z]+[^/>]+\\(src\\|href\\)=\"\\([^\"]+\\)\"[^>]*>" nil t)
+                "<[a-zA-Z]+[^/>]+\\(src\\|href\\|data\\)=\"\\([^\"]+\\)\"[^>]*>" nil t)
           (setq asset-path (match-string 2))
           (when (not (or (string-prefix-p "http://" asset-path)
                          (string-prefix-p "https://" asset-path)

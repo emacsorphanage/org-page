@@ -36,7 +36,8 @@ html {
 }
 body {
     padding: 20px;
-    font-family: Menlo, Monaco, monospace;
+    font-family: "PT Sans","Helvetica Neue",Helvetica,Arial,"Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    /*Menlo, Monaco, monospace*/
     font-size: 14px;
     line-height: 1.5;
     color: #f0fff0;
@@ -45,30 +46,40 @@ body {
 p {
     margin: 0 0 20px;
 }
-h1, h2, h3 {
+
+.title {
+    margin-bottom: 20px;
+    text-align: center;
+}
+h1 {
+    font-size:20px;
+}
+h2, h3, h4 {
+    font-size:18px;
+}
+h1, h2, h3, h4{
     position: relative;
     margin: 30px 0 20px;
-    font-size: 18px;
     font-weight: bold;
     line-height: 1.1;
     color: #ffaa00;
     text-rendering: optimizeLegibility;
 }
-h1:before, h2:before, h3:before {
+h2:before, h3:before, h4:before {
     position: absolute;
     top: auto;
     color: #cfc;
     display: none;
 }
-h1:before {
+h2:before {
     content: "*";
     left: -1.25em;
 }
-h2:before {
+h3:before {
     content: "**";
     left: -2em;
 }
-h3:before {
+h4:before {
     content: "***";
     left: -2.5em;
 }
@@ -78,7 +89,7 @@ i, em, b, strong {
 }
 b, strong {
     font-weight: bold;
-    color: #ffaa00;
+    color: #00ffff;
 }
 b:before, b:after, strong:before, strong:after {
     content: "*";
@@ -118,8 +129,8 @@ pre {
     display: block;
     margin: 0 0 14px;
     padding: 15px;
+    border: 1px solid #e1e1e8;
     border-radius: 3px 3px 3px 3px;
-    font-size: 18px;
     line-height: 28px;
     background-color: #000000;
     white-space: pre;
@@ -127,6 +138,32 @@ pre {
     word-break: break-all;
     word-wrap: break-word;
 }
+pre.src {
+    padding-top: 1.2em;
+    position: relative;
+}
+pre.src:before {
+  display: none;
+  position: absolute;
+  background-color: white;
+  top: -18px;
+  right: 10px;
+  padding: 3px;
+  border: 1px solid black;
+}
+pre.src:hover:before {
+  display: inline;
+  background-color: #000000;
+  border: 1px solid #e1e1e8;
+}
+pre.src-sh:before    { content: 'sh'; }
+pre.src-bash:before  { content: 'sh'; }
+pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+pre.src-C:before     { content: 'C/C++'; }
+pre.src-matlab:before  { content: 'matlab'; }
+pre.src-maxima:before  { content: 'maxima'; }
+pre.src-lisp:before   { content: 'common lisp'; }
+
 blockquote {
     padding: 0 0 0 20px;
     margin: 0 30px 20px -22.5px;
@@ -196,7 +233,8 @@ table th.right, table td.right {
     color: #00ffff;
 }
 .masthead ul {
-    list-style: none;
+  list-style: none;
+  margin: 8px 0;
 }
 .masthead li {
     display: inline-block;
@@ -206,6 +244,14 @@ table th.right, table td.right {
     content: "\00B7 \00a0";
     color: #cfc;
 }
+
+/*site-nav*/
+.site-nav {border-top: 1px solid #e8e8e8;}
+.site-nav .menu-icon { display: none; }
+.site-nav li a {line-height: 1.5; }
+.site-nav li a:not(:first-child) { margin-left: 20px; }
+
+
 /* searchform*/
 #searchform {
     position: absolute;
@@ -258,7 +304,7 @@ table th.right, table td.right {
 }
 .post ul > li:before {
     content: "- ";
-    margin-left: -1.25em;
+    margin-left: -0.25em;
     color: #cfc;
 }
 .post ol {
@@ -267,7 +313,6 @@ table th.right, table td.right {
 .post ol > li:before {
     content: counter(o-list) ") ";
     counter-increment: o-list;
-    margin-left: -1.85em;
     color: #cfc;
 }
 
@@ -360,6 +405,9 @@ table th.right, table td.right {
     margin: 0;
     line-height: 1.5;
 }
+.footdef {
+    margin: 0 0 20px;
+}
 .footpara {
     display: inline;
 }
@@ -367,6 +415,19 @@ table th.right, table td.right {
 /* Responsive
    -------------------------------------------------- */
 
+/* site-nav*/
+@media screen and (max-width: 512px) {
+  .site-nav {border-top: 1px solid #e8e8e8; text-align: left; }
+  .site-nav .menu-icon { display: block; width: 36px; height: 21px; line-height: 0; margin-top: 10px; margin-bottom: 5px; text-align: center;
+                         }
+  .site-nav .menu-icon > svg { width: 18px; height: 15px; }
+  .site-nav .menu-icon > svg path { fill: #ffff00; }
+  .site-nav .trigger { clear: both; display: none; }
+  .site-nav:hover .trigger { display: block; padding-bottom: 5px; }
+  .site-nav li{ display: block; padding: 5px 10px; }
+  .site-nav li:before{ display: inline-block; content: "\00B7 \00a0"; color: #cfc;}}
+
+/* whole page */
 @media (min-width: 768px) {
     /* Increase body padding and font-sizes */
     body {
@@ -374,7 +435,7 @@ table th.right, table td.right {
         font-size: 18px;
         line-height: 1.75;
     }
-    h1:before, h2:before, h3:before {
+    h1:before, h2:before, h3:before, h4:before{
         display: inline;
     }
 }
