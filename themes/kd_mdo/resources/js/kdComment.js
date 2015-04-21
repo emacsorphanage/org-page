@@ -16,36 +16,46 @@ $('.ds-label').click(function(){
 
 /* navigate */
 var kd_toc = $('#text-table-of-contents ul li');
-var kd_n = 2;
-var kd_tmp = kd_n/2;
-var kd_str = '';
-var kd_head = $('div[id*=\'orgheadline\']');
+var kd_n = 1;
+var kd_tmp = kd_n;
+var kd_head = $('div[id*=\'text-orgheadline\']');
+var topArray = [];
+while(kd_n <= kd_head.length){
+    topArray.push(kd_head.eq(kd_n-1).offset().top);
+    kd_n++;
+}
 $(window).scroll(function () {
     //kd_str="#orgheadline" + kd_n.toString();
     //var top1=kd_head.find(kd_str).offset().top;
-    var top1 = kd_head.eq(kd_n-2).offset().top;
-    var top2 = kd_head.eq(kd_n).offset().top;
-    if (window.pageYOffset <= (top1-30)) {
-        kd_str = '#orgheadline' + kd_tmp.toString();
-        kd_toc.children('a[href="' + kd_str + '"]').css('color', '#ffff00');
-        if (kd_n > 2) {
-            kd_n = kd_n - 2;
-            kd_tmp = kd_n/2;
-            kd_str = '#orgheadline' + kd_tmp.toString();
-            kd_toc.children('a[href="' + kd_str + '"]').css('color', '#22ff22');
+    var startPoint=0;
+    var endPoint=topArray.length-1;
+    var offsetValue=window.pageYOffset+60;
+    if(topArray[kd_tmp]>offsetValue || offsetValue>topArray[kd_tmp+1]){
+        while((startPoint+1) < endPoint){
+            if(topArray[Math.floor((startPoint+endPoint)/2)] > offsetValue){
+                endPoint = Math.floor((startPoint+endPoint)/2);
+            }
+            else if(topArray[Math.floor((startPoint+endPoint)/2)] < offsetValue){
+                startPoint = Math.floor((startPoint+endPoint)/2);
+            }
+            else{
+                break;
+            }
         }
-        //kd_n = parseInt(kd_str.slice(-1));
+        if(offsetValue>topArray[topArray.length-1]){
+            kd_n=topArray.length-1;
+        }
+        else if(offsetValue>topArray[topArray.length-2]){
+            kd_n=topArray.length-2;
+        }
+        else{
+            kd_n = startPoint;
+        }
 
-    }
-    else if (window.pageYOffset >= (top2-30)) {
-        kd_str = '#orgheadline' + kd_tmp.toString();
-        kd_toc.children('a[href="' + kd_str + '"]').css('color', '#ffff00');
-        if (kd_n < (kd_head.length-2)) {
-            kd_n = kd_n + 2;
-            kd_tmp = kd_n/2;
-            kd_str = '#orgheadline' + kd_tmp.toString();
-            kd_toc.children('a[href="' + kd_str + '"]').css('color', '#22ff22');
-        }
+        kd_toc.eq(kd_tmp).children('a').css('color', '#ffff00');
+        kd_tmp = kd_n;
+        kd_toc.eq(kd_tmp).children('a').css('color', '#22ff22');
+        //kd_n = parseInt(kd_str.slice(-1));
     }
 });
 
