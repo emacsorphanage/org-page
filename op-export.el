@@ -84,20 +84,20 @@ content of the buffer will be converted into html."
   (let* ((filename (buffer-file-name))
          (attr-plist `(:title ,(or (op/read-org-option "TITLE")
                                    "Untitled")
-                       :date ,(fix-timestamp-string
-                               (or (op/read-org-option "DATE")
-                                   (format-time-string "%Y-%m-%d")))
-                       :mod-date ,(if (not filename)
-                                      (format-time-string "%Y-%m-%d")
-                                    (or (op/git-last-change-date
-                                         op/repository-directory
-                                         filename)
-                                        (format-time-string
-                                         "%Y-%m-%d"
-                                         (nth 5 (file-attributes filename)))))
-                       :description ,(or (op/read-org-option "DESCRIPTION")
-                                         "No Description")
-                       :thumb ,(op/read-org-option "THUMBNAIL")))
+                              :date ,(fix-timestamp-string
+                                      (or (op/read-org-option "DATE")
+                                          (format-time-string "%Y-%m-%d")))
+                              :mod-date ,(if (not filename)
+                                             (format-time-string "%Y-%m-%d")
+                                           (or (op/git-last-change-date
+                                                op/repository-directory
+                                                filename)
+                                               (format-time-string
+                                                "%Y-%m-%d"
+                                                (nth 5 (file-attributes filename)))))
+                              :description ,(or (op/read-org-option "DESCRIPTION")
+                                                "No Description")
+                              :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
          component-table tags category cat-config)
@@ -108,10 +108,10 @@ content of the buffer will be converted into html."
                                            (split-string tags "[:,]+" t)))))
     (when op/organization
       (plist-put
-       attr-plist :authororg (or (op/read-org-option "AUTHOR")
-                                       user-full-name
-                                       "Unknown Author"
-                                       )))
+       attr-plist :authororg (delete "" (mapcar 'trim-string (split-string (or (op/read-org-option "AUTHOR")
+                                                                               user-full-name
+                                                                               "anonymous"
+                                                                               ) "[:,]+" t)))))
     (setq category (funcall (or op/retrieve-category-function
                                 op/get-file-category)
                             filename))
@@ -619,8 +619,8 @@ TODO: improve this function."
     (mapc
      #'(lambda (author-list)
          (setq author-dir (file-name-as-directory
-                        (concat author-base-dir
-                                (encode-string-to-url (car author-list)))))
+                           (concat author-base-dir
+                                   (encode-string-to-url (car author-list)))))
          (unless (file-directory-p author-dir)
            (mkdir author-dir t))
          (string-to-file

@@ -115,7 +115,7 @@ render from a default hash table."
                                           op/site-domain)
                                          (match-string 1 op/site-domain)
                                        op/site-domain)))
-                  (if op/organization (ht ("author-li" t)) (ht ("avatar" op/personal-avatar))))))))
+                  (if op/organization (ht ("authors-li" t)) (ht ("avatar" op/personal-avatar))))))))
 
 (defun op/render-content (&optional template param-table)
   "Render the content on each page. TEMPLATE is the template name for rendering,
