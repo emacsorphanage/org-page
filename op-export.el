@@ -75,7 +75,8 @@ deleted. PUB-ROOT-DIR is the root publication directory."
       (op/update-category-index file-attr-list pub-root-dir)
       (op/update-rss file-attr-list pub-root-dir)
       (op/update-tags file-attr-list pub-root-dir)
-      (op/update-authors file-attr-list pub-root-dir))))
+      (when op/organization
+        (op/update-authors file-attr-list pub-root-dir)))))
 
 (defun op/get-org-file-options (pub-root-dir do-pub)
   "Retrieve all needed options for org file opened in current buffer.
