@@ -116,6 +116,10 @@ DON'T set this variable unless you know what you are doing!"
 confounded or not."
   :group 'org-page :type 'boolean)
 
+(defcustom op/organization nil
+  "This variable is used to determine whether the site is used by organization or not"
+  :group 'org-page :type 'boolean)
+
 (defcustom op/retrieve-category-function 'op/get-file-category
   "The function used to retrieve an org file's category, its parameter is the
 org file's path, if parameter is nil, it should return all categories, the

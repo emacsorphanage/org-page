@@ -94,27 +94,28 @@ render from a default hash table."
      (message "Read nav.mustache from file")
      (file-to-string (concat (op/get-template-dir) "nav.mustache")))
     (or param-table
-        (ht ("site-main-title" op/site-main-title)
-            ("site-sub-title" op/site-sub-title)
-            ("nav-categories"
-             (mapcar
-              #'(lambda (cat)
-                  (ht ("category-uri"
-                       (concat "/" (encode-string-to-url cat) "/"))
-                      ("category-name" (capitalize cat))))
-              (sort (remove-if
-                     #'(lambda (cat)
-                         (or (string= cat "index")
-                             (string= cat "about")))
-                     (op/get-file-category nil))
-                    'string-lessp)))
-            ("github" op/personal-github-link)
-            ("avatar" op/personal-avatar)
-            ("site-domain" (if (string-match
-                                "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                op/site-domain)
-                               (match-string 1 op/site-domain)
-                             op/site-domain)))))))
+        (ht-merge (ht ("site-main-title" op/site-main-title)
+                      ("site-sub-title" op/site-sub-title)
+                      ("nav-categories"
+                       (mapcar
+                        #'(lambda (cat)
+                            (ht ("category-uri"
+                                 (concat "/" (encode-string-to-url cat) "/"))
+                                ("category-name" (capitalize cat))))
+                        (sort (remove-if
+                               #'(lambda (cat)
+                                   (or (string= cat "index")
+                                       (string= cat "about")))
+                               (op/get-file-category nil))
+                              'string-lessp)))
+                      ("github" op/personal-github-link)
+                      ("avatar" op/personal-avatar)
+                      ("site-domain" (if (string-match
+                                          "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                          op/site-domain)
+                                         (match-string 1 op/site-domain)
+                                       op/site-domain)))
+                  (if op/organization (ht ("author-li" t)) (ht ("avatar" op/personal-avatar))))))))
 
 (defun op/render-content (&optional template param-table)
   "Render the content on each page. TEMPLATE is the template name for rendering,
