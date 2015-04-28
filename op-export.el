@@ -74,7 +74,9 @@ deleted. PUB-ROOT-DIR is the root publication directory."
         (op/generate-default-about pub-root-dir))
       (op/update-category-index file-attr-list pub-root-dir)
       (op/update-rss file-attr-list pub-root-dir)
-      (op/update-tags file-attr-list pub-root-dir))))
+      (op/update-tags file-attr-list pub-root-dir)
+      (when op/organization
+        (op/update-authors file-attr-list pub-root-dir)))))
 
 (defun op/get-org-file-options (pub-root-dir do-pub)
   "Retrieve all needed options for org file opened in current buffer.
@@ -83,20 +85,20 @@ content of the buffer will be converted into html."
   (let* ((filename (buffer-file-name))
          (attr-plist `(:title ,(or (op/read-org-option "TITLE")
                                    "Untitled")
-                       :date ,(fix-timestamp-string
-                               (or (op/read-org-option "DATE")
-                                   (format-time-string "%Y-%m-%d")))
-                       :mod-date ,(if (not filename)
-                                      (format-time-string "%Y-%m-%d")
-                                    (or (op/git-last-change-date
-                                         op/repository-directory
-                                         filename)
-                                        (format-time-string
-                                         "%Y-%m-%d"
-                                         (nth 5 (file-attributes filename)))))
-                       :description ,(or (op/read-org-option "DESCRIPTION")
-                                         "No Description")
-                       :thumb ,(op/read-org-option "THUMBNAIL")))
+                              :date ,(fix-timestamp-string
+                                      (or (op/read-org-option "DATE")
+                                          (format-time-string "%Y-%m-%d")))
+                              :mod-date ,(if (not filename)
+                                             (format-time-string "%Y-%m-%d")
+                                           (or (op/git-last-change-date
+                                                op/repository-directory
+                                                filename)
+                                               (format-time-string
+                                                "%Y-%m-%d"
+                                                (nth 5 (file-attributes filename)))))
+                              :description ,(or (op/read-org-option "DESCRIPTION")
+                                                "No Description")
+                              :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
          component-table tags category cat-config)
@@ -105,6 +107,12 @@ content of the buffer will be converted into html."
       (plist-put
        attr-plist :tags (delete "" (mapcar 'trim-string
                                            (split-string tags "[:,]+" t)))))
+    (when op/organization
+      (plist-put
+       attr-plist :authororg (delete "" (mapcar 'trim-string (split-string (or (op/read-org-option "AUTHOR")
+                                                                               user-full-name
+                                                                               "anonymous"
+                                                                               ) "[:,]+" t)))))
     (setq category (funcall (or op/retrieve-category-function
                                 op/get-file-category)
                             filename))
@@ -136,7 +144,7 @@ content of the buffer will be converted into html."
                 ;;; TODO: not only links need to convert, but also inline
                 ;;; images, may add others later
                 ;; "<a[^>]+href=\"\\([^\"]+\\)\"[^>]*>\\([^<]*\\)</a>" nil t)
-                "<[a-zA-Z]+[^/>]+\\(src\\|href\\)=\"\\([^\"]+\\)\"[^>]*>" nil t)
+                "<[a-zA-Z]+[^/>]+\\(src\\|href\\|data\\)=\"\\([^\"]+\\)\"[^>]*>" nil t)
           (setq asset-path (match-string 2))
           (when (not (or (string-prefix-p "http://" asset-path)
                          (string-prefix-p "https://" asset-path)
@@ -552,6 +560,108 @@ TODO: improve this function."
                                                   "Unknown Email"))))))))
           (concat tag-dir "index.html") 'html-mode))
      tag-alist)))
+
+(defun op/generate-author-uri (author-name)
+  "Generate author uri based on AUTHOR-NAME."
+  (concat "/authors/" (encode-string-to-url author-name) "/"))
+
+(defun op/update-authors (file-attr-list pub-base-dir)
+  "Update author pages. FILE-ATTR-LIST is the list of all file attribute property
+lists. PUB-BASE-DIR is the root publication directory.
+TODO: improve this function."
+  (let ((author-base-dir (expand-file-name "authors/" pub-base-dir))
+        author-alist author-list author-dir)
+    (mapc
+     #'(lambda (attr-plist)
+         (mapc
+          #'(lambda (author-name)
+              (setq author-list (assoc author-name author-alist))
+              (unless author-list
+                (add-to-list 'author-alist (setq author-list `(,author-name))))
+              (nconc author-list (list attr-plist)))
+          (plist-get attr-plist :authororg)))
+     file-attr-list)
+    (unless (file-directory-p author-base-dir)
+      (mkdir author-base-dir t))
+    (string-to-file
+     (mustache-render
+      (op/get-cache-create
+       :container-template
+       (message "Read container.mustache from file")
+       (file-to-string (concat (op/get-template-dir) "container.mustache")))
+      (ht ("header"
+           (op/render-header
+            (ht ("page-title" (concat "Author Index - " op/site-main-title))
+                ("author" (or user-full-name "Unknown Author")))))
+          ("nav" (op/render-navigation-bar))
+          ("content"
+           (op/render-content
+            "author-index.mustache"
+            (ht ("authors"
+                 (mapcar
+                  #'(lambda (author-list)
+                      (ht ("author-name" (car author-list))
+                          ("author-uri" (op/generate-author-uri (car author-list)))
+                          ("count" (number-to-string (length (cdr author-list))))))
+                  author-alist)))))
+          ("footer"
+           (op/render-footer
+            (ht ("show-meta" nil)
+                ("show-comment" nil)
+                ("author" (or user-full-name "Unknown Author"))
+                ("google-analytics" (and (boundp
+                                          'op/personal-google-analytics-id)
+                                         op/personal-google-analytics-id))
+                ("google-analytics-id" op/personal-google-analytics-id)
+                ("creator-info" op/html-creator-string)
+                ("email" (confound-email (or user-mail-address
+                                             "Unknown Email"))))))))
+     (concat author-base-dir "index.html") 'html-mode)
+    (mapc
+     #'(lambda (author-list)
+         (setq author-dir (file-name-as-directory
+                           (concat author-base-dir
+                                   (encode-string-to-url (car author-list)))))
+         (unless (file-directory-p author-dir)
+           (mkdir author-dir t))
+         (string-to-file
+          (mustache-render
+           (op/get-cache-create
+            :container-template
+            (message "Read container.mustache from file")
+            (file-to-string (concat (op/get-template-dir)
+                                    "container.mustache")))
+           (ht ("header"
+                (op/render-header
+                 (ht ("page-title" (concat "Author: " (car author-list)
+                                           " - " op/site-main-title))
+                     ("author" (or user-full-name "Unknown Author")))))
+               ("nav" (op/render-navigation-bar))
+               ("content"
+                (op/render-content
+                 "author.mustache"
+                 (ht ("author-name" (car author-list))
+                     ("posts"
+                      (mapcar
+                       #'(lambda (attr-plist)
+                           (ht ("post-uri" (plist-get attr-plist :uri))
+                               ("post-title" (plist-get attr-plist :title))
+                               ("post-date" (plist-get attr-plist :date))))
+                       (cdr author-list))))))
+               ("footer"
+                (op/render-footer
+                 (ht ("show-meta" nil)
+                     ("show-comment" nil)
+                     ("author" (or user-full-name "Unknown Author"))
+                     ("google-analytics" (and (boundp
+                                               'op/personal-google-analytics-id)
+                                              op/personal-google-analytics-id))
+                     ("google-analytics-id" op/personal-google-analytics-id)
+                     ("creator-info" op/html-creator-string)
+                     ("email" (confound-email (or user-mail-address
+                                                  "Unknown Email"))))))))
+          (concat author-dir "index.html") 'html-mode))
+     author-alist)))
 
 (defun op/update-rss (file-attr-list pub-base-dir)
   "Update RSS. FILE-ATTR-LIST is the list of all file attribute property lists.

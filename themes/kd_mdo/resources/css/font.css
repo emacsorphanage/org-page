@@ -1,0 +1,107 @@
+@font-face {
+    font-family: 'SFPixelateBold';
+        src: url('/media/fonts/pixelated/SFPixelateBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+      }
+@font-face {
+    font-family: 'SFPixelateRegular';
+        src: url('/media/fonts/pixelated/SFPixelateRegular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+      }
+@font-face {
+    font-family: 'SFPixelateShadedOblique';
+        src: url('/media/fonts/pixelated/SFPixelateShadedOblique.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+      }
+@font-face {
+    font-family: 'SFPixelateShadedBoldOblique';
+        src: url('/media/fonts/pixelated/SFPixelateShadedBoldOblique.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+      }
+@font-face {
+    font-family: 'SFPixelateShadedRegular';
+        src: url('/media/fonts/pixelated/SFPixelateShadedRegular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+      }
+@font-face {
+    font-family: 'SFPixelateBoldOblique';
+        src: url('/media/fonts/pixelated/SFPixelateBoldOblique.ttf') format('truetype');
+    font-weight: bold;
+    font-style: italic;
+      }
+@font-face {
+    font-family: 'SFPixelateShadedBold';
+        src: url('/media/fonts/pixelated/SFPixelateShadedBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+      }
+@font-face {
+    font-family: 'SFPixelateOblique';
+        src: url('/media/fonts/pixelated/SFPixelateOblique.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+      }
+
+
+/* The following rules are deprecated. */
+
+@font-face {
+    font-family: 'SF Pixelate';
+        src: url('/media/fonts/pixelated/SFPixelateBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+      }
+
+@font-face {
+    font-family: 'SF Pixelate';
+        src: url('/media/fonts/pixelated/SFPixelateRegular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+      }
+
+@font-face {
+    font-family: 'SF Pixelate Shaded';
+        src: url('/media/fonts/pixelated/SFPixelateShadedOblique.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+      }
+
+@font-face {
+    font-family: 'SF Pixelate Shaded';
+        src: url('/media/fonts/pixelated/SFPixelateShadedBoldOblique.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+      }
+
+@font-face {
+    font-family: 'SF Pixelate Shaded';
+        src: url('/media/fonts/pixelated/SFPixelateShadedRegular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+      }
+
+@font-face {
+    font-family: 'SF Pixelate';
+        src: url('/media/fonts/pixelated/SFPixelateBoldOblique.ttf') format('truetype');
+    font-weight: bold;
+    font-style: italic;
+      }
+
+@font-face {
+    font-family: 'SF Pixelate Shaded';
+        src: url('/media/fonts/pixelated/SFPixelateShadedBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+      }
+
+@font-face {
+    font-family: 'SF Pixelate';
+        src: url('/media/fonts/pixelated/SFPixelateOblique.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+      }
