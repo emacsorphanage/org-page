@@ -229,10 +229,12 @@ table th.right, table td.right {
     width: 160px;
 }
 .masthead img.avatar {
-    position: absolute;
+    position: relative;
+    float: right;
+    margin-top: -100px;
+    margin-bottom: -100%;
+    margin-right: 10%;
     width: 200px;
-    top: 100px;
-    right: 29%;
     background-color: #fff;
 }
 /* post */
