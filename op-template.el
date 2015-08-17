@@ -182,7 +182,7 @@ similar to `op/render-header'."
                              #'(lambda (tag)
                                  (mustache-render
                                   "<a href=\"{{link}}\">{{name}}</a>" tag))
-                             tags " ")))
+                             tags ", ")))
              ("author" (or (op/read-org-option "AUTHOR")
                            user-full-name
                            "Unknown Author"))
