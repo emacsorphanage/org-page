@@ -116,6 +116,11 @@ DON'T set this variable unless you know what you are doing!"
 confounded or not."
   :group 'org-page :type 'boolean)
 
+(defcustom op/tag-rss nil
+  "This variable is used to determine whether a rss.xml will be generated for
+each tag."
+  :group 'org-page :type 'boolean)
+
 (defcustom op/organization nil
   "This variable is used to determine whether the site is used by organization or not"
   :group 'org-page :type 'boolean)

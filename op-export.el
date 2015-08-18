@@ -522,6 +522,29 @@ TODO: improve this function."
                                 (encode-string-to-url (car tag-list)))))
          (unless (file-directory-p tag-dir)
            (mkdir tag-dir t))
+         (when op/tag-rss
+           (let ((last-10-posts
+                  (-take 10 (--sort (>= 0 (compare-standard-date
+                                           (fix-timestamp-string
+                                            (plist-get it :mod-date))
+                                           (fix-timestamp-string
+                                            (plist-get other :mod-date))))
+                                    (cdr tag-list)))))
+             (string-to-file
+              (mustache-render
+               op/rss-template
+               (ht ("title" op/site-main-title)
+                   ("link" op/site-domain)
+                   ("description" op/site-sub-title)
+                   ("date" (format-time-string "%a, %d %b %Y %T %Z"))
+                   ("items" (--map
+                             (ht
+                              ("item-title" (plist-get it :title))
+                              ("item-link" (get-full-url (plist-get it :uri)))
+                              ("item-description" (plist-get it :description))
+                              ("item-update-date" (plist-get it :mod-date)))
+                             last-10-posts))))
+              (concat tag-dir "rss.xml"))))
          (string-to-file
           (mustache-render
            (op/get-cache-create
