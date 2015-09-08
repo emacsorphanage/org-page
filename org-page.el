@@ -39,6 +39,7 @@
 ;; 10) site visiting tracking (implemented using google analytics)
 ;; 11) index/about page support (auto generated if no default provided)
 ;; 12) highly customizable
+;; 13) preview site in web browser
 
 ;;; Code:
 
@@ -49,7 +50,7 @@
 (require 'op-git)
 (require 'op-enhance)
 (require 'op-export)
-
+(require 'simple-httpd)
 
 (defconst org-page-version "0.5")
 
@@ -308,6 +309,14 @@ responsibility to guarantee the two parameters are valid."
                                   "add, tags, here"
                                   "add description here"))
     (save-buffer)))
+
+(defun op/do-publication-and-preview-site ()
+  "Do publication in ~/.op-tmp and preview site in browser simple-httpd"
+  (interactive)
+  (op/do-publication t nil "~/.op-tmp/")
+  (httpd-serve-directory "~/.op-tmp/")
+  (browse-url (format "http://%s:%d" system-name httpd-port)))
+
 
 
 (provide 'org-page)
