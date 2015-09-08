@@ -50,7 +50,7 @@
 (require 'op-git)
 (require 'op-enhance)
 (require 'op-export)
-
+(require 'simple-httpd)
 
 (defconst org-page-version "0.5")
 
