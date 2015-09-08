@@ -69,6 +69,9 @@
    : (setq op/personal-duoshuo-shortname "your_duoshuo_shortname")
    : ;;; the configuration below are optional
    : (setq op/personal-google-analytics-id "your_google_analytics_id")
+   : ;;; custom highlight render
+   : (setq op/highlight-render 'js)
+   : ;;; (setq op/highlight-render 'htmlize)
 
 ** Publication
 
