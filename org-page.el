@@ -310,12 +310,22 @@ responsibility to guarantee the two parameters are valid."
                                   "add description here"))
     (save-buffer)))
 
-(defun op/do-publication-and-preview-site ()
-  "Do publication in ~/.op-tmp and preview site in browser simple-httpd"
-  (interactive)
-  (op/do-publication t nil "~/.op-tmp/")
-  (httpd-serve-directory "~/.op-tmp/")
-  (browse-url (format "http://%s:%d" system-name httpd-port)))
+(defun op/do-publication-and-preview-site (path start-httpd)
+  "Do publication in PATH.
+
+If START-HTTPD is non-nil preview the site in the browser with simple-httpd.
+
+gWhen invoked without prefix argument then PATH defaults to
+`op/site-preview-directory' and httpd is started."
+  (interactive
+   (if current-prefix-arg
+       (list (read-directory-name "Path: ")
+             (yes-or-no-p "Start httpd?"))
+       (list op/site-preview-directory t)))
+  (op/do-publication t nil path)
+  (when start-httpd
+    (httpd-serve-directory path)
+    (browse-url (format "http://%s:%d" system-name httpd-port))))
 
 
 
