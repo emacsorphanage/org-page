@@ -201,7 +201,7 @@ default value is `op/get-file-category'."
     <item>
       <title>{{item-title}}</title>
       <link>{{item-link}}</link>
-      <description>{{item-description}}</description>
+      <description><![CDATA[{{& item-description}}]]></description>
       <pubDate>{{item-update-date}}</pubDate>
       <guid>{{item-link}}</guid>
     </item>

@@ -90,14 +90,12 @@ content of the buffer will be converted into html."
                                           (format-time-string "%Y-%m-%d")))
                               :mod-date ,(if (not filename)
                                              (format-time-string "%Y-%m-%d")
-                                           (or (op/git-last-change-date
-                                                op/repository-directory
-                                                filename)
-                                               (format-time-string
-                                                "%Y-%m-%d"
-                                                (nth 5 (file-attributes filename)))))
-                              :description ,(or (op/read-org-option "DESCRIPTION")
-                                                "No Description")
+                                             (or (op/git-last-change-date
+                                                  op/repository-directory
+                                                  filename)
+                                                 (format-time-string
+                                                  "%Y-%m-%d"
+                                                  (nth 5 (file-attributes filename)))))
                               :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
@@ -158,23 +156,25 @@ content of the buffer will be converted into html."
             (if (not (file-exists-p asset-abs-path))
                 (message "[WARN] File %s in hyper link does not exist, org \
 file: %s." asset-path filename)
-              (unless (file-directory-p assets-dir)
-                (mkdir assets-dir t))
-              (copy-file asset-abs-path assets-dir t t t t)
-              (setq pub-abs-path (concat assets-dir
-                                         (file-name-nondirectory asset-path)))
-              (unless (string-prefix-p pub-root-dir pub-abs-path)
-                (message "[WARN] The publication root directory %s is not an \
+                (unless (file-directory-p assets-dir)
+                  (mkdir assets-dir t))
+                (copy-file asset-abs-path assets-dir t t t t)
+                (setq pub-abs-path (concat assets-dir
+                                           (file-name-nondirectory asset-path)))
+                (unless (string-prefix-p pub-root-dir pub-abs-path)
+                  (message "[WARN] The publication root directory %s is not an \
 ancestor directory of assets directory %s." pub-root-dir assets-dir))
-              (setq converted-path
-                    (concat "/" (file-relative-name pub-abs-path pub-root-dir)))
-              (setq post-content
-                    (replace-regexp-in-string
-                     (regexp-quote asset-path) converted-path post-content))))))
+                (setq converted-path
+                      (concat "/" (file-relative-name pub-abs-path pub-root-dir)))
+                (setq post-content
+                      (replace-regexp-in-string
+                       (regexp-quote asset-path) converted-path post-content))))))
       (setq component-table (ht ("header" (op/render-header))
                                 ("nav" (op/render-navigation-bar))
                                 ("content" post-content)
-                                ("footer" (op/render-footer)))))
+                                ("footer" (op/render-footer))))
+      (plist-put attr-plist :description (or (op/read-org-option "DESCRIPTION")
+                                             post-content)))
     (cons attr-plist component-table)))
 
 (defun op/read-org-option (option)
@@ -268,9 +268,9 @@ the default 'blog' category will be used. For sorting, later lies headmost."
          (setq cat-list (cdr (assoc (plist-get plist :category) cat-alist)))
          (if cat-list
              (nconc cat-list (list plist))
-           (setq cat-alist (cons (cons (plist-get plist :category)
-                                       (list plist))
-                                 cat-alist))))
+             (setq cat-alist (cons (cons (plist-get plist :category)
+                                         (list plist))
+                                   cat-alist))))
      file-attr-list)
     (mapc
      #'(lambda (cell)
