@@ -315,7 +315,7 @@ responsibility to guarantee the two parameters are valid."
 
 If START-HTTPD is non-nil preview the site in the browser with simple-httpd.
 
-gWhen invoked without prefix argument then PATH defaults to
+When invoked without prefix argument then PATH defaults to
 `op/site-preview-directory' and httpd is started."
   (interactive
    (if current-prefix-arg
