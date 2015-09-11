@@ -131,32 +131,35 @@ org file's path, if parameter is nil, it should return all categories, the
 default value is `op/get-file-category'."
   :group 'org-page :type 'function)
 
+<<<<<<< HEAD
 (defcustom op/site-preview-directory "~/.op-tmp/"
   "Temporary directory path for site preview."
   :group 'org-page :type 'string)
 
+=======
+>>>>>>> parent of 04d6f66... Add `op/site-preview-directory' user option.
 (defvar op/category-config-alist
   '(("blog" ;; this is the default configuration
-     :show-meta t
-     :show-comment t
-     :uri-generator op/generate-uri
-     :uri-template "/blog/%y/%m/%d/%t/"
-     :sort-by :date     ;; how to sort the posts
-     :category-index t) ;; generate category index or not
-    ("index"
-     :show-meta nil
-     :show-comment nil
-     :uri-generator op/generate-uri
-     :uri-template "/"
-     :sort-by :date
-     :category-index nil)
-    ("about"
-     :show-meta nil
-     :show-comment nil
-     :uri-generator op/generate-uri
-     :uri-template "/about/"
-     :sort-by :date
-     :category-index nil))
+    :show-meta t
+    :show-comment t
+    :uri-generator op/generate-uri
+    :uri-template "/blog/%y/%m/%d/%t/"
+    :sort-by :date     ;; how to sort the posts
+    :category-index t) ;; generate category index or not
+   ("index"
+    :show-meta nil
+    :show-comment nil
+    :uri-generator op/generate-uri
+    :uri-template "/"
+    :sort-by :date
+    :category-index nil)
+   ("about"
+    :show-meta nil
+    :show-comment nil
+    :uri-generator op/generate-uri
+    :uri-template "/about/"
+    :sort-by :date
+    :category-index nil))
   "Configurations for different categories, can and should be customized.")
 
 (defvar op/category-ignore-list
