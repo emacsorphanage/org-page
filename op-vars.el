@@ -85,6 +85,11 @@ points to the directory `themes' in org-page installation directory."
   "The theme used for page generation."
   :group 'org-page :type 'symbol)
 
+(defcustom op/highlight-render 'js
+  "Code highlight render"
+  :group 'org-page :type 'symbol)
+
+
 (defcustom op/personal-github-link "https://github.com/kelvinh/org-page"
   "The personal github link."
   :group 'org-page :type 'string)
