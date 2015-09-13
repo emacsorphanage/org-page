@@ -314,14 +314,18 @@ responsibility to guarantee the two parameters are valid."
                                   "add description here"))
     (save-buffer)))
 
-(defun op/do-publication-and-preview-site ()
-  "Do publication in ~/.op-tmp and preview site in browser simple-httpd"
-  (interactive)
-  (op/do-publication t nil "~/.op-tmp/")
-  (httpd-serve-directory "~/.op-tmp/")
+(defun op/do-publication-and-preview-site (path)
+  "Do publication in PATH and preview the site in the browser with simple-httpd.
+
+When invoked without prefix argument then PATH defaults to
+`op/site-preview-directory'."
+  (interactive
+   (if current-prefix-arg
+       (list (read-directory-name "Path: "))
+       (list op/site-preview-directory)))
+  (op/do-publication t nil path)
+  (httpd-serve-directory path)
   (browse-url (format "http://%s:%d" system-name httpd-port)))
-
-
 
 (provide 'org-page)
 

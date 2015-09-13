@@ -136,6 +136,10 @@ org file's path, if parameter is nil, it should return all categories, the
 default value is `op/get-file-category'."
   :group 'org-page :type 'function)
 
+(defcustom op/site-preview-directory "~/.op-tmp/"
+  "Temporary directory path for site preview."
+  :group 'org-page :type 'string)
+
 (defvar op/category-config-alist
   '(("blog" ;; this is the default configuration
     :show-meta t
