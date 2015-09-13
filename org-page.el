@@ -156,7 +156,8 @@ perfectly manipulated by org-page."
 `op/site-sub-title': [optional] (but customization recommanded)
 `op/personal-github-link': [optional] (but customization recommended)
 `op/personal-google-analytics-id': [optional] (but customization recommended)
-`op/theme': [optional]"
+`op/theme': [optional]
+`op/highlight-render': [optional](default 'js)"
   (unless (and op/repository-directory
                (file-directory-p op/repository-directory))
     (error "Directory `%s' is not properly configured."
@@ -174,7 +175,10 @@ help configure it manually, usually it should be <org-page directory>/themes/."
               (string-prefix-p "https://" op/site-domain))
     (setq op/site-domain (concat "http://" op/site-domain)))
   (unless op/theme
-    (setq op/theme 'mdo)))
+    (setq op/theme 'mdo))
+  (unless op/highlight-render
+    (setq op/highlight-render 'js))
+  )
 
 (defun op/generate-readme (save-dir)
   "Generate README for `op/new-repository'. SAVE-DIR is the directory where to
