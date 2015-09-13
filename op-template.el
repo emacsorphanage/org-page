@@ -118,29 +118,29 @@ render from a default hash table."
                   (if op/organization (ht ("authors-li" t)) (ht ("avatar" op/personal-avatar))))))))
 
 (defun op/render-content (&optional template param-table)
-    "Render the content on each page. TEMPLATE is the template name for rendering,
+  "Render the content on each page. TEMPLATE is the template name for rendering,
 if it is not set of nil, will use default post.mustache instead. PARAM-TABLE is
-similar to `op/render-header'.`op/highlight-render' is `js' or `htmlize'"
-    (mustache-render
-     (op/get-cache-create
-      (if template
-          (intern (replace-regexp-in-string "\\.mustache$" "-template" template))
-        :post-template)
-      (message (concat "Read " (or template "post.mustache") " from file"))
-      (file-to-string (concat (op/get-template-dir)
-                              (or template "post.mustache"))))
-     (or param-table
-         (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
-             ("content"
-              (cond ((eq op/highlight-render 'js)
-               (progn
-                (cl-letf (((symbol-function'org-html-fontify-code)
-                                       #'(lambda (code lang)
-                                           (when code
-                                             (org-html-encode-plain-text code)))))
-                  (org-export-as'html nil nil t nil))))
-              ((eq op/highlight-render 'htmlize)
-               (org-export-as'html nil nil t nil))))))))
+similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
+  (mustache-render
+   (op/get-cache-create
+    (if template
+        (intern (replace-regexp-in-string "\\.mustache$" "-template" template))
+      :post-template)
+    (message (concat "Read " (or template "post.mustache") " from file"))
+    (file-to-string (concat (op/get-template-dir)
+                            (or template "post.mustache"))))
+   (or param-table
+       (ht ("title" (or (op/read-org-option "TITLE") "Untitled"))
+           ("content"
+            (cond ((eq op/highlight-render 'js)
+                   (progn
+                     (cl-letf (((symbol-function'org-html-fontify-code)
+                                #'(lambda (code lang)
+                                    (when code
+                                      (org-html-encode-plain-text code)))))
+                       (org-export-as'html nil nil t nil))))
+                  ((eq op/highlight-render 'htmlize)
+                   (org-export-as'html nil nil t nil))))))))
 
 (defun op/render-footer (&optional param-table)
   "Render the footer on each page. PARAM-TABLE is similar to

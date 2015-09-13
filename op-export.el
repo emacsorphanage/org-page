@@ -174,7 +174,7 @@ ancestor directory of assets directory %s." pub-root-dir assets-dir))
                                 ("content" post-content)
                                 ("footer" (op/render-footer))))
       (plist-put attr-plist :description (or (op/read-org-option "DESCRIPTION")
-                                            post-content)))
+                                             post-content)))
     (cons attr-plist component-table)))
 
 (defun op/read-org-option (option)

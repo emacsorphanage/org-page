@@ -38,8 +38,8 @@
 ;; 9) commenting (implemented using disqus)
 ;; 10) site visiting tracking (implemented using google analytics)
 ;; 11) index/about page support (auto generated if no default provided)
-;; 12) highly customizable
-;; 13) preview site in web browser
+;; 12) site preview
+;; 13) highly customizable
 
 ;;; Code:
 
@@ -177,8 +177,7 @@ help configure it manually, usually it should be <org-page directory>/themes/."
   (unless op/theme
     (setq op/theme 'mdo))
   (unless op/highlight-render
-    (setq op/highlight-render 'js))
-  )
+    (setq op/highlight-render 'js)))
 
 (defun op/generate-readme (save-dir)
   "Generate README for `op/new-repository'. SAVE-DIR is the directory where to
@@ -315,8 +314,7 @@ responsibility to guarantee the two parameters are valid."
     (save-buffer)))
 
 (defun op/do-publication-and-preview-site (path)
-  "Do publication in PATH and preview the site in the browser with simple-httpd.
-
+  "Do publication in PATH and preview the site in browser with simple-httpd.
 When invoked without prefix argument then PATH defaults to
 `op/site-preview-directory'."
   (interactive
@@ -326,6 +324,7 @@ When invoked without prefix argument then PATH defaults to
   (op/do-publication t nil path)
   (httpd-serve-directory path)
   (browse-url (format "http://%s:%d" system-name httpd-port)))
+
 
 (provide 'org-page)
 

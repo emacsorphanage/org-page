@@ -60,13 +60,13 @@
 
 ** Site Preview
 
-If you'd like to preview your new post prior to publication, you can do this with
+  If you'd like to preview your new post prior to publication, you can do this with
 
-: (op/do-publication-and-preview-site)
+  : (op/do-publication-and-preview-site)
 
-After executing this command, your site will be published to the =op/site-preview-directory= which defaults to
-=~/.op-tmp= and will be served locally by [[https://github.com/skeeto/emacs-web-server][simple-httpd]]. The =op/site-preview-directory= variable is
-customizable. Be sure to read the documentation for =op/do-publication-and-preview-site= for even more options.
+  After executing this command, your site will be published to the =op/site-preview-directory= which defaults to
+  =~/.op-tmp= and will be served locally by [[https://github.com/skeeto/emacs-web-server][simple-httpd]]. The =op/site-preview-directory= variable is
+  customizable. Be sure to read the documentation for =op/do-publication-and-preview-site= for even more options.
 
 * Helpful features
 

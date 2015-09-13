@@ -86,7 +86,7 @@ points to the directory `themes' in org-page installation directory."
   :group 'org-page :type 'symbol)
 
 (defcustom op/highlight-render 'js
-  "Code highlight render"
+  "Code highlight render."
   :group 'org-page :type 'symbol)
 
 
