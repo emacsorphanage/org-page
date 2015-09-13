@@ -96,8 +96,6 @@ content of the buffer will be converted into html."
                                                (format-time-string
                                                 "%Y-%m-%d"
                                                 (nth 5 (file-attributes filename)))))
-                              :description ,(or (op/read-org-option "DESCRIPTION")
-                                                "No Description")
                               :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
@@ -174,7 +172,9 @@ ancestor directory of assets directory %s." pub-root-dir assets-dir))
       (setq component-table (ht ("header" (op/render-header))
                                 ("nav" (op/render-navigation-bar))
                                 ("content" post-content)
-                                ("footer" (op/render-footer)))))
+                                ("footer" (op/render-footer))))
+      (plist-put attr-plist :description (or (op/read-org-option "DESCRIPTION")
+                                            post-content)))
     (cons attr-plist component-table)))
 
 (defun op/read-org-option (option)
