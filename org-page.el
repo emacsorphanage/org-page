@@ -90,6 +90,7 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
   (let* ((orig-branch (op/git-branch-name op/repository-directory))
          (to-repo (not (stringp pub-base-dir)))
          (store-dir (if to-repo "~/.op-tmp/" pub-base-dir)) ; TODO customization
+         (store-dir-abs (file-name-as-directory (expand-file-name store-dir)))
          changed-files all-files remote-repos)
     (op/git-change-branch op/repository-directory op/repository-org-branch)
     (op/prepare-theme store-dir)
@@ -98,7 +99,7 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
                             `(:update ,all-files :delete nil)
                           (op/git-files-changed op/repository-directory
                                                 (or base-git-commit "HEAD~1"))))
-    (op/publish-changes all-files changed-files store-dir)
+    (op/publish-changes all-files changed-files store-dir-abs)
     (when to-repo
       (op/git-change-branch op/repository-directory op/repository-html-branch)
       (copy-directory store-dir op/repository-directory t t t)
