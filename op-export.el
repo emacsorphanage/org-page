@@ -326,7 +326,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                                       "container.mustache")))
              (ht ("header"
                   (op/render-header
-                   (ht ("page-title" (concat (capitalize (car cat-list))
+                   (ht ("page-title" (concat (op/get-category-name (car cat-list))
                                              " Index - "
                                              op/site-main-title))
                        ("author" (or user-full-name "Unknown Author")))))
@@ -334,7 +334,7 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
                  ("content"
                   (op/render-content
                    "category-index.mustache"
-                   (ht ("cat-name" (capitalize (car cat-list)))
+                   (ht ("cat-name" (op/get-category-name (car cat-list)))
                        ("posts"
                         (mapcar
                          #'(lambda (attr-plist)
