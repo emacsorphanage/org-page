@@ -62,6 +62,14 @@ BODY and push the result into cache and return it."
   `(or (op/get-cache-item ,key)
        (op/update-cache-item ,key (funcall (lambda () ,@body)))))
 
+(defun op/get-category-name (category)
+  "Return the name of the CATEGORY based on op/category-config-alist :label property. 
+Default to capitalized CATEGORY name if no :label property found."
+  (let* ((config (cdr (or (assoc category op/category-config-alist)
+                          (assoc "blog" op/category-config-alist)))))
+    (or (plist-get config :label)
+        (capitalize category))))
+
 (defun op/render-header (&optional param-table)
   "Render the header on each page. PARAM-TABLE is the hash table from mustache
 to render the template. If it is not set or nil, this function will try to build
@@ -101,7 +109,7 @@ render from a default hash table."
                         #'(lambda (cat)
                             (ht ("category-uri"
                                  (concat "/" (encode-string-to-url cat) "/"))
-                                ("category-name" (capitalize cat))))
+                                ("category-name" (op/get-category-name cat))))
                         (sort (remove-if
                                #'(lambda (cat)
                                    (or (string= cat "index")

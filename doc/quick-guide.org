@@ -116,6 +116,7 @@
      + =:sort-by=: how to sort posts on category index page, by
        =:date= or by =:mod-date=  (:mod-date is last modification date)?
      + =:category-index=: generate an index page for this category?
+     + =:label=: displayed label for the category (default: category folder name)
 
   10. Want to add an avatar to the page?
 
