@@ -1,0 +1,22 @@
+<section id="content" role="main">
+    {{#categories}}
+        <div id="outline-container-sec-{{id}}" class="row" style="padding-top: 70px">
+            <div class="container center-block">
+                <div class="col-md-2"></div>
+                <div class="col-md-8 col-sm-12">
+                    <div class="panel panel-default" id="text-{{id}}">
+                        <div class="panel-heading">
+                            <h3 id="sec-{{id}}" class="panel-title">{{category}}</h3>
+                        </div>
+                            <ul class="list-group">
+                                {{#posts}}
+                                    <li class="list-group-item title"><a href="{{post-uri}}">{{post-title}}</a></li>
+                                {{/posts}}
+                            </ul>
+                        </div>
+                        <div class="col-md-2"></div>
+                    </div>
+                </div>
+            </div>
+    {{/categories}}
+</section>
