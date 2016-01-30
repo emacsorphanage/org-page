@@ -1,0 +1,135 @@
+
+
+/* -------------------------------------*/
+/* Syntax Coloring */
+/* -------------------------------------*/
+.highlight pre {
+  font-size: 13px;
+  word-wrap: break-word;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+  padding: 16px;
+  padding-left: 21px;
+  padding-bottom: 14px;
+  display: block;
+  color: #788D9E;
+  background: #fff;
+  border: none;
+  box-shadow: inset 0 0 0 1px #E4EBF2, inset 49px 0 0 #FBFDFE, inset 50px 0 0 #E4EBF2;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: 'Menlo', 'Monaco', Courier, monospace;
+
+}
+
+.post .highlight pre ol li {
+  font-size: 13px;
+  list-style: none;
+  line-height: 1.6; }
+
+.post .highlight pre ol li + li {
+  margin-top: 0; }
+
+/* Inline code*/
+.inline {
+  font-size: 14px;
+  color: #333;
+  font-family: 'Menlo', 'Monaco', Courier, monospace;
+  border-bottom: 1px dotted #ddd;
+  padding-bottom: 2px; }
+
+.o,
+.nf,
+.highlight pre ol li {
+  color: #788D9E;
+  /* Default */ }
+
+.k,
+.kc,
+.k + .nx {
+  color: #FF9740;
+  /* Orange */
+  /* k + nx = followed by "New" */ }
+
+.c,
+.cm,
+.cp,
+.c1,
+.cs {
+  color: #A4BDD1; }
+
+/* Comment */
+.mi, .mf {
+  color: #5BC1F0; }
+
+/* Blue */
+.s {
+  color: #8DDE19;
+  /* Original Green */
+  color: #6ED300;
+  /* Darker Green */ }
+
+/*# String escaping in Framer
+"myString,..." */
+.s + .si,
+.si + .nx,
+.si + .s,
+.nx + .si {
+  color: #6ED300; }
+
+/* Lighter, following dots like ".states.add etc" */
+.p + .nx {
+  color: #79A3C4; }
+
+/* Custom LineNumbers */
+.highlight pre ol {
+  counter-reset: linenumbers;
+  margin-left: 50px; }
+
+.highlight pre ol li {
+  line-height: 1.6;
+  text-align: left; }
+
+/* Line-height bug in FF */
+.is-firefox .highlight pre ol li {
+  line-height: 1.55; }
+
+.highlight pre ol li:before {
+  content: counter(linenumbers);
+  counter-increment: linenumbers;
+  float: left;
+  margin-left: -50px;
+  font-size: 10px;
+  color: #B7CADA;
+  position: relative;
+  top: 3px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  text-align: right;
+  width: 12px;
+  left: -4px;
+  white-space: nowrap; }
+
+  .highlight .lineno {
+    color: #B7CADA;
+    font-size: 10px;
+    display:inline-block;
+    padding: 0 30px 0 0px;
+    /*border-right:1px solid #ccc;*/
+    position: relative;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    text-align: right;
+
+    white-space: nowrap;
+  }
+
+  .highlight pre code {
+    display: block;
+    white-space: pre;
+    overflow-x: auto;
+    word-wrap: normal;
+  }
