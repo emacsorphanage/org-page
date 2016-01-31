@@ -112,7 +112,7 @@ content of the buffer will be converted into html."
                                                                                "anonymous"
                                                                                ) "[:,]+" t)))))
     (setq category (funcall (or op/retrieve-category-function
-                                op/get-file-category)
+                                #'op/get-file-category)
                             filename))
     (plist-put attr-plist :category category)
     (setq cat-config (cdr (or (assoc category op/category-config-alist)
