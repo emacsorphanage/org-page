@@ -172,7 +172,7 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
                                  ("name" tag-name)))
                          (delete "" (mapcar 'trim-string (split-string tags "[:,]+" t))))))
               (category (funcall (or op/retrieve-category-function
-                                     op/get-file-category)
+                                     #'op/get-file-category)
                                  filename))
               (config (cdr (or (assoc category op/category-config-alist)
                                (assoc "blog" op/category-config-alist))))
