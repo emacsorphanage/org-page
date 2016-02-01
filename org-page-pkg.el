@@ -6,4 +6,5 @@
     (mustache "0.22")
     (htmlize "1.47")
     (org "8.0")
-    (dash "2.0.0")))
+    (dash "2.0.0")
+    (cl-lib "0.5")))

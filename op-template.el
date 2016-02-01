@@ -26,6 +26,7 @@
 ;;; Code:
 
 (require 'ox)
+(require 'cl-lib)
 ;; (require 'mustache)
 (autoload 'mustache-render "mustache")
 (require 'op-util)
@@ -110,7 +111,7 @@ render from a default hash table."
                             (ht ("category-uri"
                                  (concat "/" (encode-string-to-url cat) "/"))
                                 ("category-name" (op/get-category-name cat))))
-                        (sort (remove-if
+                        (sort (cl-remove-if
                                #'(lambda (cat)
                                    (or (string= cat "index")
                                        (string= cat "about")))

@@ -29,6 +29,7 @@
 (require 'ox)
 (require 'ht)
 (require 'dash)
+(require 'cl-lib)
 (require 'op-util)
 (require 'op-vars)
 (require 'op-git)
@@ -206,7 +207,7 @@ can contain following parameters:
         (encoded-title (encode-string-to-url title)))
     (format-spec uri-template `((?y . ,(car date-list))
                                 (?m . ,(cadr date-list))
-                                (?d . ,(caddr date-list))
+                                (?d . ,(cl-caddr date-list))
                                 (?t . ,encoded-title)))))
 
 (defun op/get-file-category (org-file)
@@ -406,7 +407,7 @@ publication directory."
                                             ("post-thumb"
                                              (or (plist-get plist :thumb) ""))))
                                     (cdr cell)))))
-                  (remove-if
+                  (cl-remove-if
                    #'(lambda (cell)
                        (string= (car cell) "about"))
                    sort-alist))))))
