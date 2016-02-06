@@ -47,13 +47,15 @@ one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
   (let* ((upd-list (plist-get change-plist :update))
          (del-list (plist-get change-plist :delete))
-         visiting file-buffer attr-cell file-attr-list)
+         attr-cell file-attr-list)
     (when (or upd-list del-list)
       (mapc
        #'(lambda (org-file)
-           (setq visiting (find-buffer-visiting org-file))
-           (with-current-buffer (setq file-buffer
-                                      (or visiting (find-file org-file)))
+           (with-temp-buffer
+             (insert-file-contents org-file)
+             (beginning-of-buffer)
+             ;; somewhere need `buffer-file-name',make them happy
+             (setq buffer-file-name org-file)
              (setq attr-cell (op/get-org-file-options
                               pub-root-dir
                               (member org-file upd-list)))
@@ -62,8 +64,9 @@ deleted. PUB-ROOT-DIR is the root publication directory."
                (op/publish-modified-file (cdr attr-cell)
                                          (plist-get (car attr-cell) :pub-dir)))
              (when (member org-file del-list)
-               (op/handle-deleted-file org-file)))
-           (or visiting (kill-buffer file-buffer)))
+               (op/handle-deleted-file org-file))
+             (setq buffer-file-name nil) ;; dismiss `kill-anyway?'
+             ))
        all-list)
       (unless (member
                (expand-file-name "index.org" op/repository-directory)
