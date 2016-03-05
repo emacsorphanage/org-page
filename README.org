@@ -96,6 +96,7 @@
   6. [[https://github.com/magnars/dash.el][dash.el]]: a modern list library for Emacs
   7. [[https://github.com/Wilfred/ht.el][ht.el]]: a modern hash-table library for Emacs
   8. [[https://github.com/skeeto/emacs-web-server][simple-httpd]]: A simple Emacs web server is required for site preview
+  9. [[https://github.com/rejeep/git.el][git.el]]: An Elisp API for programmatically using Git
 
 * Known issues
 
@@ -103,7 +104,7 @@
     if you deleted some org sources, you may have to manually delete
     corresponding generated html files.
   - URI path change detection is not available. That is, if you make a
-    post with the URI "/blog/2013/03/25/the-old-post-name" and then 
+    post with the URI "/blog/2013/03/25/the-old-post-name" and then
     change this value in your org source, org-page would be unable to
     detect that this has happened. it will only publish a new html
     file for you so you need to delete the old html file related to
