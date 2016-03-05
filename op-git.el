@@ -30,6 +30,7 @@
 (require 'op-util)
 (require 'op-vars)
 (require 'git)
+(require 'dash)
 
 (defun op/git-all-files (repo-dir &optional branch)
   "This function will return a list contains all org files in git repository
@@ -39,10 +40,9 @@ instead of pointer HEAD."
          (git-repo repo-dir)
          (output (git-run "ls-tree" "-r" "--name-only"
                           (or branch "HEAD"))))
-    (delq nil (mapcar #'(lambda (line)
-                          (when (string-suffix-p org-file-ext line t)
-                            (expand-file-name line repo-dir)))
-                      (split-string output "\n")))))
+    (--map (expand-file-name it repo-dir)
+           (--filter (string-suffix-p org-file-ext it t)
+                     (split-string output "\n")))))
 
 (defun op/git-branch-name (repo-dir)
   "Return name of current branch of git repository presented by REPO-DIR."
@@ -89,14 +89,13 @@ only two types will work well: need to publish or need to delete.
          (git-repo (file-name-as-directory repo-dir))
          (output (git-run "diff" "--name-status" base-commit "HEAD"))
          upd-list del-list)
-    (mapc #'(lambda (line)
-              (if (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" line)
-                  (setq upd-list (cons (concat repo-dir (match-string 1 line))
-                                       upd-list)))
-              (if (string-match "\\`D\t\\(.*\.org\\)\\'" line)
-                  (setq del-list (cons (concat repo-dir (match-string 1 line))
-                                       del-list))))
-          (split-string output "\n"))
+
+    (--each (split-string output "\n")
+      (when (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" it)
+        (!cons (concat repo-dir (match-string 1 it)) upd-list))
+      (when (string-match "\\`D\t\\(.*\.org\\)\\'" it)
+        (!cons (concat repo-dir (match-string 1 it)) del-list)))
+
     (list :update upd-list :delete del-list)))
 
 (defun op/git-last-change-date (repo-dir filepath)
