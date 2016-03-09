@@ -29,96 +29,53 @@
 (require 'ht)
 (require 'op-util)
 (require 'op-vars)
-
-
-(defun op/verify-git-repository (repo-dir)
-  "This function will verify whether REPO-DIR is a valid git repository.
-TODO: may add branch/commit verification later."
-  (unless (and (file-directory-p repo-dir)
-               (file-directory-p (expand-file-name ".git/" repo-dir)))
-    (error "Fatal: `%s' is not a valid git repository." repo-dir)))
-
-(defun op/shell-command (dir command &optional need-git)
-  "This function execute shell commands in a specified directory.
-If NEED-GIT is non-nil, then DIR must be a git repository. COMMAND is the
-command to be executed."
-  (if need-git
-      (op/verify-git-repository dir))
-  (with-current-buffer (get-buffer-create op/temp-buffer-name)
-    (erase-buffer)
-    (setq default-directory (file-name-as-directory dir))
-    (shell-command command t nil)
-    (buffer-string)))
+(require 'git)
+(require 'dash)
 
 (defun op/git-all-files (repo-dir &optional branch)
   "This function will return a list contains all org files in git repository
 presented by REPO-DIR, if optional BRANCH is offered, will check that branch
 instead of pointer HEAD."
-  (let ((org-file-ext ".org")
-        (output (op/shell-command
-                 repo-dir
-                 (concat "git ls-tree -r --name-only "
-                         (or branch "HEAD"))
-                 t)))
-    (delq nil (mapcar #'(lambda (line)
-                          (when (string-suffix-p org-file-ext line t)
-                            (expand-file-name line repo-dir)))
-                      (split-string output "\n")))))
+  (let* ((org-file-ext ".org")
+         (git-repo repo-dir)
+         (output (git-run "ls-tree" "-r" "--name-only"
+                          (or branch "HEAD"))))
+    (--map (expand-file-name it repo-dir)
+           (--filter (string-suffix-p org-file-ext it t)
+                     (split-string output "\n")))))
 
 (defun op/git-branch-name (repo-dir)
   "Return name of current branch of git repository presented by REPO-DIR."
-  (let ((repo-dir (file-name-as-directory repo-dir))
-        (output (op/shell-command
-                 repo-dir
-                 "git rev-parse --abbrev-ref HEAD"
-                 t)))
-    (replace-regexp-in-string "[\n\r]" "" output)))
+  (let ((git-repo repo-dir))
+    (git-on-branch)))
 
 (defun op/git-new-branch (repo-dir branch-name)
-  "This function will create a new branch with BRANCH-NAME, and checkout it.
-TODO: verify if the branch exists."
-  (let ((repo-dir (file-name-as-directory repo-dir))
-        (output (op/shell-command
-                 repo-dir
-                 (concat "git checkout -b " branch-name)
-                 t)))
-    (unless (string-match "Switched to a new branch" output)
-      (error "Fatal: Failed to create a new branch with name '%s'."
-             branch-name))))
+  "This function will create a new branch with BRANCH-NAME, and checkout it."
+  (let ((git-repo repo-dir))
+    (unless (git-branch? branch-name)
+      (git-branch branch-name))
+    (git-checkout branch-name)))
 
 (defun op/git-change-branch (repo-dir branch-name)
   "This function will change branch to BRANCH-NAME of git repository presented
 by REPO-DIR. Do nothing if it is current branch."
-  (let ((repo-dir (file-name-as-directory repo-dir))
-        (output (op/shell-command
-                 repo-dir
-                 (concat "git checkout " branch-name)
-                 t)))
-    (when (string-match "\\`error" output)
-      (error "Failed to change branch to '%s' of repository '%s'."
-             branch-name repo-dir))))
+  (let ((git-repo repo-dir))
+    (unless (git-on-branch? branch-name)
+      (git-checkout branch-name))))
 
 (defun op/git-init-repo (repo-dir)
   "This function will initialize a new empty git repository. REPO-DIR is the
 directory where repository will be initialized."
   (unless (file-directory-p repo-dir)
     (mkdir repo-dir t))
-  (unless (string-prefix-p "Initialized empty Git repository"
-                           (op/shell-command repo-dir "git init" nil))
-    (error "Fatal: Failed to initialize new git repository '%s'." repo-dir)))
+  (git-init repo-dir))
 
 (defun op/git-commit-changes (repo-dir message)
   "This function will commit uncommitted changes to git repository presented by
 REPO-DIR, MESSAGE is the commit message."
-  (let ((repo-dir (file-name-as-directory repo-dir)) output)
-    (op/shell-command repo-dir "git add ." t)
-    (setq output
-          (op/shell-command repo-dir
-                            (format "git commit -m \"%s\"" message)
-                            t))
-    (when (not (string-match "\\[.* .*\\]" output))
-      (error "Failed to commit changes on current branch of repository '%s'."
-             repo-dir))))
+  (let ((git-repo repo-dir))
+    (git-add)
+    (git-commit message)))
 
 (defun op/git-files-changed (repo-dir base-commit)
   "This function can get modified/deleted org files from git repository
@@ -128,45 +85,33 @@ property list, property :update maps a list of updated/added files, property
 For git, there are three types: Added, Modified, Deleted, but for org-page,
 only two types will work well: need to publish or need to delete.
 <TODO>: robust enhance, branch check, etc."
-  (let ((org-file-ext ".org")
-        (repo-dir (file-name-as-directory repo-dir))
-        (output (op/shell-command
-                 repo-dir
-                 (concat "git diff --name-status "
-                         base-commit " HEAD")
-                 t))
-        upd-list del-list)
-    (mapc #'(lambda (line)
-              (if (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" line)
-                  (setq upd-list (cons (concat repo-dir (match-string 1 line))
-                                       upd-list)))
-              (if (string-match "\\`D\t\\(.*\.org\\)\\'" line)
-                  (setq del-list (cons (concat repo-dir (match-string 1 line))
-                                       del-list))))
-          (split-string output "\n"))
+  (let* ((org-file-ext ".org")
+         (git-repo (file-name-as-directory repo-dir))
+         (output (git-run "diff" "--name-status" base-commit "HEAD"))
+         upd-list del-list)
+
+    (--each (split-string output "\n")
+      (when (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" it)
+        (!cons (concat repo-dir (match-string 1 it)) upd-list))
+      (when (string-match "\\`D\t\\(.*\.org\\)\\'" it)
+        (!cons (concat repo-dir (match-string 1 it)) del-list)))
+
     (list :update upd-list :delete del-list)))
 
 (defun op/git-last-change-date (repo-dir filepath)
   "This function will return the last commit date of a file in git repository
 presented by REPO-DIR, FILEPATH is the path of target file, can be absolute or
 relative."
-  (let ((repo-dir (file-name-as-directory repo-dir))
-        (output (op/shell-command
-                 repo-dir
-                 (concat "git log -1 --format=\"%ci\" -- \"" filepath "\"")
-                 t)))
+  (let* ((git-repo repo-dir)
+         (output (git-run "log" "-1" "--format=\"%ci\"" "--" filepath)))
     (when (string-match "\\`\\([0-9]+-[0-9]+-[0-9]+\\) .*\n\\'" output)
       (match-string 1 output))))
 
 (defun op/git-remote-name (repo-dir)
   "This function will return all remote repository names of git repository
 presented by REPO-DIR, return nil if there is no remote repository."
-  (let ((repo-dir (file-name-as-directory repo-dir))
-        (output (op/shell-command
-                 repo-dir
-                 "git remote"
-                 t)))
-    (delete "" (split-string output "\n"))))
+  (let ((git-repo repo-dir))
+    (git-remotes)))
 
 (defun op/git-push-remote (repo-dir remote-repo branch)
   "This function will push local branch to remote repository, REPO-DIR is the
@@ -174,15 +119,8 @@ local git repository, REMOTE-REPO is the remote repository, BRANCH is the name
 of branch will be pushed (the branch name will be the same both in local and
 remote repository), and if there is no branch named BRANCH in remote repository,
 it will be created."
-  (let ((repo-dir (file-name-as-directory repo-dir))
-        (output (op/shell-command
-                 repo-dir
-                 (concat "git push " remote-repo " " branch ":" branch)
-                 t)))
-    (when (or (string-match "fatal" output)
-              (string-match "error" output))
-      (error "Failed to push branch '%s' to remote repository '%s'."
-             branch remote-repo))))
+  (let ((git-repo repo-dir))
+    (git-push remote-repo branch)))
 
 
 (provide 'op-git)
