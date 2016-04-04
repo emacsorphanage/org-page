@@ -300,6 +300,7 @@ responsibility to guarantee the two parameters are valid."
   (let* ((dir (concat (file-name-as-directory op/repository-directory)
                       (file-name-as-directory category)))
          (path (concat dir filename)))
+    (op/git-change-branch op/repository-directory op/repository-org-branch)
     (if (file-exists-p path)
         (error "Post `%s' already exists." path))
     (unless (file-directory-p dir)
