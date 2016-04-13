@@ -12,7 +12,7 @@
    dependencies listed in *README.org*. Once this has been completed,
    clone the repo:
 
-   : git clone https://github.com/kelvinh/org-page.it
+   : git clone https://github.com/kelvinh/org-page.git
 
    After that, please remember to add this location to your emacs'
    =load-path= variable so that emacs can find the package.
