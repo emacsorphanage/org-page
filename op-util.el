@@ -216,6 +216,17 @@ alternative to `ht-from-plist'."
             (value (cadr pair)))
         (ht-set h key value)))))
 
+(defun validate-ignore-categories (file)
+  (if op/category-config-alist
+      (let ((rst nil)
+	    (len (length op/category-ignore-list)))
+	(while (> len 0)
+	  (setq len (- len 1))
+	  (when (string-prefix-p (nth len op/category-ignore-list) file)
+	    (setq len 0)
+	    (setq rst t)))
+	rst)))
+
 
 (provide 'op-util)
 
