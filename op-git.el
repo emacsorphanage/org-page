@@ -104,7 +104,7 @@ presented by REPO-DIR, FILEPATH is the path of target file, can be absolute or
 relative."
   (let* ((git-repo repo-dir)
          (output (git-run "log" "-1" "--format=\"%ci\"" "--" filepath)))
-    (when (string-match "\\`\\([0-9]+-[0-9]+-[0-9]+\\) .*\n\\'" output)
+    (when (string-match "\\`\"\\([0-9]+-[0-9]+-[0-9]+\\) .*\"\n\\'" output)
       (match-string 1 output))))
 
 (defun op/git-remote-name (repo-dir)
