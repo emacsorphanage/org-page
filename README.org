@@ -82,6 +82,9 @@
 
    You can also run it interactively: =M-x op/do-publication <Enter>=
 
+*NOTE: Org-page does NOT commit your org files to git, so you have to commit them
+manually before you run this command.*
+
 ** Site preview in browser
 
    Just run =M-x op/do-publication-and-preview-site <Enter>=, the site will be published in =~/.op-tmp=, then it will be previewed in browser automatically.
