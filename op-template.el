@@ -147,9 +147,9 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
                                 #'(lambda (code lang)
                                     (when code
                                       (org-html-encode-plain-text code)))))
-                       (org-export-as op/export-method nil nil t nil))))
+                       (org-export-as op/export-backend nil nil t nil))))
                   ((eq op/highlight-render 'htmlize)
-                   (org-export-as op/export-method nil nil t nil))))))))
+                   (org-export-as op/export-backend nil nil t nil))))))))
 
 (defun op/render-footer (&optional param-table)
   "Render the footer on each page. PARAM-TABLE is similar to

@@ -52,8 +52,8 @@
 `op/repository-html-branch'."
   :group 'org-page :type 'string)
 
-(defcustom op/export-method 'html
-  "The org-export method used for page generation"
+(defcustom op/export-backend 'html
+  "The org-export backend used for page generation"
   :group 'org-page :type 'symbol)
 
 (defcustom op/site-domain nil
