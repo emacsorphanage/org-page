@@ -151,6 +151,7 @@ perfectly manipulated by org-page."
 `op/site-domain': <required>
 `op/personal-disqus-shortname': <optional>
 `op/personal-duoshuo-shortname': <optional>
+`op/export-method': [optional](default 'html)
 `op/repository-org-branch': [optional] (but customization recommended)
 `op/repository-html-branch': [optional] (but customization recommended)
 `op/site-main-title': [optional] (but customization recommanded)
