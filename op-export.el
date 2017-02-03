@@ -200,6 +200,7 @@ can contain following parameters:
 %y: year of creation date
 %m: month of creation date
 %d: day of creation date
+%f: base file name with suffix .html (a.org->a.html)
 %t: title of current buffer"
   (let ((uri-template (or (op/read-org-option "URI")
                           default-uri-template))
@@ -207,11 +208,14 @@ can contain following parameters:
                                      (fix-timestamp-string creation-date)
                                    (format-time-string "%Y-%m-%d"))
                                  "-"))
+        (html-file-name (concat (file-name-base (buffer-file-name)) ".html"))
         (encoded-title (encode-string-to-url title)))
     (format-spec uri-template `((?y . ,(car date-list))
                                 (?m . ,(cadr date-list))
                                 (?d . ,(cl-caddr date-list))
+                                (?f . ,html-file-name)
                                 (?t . ,encoded-title)))))
+
 
 (defun op/get-file-category (org-file)
   "Get org file category presented by ORG-FILE, return all categories if
