@@ -47,7 +47,7 @@ one is :update for files to be updated, another is :delete for files to be
 deleted. PUB-ROOT-DIR is the root publication directory."
   (let* ((upd-list (plist-get change-plist :update))
          (del-list (plist-get change-plist :delete))
-         attr-cell file-attr-list)
+         attr-cell file-attr-list file-uri-plist)
     (when (or upd-list del-list)
       (mapc
        #'(lambda (org-file)
@@ -58,7 +58,24 @@ deleted. PUB-ROOT-DIR is the root publication directory."
              (setq buffer-file-name org-file)
              (setq attr-cell (op/get-org-file-options
                               pub-root-dir
-                              (member org-file upd-list)))
+                              nil
+                              file-uri-plist))
+             (setq file-uri-plist (plist-put file-uri-plist (intern org-file) (plist-get (car attr-cell) :uri)))
+             (setq buffer-file-name nil) ;; dismiss `kill-anyway?'
+             ))
+       all-list)
+
+      (mapc
+       #'(lambda (org-file)
+           (with-temp-buffer
+             (insert-file-contents org-file)
+             (beginning-of-buffer)
+             ;; somewhere need `buffer-file-name',make them happy
+             (setq buffer-file-name org-file)
+             (setq attr-cell (op/get-org-file-options
+                              pub-root-dir
+                              (member org-file upd-list)
+                              file-uri-plist))
              (setq file-attr-list (cons (car attr-cell) file-attr-list))
              (when (member org-file upd-list)
                (op/publish-modified-file (cdr attr-cell)
@@ -82,12 +99,13 @@ deleted. PUB-ROOT-DIR is the root publication directory."
       (when op/organization
         (op/update-authors file-attr-list pub-root-dir)))))
 
-(defun op/get-org-file-options (pub-root-dir do-pub)
+(defun op/get-org-file-options (pub-root-dir do-pub &optional file-uri-plist)
   "Retrieve all needed options for org file opened in current buffer.
 PUB-ROOT-DIR is the root directory of published files, if DO-PUB is t, the
 content of the buffer will be converted into html."
   (let* ((filename (buffer-file-name))
-         (attr-plist `(:title ,(or (op/read-org-option "TITLE")
+         (attr-plist `(:filepath ,filename
+                       :title ,(or (op/read-org-option "TITLE")
                                    "Untitled")
                               :date ,(fix-timestamp-string
                                       (or (op/read-org-option "DATE")
@@ -103,6 +121,7 @@ content of the buffer will be converted into html."
                               :thumb ,(op/read-org-option "THUMBNAIL")))
          assets-dir post-content
          asset-path asset-abs-path pub-abs-path converted-path
+         org-path org-abs-path org-uri
          component-table tags category cat-config)
     (setq tags (op/read-org-option "TAGS"))
     (when tags
@@ -157,6 +176,17 @@ content of the buffer will be converted into html."
                          ))
             (setq asset-abs-path
                   (expand-file-name asset-path (file-name-directory filename)))
+            (when (not (file-exists-p asset-abs-path))
+              (setq org-path (replace-regexp-in-string "\\.html?$"  ".org" asset-abs-path))
+              (setq org-abs-path (expand-file-name org-path (file-name-directory filename)))
+              (when (file-exists-p org-abs-path)
+                (setq org-uri (plist-get file-uri-plist (intern org-abs-path)))
+                (when org-uri
+                  (setq post-content
+                        (replace-regexp-in-string
+                         (regexp-quote asset-path) org-uri post-content)))))
+
+
             (if (not (file-exists-p asset-abs-path))
                 (message "[WARN] File %s in hyper link does not exist, org \
 file: %s." asset-path filename)
