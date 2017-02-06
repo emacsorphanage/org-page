@@ -92,9 +92,9 @@ only two types will work well: need to publish or need to delete.
 
     (--each (split-string output "\n")
       (when (string-match "\\`[A|M]\t\\(.*\.org\\)\\'" it)
-        (!cons (concat repo-dir (match-string 1 it)) upd-list))
+        (!cons (concat git-repo (match-string 1 it)) upd-list))
       (when (string-match "\\`D\t\\(.*\.org\\)\\'" it)
-        (!cons (concat repo-dir (match-string 1 it)) del-list)))
+        (!cons (concat git-repo (match-string 1 it)) del-list)))
 
     (list :update upd-list :delete del-list)))
 
