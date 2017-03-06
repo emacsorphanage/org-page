@@ -52,6 +52,10 @@
 `op/repository-html-branch'."
   :group 'org-page :type 'string)
 
+(defcustom op/export-backend 'html
+  "The org-export backend used for page generation"
+  :group 'org-page :type 'symbol)
+
 (defcustom op/site-domain nil
   "The domain name of entire site, it is recommended to assign with prefix
 http:// or https://, http will be considered if not assigned."
