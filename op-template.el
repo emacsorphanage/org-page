@@ -64,12 +64,21 @@ BODY and push the result into cache and return it."
        (op/update-cache-item ,key (funcall (lambda () ,@body)))))
 
 (defun op/get-category-name (category)
-  "Return the name of the CATEGORY based on op/category-config-alist :label property. 
+  "Return the name of the CATEGORY based on op/category-config-alist :label property.
 Default to capitalized CATEGORY name if no :label property found."
   (let* ((config (cdr (or (assoc category op/category-config-alist)
                           (assoc "blog" op/category-config-alist)))))
     (or (plist-get config :label)
         (capitalize category))))
+
+(defun op/get-category-uri (category)
+  "Return the uri of the CATEGORY based on op/category-config-alist :label property.
+Default to encoded CATEGORY name if no :label property found."
+  (let* ((config (cdr (or (assoc category op/category-config-alist)
+                          (assoc "blog" op/category-config-alist)))))
+    (concat "/"
+            (encode-string-to-url (or (plist-get config :label) category))
+            "/")))
 
 (defun op/render-header (&optional param-table)
   "Render the header on each page. PARAM-TABLE is the hash table from mustache
@@ -108,8 +117,7 @@ render from a default hash table."
                       ("nav-categories"
                        (mapcar
                         #'(lambda (cat)
-                            (ht ("category-uri"
-                                 (concat "/" (encode-string-to-url cat) "/"))
+                            (ht ("category-uri" (op/get-category-uri cat))
                                 ("category-name" (op/get-category-name cat))))
                         (sort (cl-remove-if
                                #'(lambda (cat)
