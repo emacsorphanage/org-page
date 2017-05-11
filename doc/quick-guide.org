@@ -42,6 +42,7 @@
   : ;;; the configuration below you should choose one, not both
   : (setq op/personal-disqus-shortname "your_disqus_shortname")    ;; your disqus commenting system
   : (setq op/personal-duoshuo-shortname "your_duoshuo_shortname")  ;; your duoshuo commenting system
+  : (setq op/hashover-comments t)                                   ;; activate hashover self-hosted comment system
 
 * Publication
 

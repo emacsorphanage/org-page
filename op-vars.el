@@ -245,6 +245,12 @@ the date in the aaaa-mm-dd format. It should return a string
 representing the date in its new format."
   :group 'org-page :type 'function)
 
+(defcustom op/hashover-comments nil
+  "use hashover commenting system"
+  :group 'org-page
+  :type 'boolean)
+
+
 (provide 'op-vars)
 
 ;;; op-vars.el ends here
