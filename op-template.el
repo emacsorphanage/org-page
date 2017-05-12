@@ -200,6 +200,8 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
              ("author" (or (op/read-org-option "AUTHOR")
                            user-full-name
                            "Unknown Author"))
+	     ("hashover-comment" (and (boundp 'op/hashover-comments)
+				      op/hashover-comments))
              ("disqus-id" uri)
              ("disqus-url" (get-full-url uri))
              ("disqus-comment" (and (boundp 'op/personal-disqus-shortname)
