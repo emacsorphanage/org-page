@@ -181,15 +181,17 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
                             (plist-get config :uri-template) date title)))
          (ht ("show-meta" (plist-get config :show-meta))
              ("show-comment" (plist-get config :show-comment))
-             ("date" date)
-             ("mod-date" (if (not filename)
-                             (format-time-string "%Y-%m-%d")
-                           (or (op/git-last-change-date
-                                op/repository-directory
-                                filename)
-                               (format-time-string
-                                "%Y-%m-%d"
-                                (nth 5 (file-attributes filename))))))
+             ("date" (funcall op/date-final-format date))
+             ("mod-date" (funcall
+			  op/date-final-format
+			  (if (not filename)
+			      (format-time-string "%Y-%m-%d")
+			    (or (op/git-last-change-date
+				 op/repository-directory
+				 filename)
+				(format-time-string
+				 "%Y-%m-%d"
+				 (nth 5 (file-attributes filename)))))))
              ("tags" tags)
              ("tag-links" (if (not tags) "N/A"
                             (mapconcat
