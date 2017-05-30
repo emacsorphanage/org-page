@@ -94,7 +94,19 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
          changed-files all-files remote-repos)
     (op/git-change-branch op/repository-directory op/repository-org-branch)
     (op/prepare-theme store-dir)
-    (setq all-files (op/git-all-files op/repository-directory))
+    (setq all-files
+          (cl-remove-if
+           #'(lambda (file)
+               (let ((root-dir (file-name-as-directory
+                                (expand-file-name op/repository-directory))))
+                 (member t
+                         (mapcar
+                          #'(lambda (cat)
+                              (string-prefix-p
+                               cat
+                               (file-relative-name file root-dir)))
+                          op/category-ignore-list))))
+           (op/git-all-files op/repository-directory)))
     (setq changed-files (if force-all
                             `(:update ,all-files :delete nil)
                           (op/git-files-changed op/repository-directory

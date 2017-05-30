@@ -234,6 +234,22 @@ default value is `op/get-file-category'."
   :group 'org-page
   :type 'string)
 
+(defcustom op/date-final-format
+  (lambda (datestr) datestr)
+  "final date formatting function. Org-page format dates as
+aaaa-mm-dd by default during the generation of category index
+pages. This function allows the user to change the format.
+
+The provided function should accept one string argument which is
+the date in the aaaa-mm-dd format. It should return a string
+representing the date in its new format."
+  :group 'org-page :type 'function)
+
+(defcustom op/hashover-comments nil
+  "use hashover commenting system"
+  :group 'org-page
+  :type 'boolean)
+
 
 (provide 'op-vars)
 
