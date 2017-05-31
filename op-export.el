@@ -383,7 +383,12 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
 is the list of all file attribute property lists. PUB-BASE-DIR is the root
 publication directory."
   (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
-        (id 0))
+        (id 0)
+        (recent-posts (seq-take (sort file-attr-list
+                                      (lambda (a b)
+                                        (string-lessp (plist-get b :date)
+                                                     (plist-get a :date))))
+                                10)))
     (string-to-file
      (mustache-render
       (op/get-cache-create
@@ -398,23 +403,15 @@ publication directory."
           ("content"
            (op/render-content
             "index.mustache"
-            (ht ("categories"
+            (ht ("recent-posts"
+                 (mapcar 'op--post-hashtable recent-posts))
+                ("categories"
                  (mapcar
                   #'(lambda (cell)
                       (ht ("id" (setq id (+ id 1)))
                           ("category" (capitalize (car cell)))
                           ("posts" (mapcar
-                                    #'(lambda (plist)
-                                        (ht ("post-uri"
-                                             (plist-get plist :uri))
-                                            ("post-title"
-                                             (plist-get plist :title))
-                                            ("post-desc"
-                                             (plist-get plist :description))
-                                            ("post-date"
-                                             (funcall op/date-final-format (plist-get plist :date)))
-                                            ("post-thumb"
-                                             (or (plist-get plist :thumb) ""))))
+                                    'op--post-hashtable
                                     (cdr cell)))))
                   (cl-remove-if
                    #'(lambda (cell)
@@ -433,6 +430,22 @@ publication directory."
                 ("email" (confound-email (or user-mail-address
                                              "Unknown Email"))))))))
      (concat pub-base-dir "index.html") 'html-mode)))
+
+(defun op--post-hashtable (post)
+  "Takes a POST and turn it into a hashtable format for a mustache template."
+  (message "%s" post)
+  (ht ("post-uri"
+       (plist-get post :uri))
+      ("post-title"
+       (plist-get post :title))
+      ("post-desc"
+       (plist-get post :description))
+      ("post-date"
+       (funcall op/date-final-format (plist-get plist :date)))
+      ("post-category"
+       (plist-get post :category))
+      ("post-thumb"
+       (or (plist-get post :thumb) ""))))
 
 (defun op/generate-default-about (pub-base-dir)
   "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
