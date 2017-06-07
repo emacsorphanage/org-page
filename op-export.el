@@ -441,7 +441,7 @@ publication directory."
       ("post-desc"
        (plist-get post :description))
       ("post-date"
-       (funcall op/date-final-format (plist-get plist :date)))
+       (funcall op/date-final-format (plist-get post :date)))
       ("post-category"
        (plist-get post :category))
       ("post-thumb"
