@@ -384,7 +384,7 @@ is the list of all file attribute property lists. PUB-BASE-DIR is the root
 publication directory."
   (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
         (id 0)
-        (recent-posts (seq-take (sort file-attr-list
+        (recent-posts (seq-take (sort (copy-sequence file-attr-list)
                                       (lambda (a b)
                                         (string-lessp (plist-get b :date)
                                                      (plist-get a :date))))
