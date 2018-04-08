@@ -71,6 +71,15 @@ Default to capitalized CATEGORY name if no :label property found."
     (or (plist-get config :label)
         (capitalize category))))
 
+(defun op/header-param-table ()
+  "Return the parameter set used to render the header on each page."
+  (ht ("page-title" (concat (or (op/read-org-option "TITLE") "Untitled")
+                            " - " op/site-main-title))
+      ("author" (or (op/read-org-option "AUTHOR")
+                    user-full-name "Unknown Author"))
+      ("description" (op/read-org-option "DESCRIPTION"))
+      ("keywords" (op/read-org-option "KEYWORDS"))))
+
 (defun op/render-header (&optional param-table)
   "Render the header on each page. PARAM-TABLE is the hash table from mustache
 to render the template. If it is not set or nil, this function will try to build
@@ -80,13 +89,32 @@ a hash table accordint to current buffer."
     :header-template
     (message "Read header.mustache from file")
     (file-to-string (concat (op/get-template-dir) "header.mustache")))
-   (or param-table
-       (ht ("page-title" (concat (or (op/read-org-option "TITLE") "Untitled")
-                                 " - " op/site-main-title))
-           ("author" (or (op/read-org-option "AUTHOR")
-                         user-full-name "Unknown Author"))
-           ("description" (op/read-org-option "DESCRIPTION"))
-           ("keywords" (op/read-org-option "KEYWORDS"))))))
+   (or param-table (op/header-param-table))))
+
+(defun op/navigation-bar-param-table ()
+  "Return the parameter set used to render the navigation bar on each page."
+  (ht-merge (ht ("site-main-title" op/site-main-title)
+                ("site-sub-title" op/site-sub-title)
+                ("nav-categories"
+                 (mapcar
+                  #'(lambda (cat)
+                      (ht ("category-uri"
+                           (concat "/" (encode-string-to-url cat) "/"))
+                          ("category-name" (op/get-category-name cat))))
+                  (sort (cl-remove-if
+                         #'(lambda (cat)
+                             (or (string= cat "index")
+                                 (string= cat "about")))
+                         (op/get-file-category nil))
+                        'string-lessp)))
+                ("github" op/personal-github-link)
+                ("avatar" op/personal-avatar)
+                ("site-domain" (if (string-match
+                                    "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
+                                    op/site-domain)
+                                   (match-string 1 op/site-domain)
+                                 op/site-domain)))
+            (if op/organization (ht ("authors-li" t)) (ht ("avatar" op/personal-avatar)))))
 
 (defun op/render-navigation-bar (&optional param-table)
   "Render the navigation bar on each page. it will be read firstly from
@@ -102,29 +130,7 @@ render from a default hash table."
      :nav-bar-template
      (message "Read nav.mustache from file")
      (file-to-string (concat (op/get-template-dir) "nav.mustache")))
-    (or param-table
-        (ht-merge (ht ("site-main-title" op/site-main-title)
-                      ("site-sub-title" op/site-sub-title)
-                      ("nav-categories"
-                       (mapcar
-                        #'(lambda (cat)
-                            (ht ("category-uri"
-                                 (concat "/" (encode-string-to-url cat) "/"))
-                                ("category-name" (op/get-category-name cat))))
-                        (sort (cl-remove-if
-                               #'(lambda (cat)
-                                   (or (string= cat "index")
-                                       (string= cat "about")))
-                               (op/get-file-category nil))
-                              'string-lessp)))
-                      ("github" op/personal-github-link)
-                      ("avatar" op/personal-avatar)
-                      ("site-domain" (if (string-match
-                                          "\\`https?://\\(.*[a-zA-Z]\\)/?\\'"
-                                          op/site-domain)
-                                         (match-string 1 op/site-domain)
-                                       op/site-domain)))
-                  (if op/organization (ht ("authors-li" t)) (ht ("avatar" op/personal-avatar))))))))
+    (or param-table (op/navigation-bar-param-table)))))
 
 (defun op/render-content (&optional template param-table)
   "Render the content on each page. TEMPLATE is the template name for rendering,
@@ -151,6 +157,68 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
                   ((eq op/highlight-render 'htmlize)
                    (org-export-as op/export-backend nil nil t nil))))))))
 
+(defun op/footer-param-table ()
+  "Return the parameter set used to render the footer on each page."
+  (let* ((filename (buffer-file-name))
+         (title (or (op/read-org-option "TITLE") "Untitled"))
+         (date (fix-timestamp-string
+                (or (op/read-org-option "DATE")
+                    (format-time-string "%Y-%m-%d"))))
+         (tags (op/read-org-option "TAGS"))
+         (tags (if tags
+                   (mapcar
+                    #'(lambda (tag-name)
+                        (ht ("link" (op/generate-tag-uri tag-name))
+                            ("name" tag-name)))
+                    (delete "" (mapcar 'trim-string (split-string tags "[:,]+" t))))))
+         (category (funcall (or op/retrieve-category-function
+                                #'op/get-file-category)
+                            filename))
+         (config (cdr (or (assoc category op/category-config-alist)
+                          (assoc "blog" op/category-config-alist))))
+         (uri (funcall (plist-get config :uri-generator)
+                       (plist-get config :uri-template) date title)))
+    (ht ("show-meta" (plist-get config :show-meta))
+        ("show-comment" (plist-get config :show-comment))
+        ("date" (funcall op/date-final-format date))
+        ("google-analytics" (and (boundp 'op/personal-google-analytics-id)
+                                 op/personal-google-analytics-id))
+        ("google-analytics-id" op/personal-google-analytics-id)
+        ("mod-date" (funcall
+			         op/date-final-format
+			         (if (not filename)
+			             (format-time-string "%Y-%m-%d")
+			           (or (op/git-last-change-date
+				            op/repository-directory
+				            filename)
+				           (format-time-string
+				            "%Y-%m-%d"
+				            (nth 5 (file-attributes filename)))))))
+        ("tags" tags)
+        ("tag-links" (if (not tags) "N/A"
+                       (mapconcat
+                        #'(lambda (tag)
+                            (mustache-render
+                             "<a href=\"{{link}}\">{{name}}</a>" tag))
+                        tags ", ")))
+        ("author" (or (op/read-org-option "AUTHOR")
+                      user-full-name
+                      "Unknown Author"))
+	    ("hashover-comment" (and (boundp 'op/hashover-comments)
+				                 op/hashover-comments))
+        ("disqus-id" uri)
+        ("disqus-url" (get-full-url uri))
+        ("disqus-comment" (and (boundp 'op/personal-disqus-shortname)
+                               op/personal-disqus-shortname))
+        ("disqus-shortname" op/personal-disqus-shortname)
+        ("duoshuo-comment" (and (boundp 'op/personal-duoshuo-shortname)
+                                op/personal-duoshuo-shortname))
+        ("duoshuo-shortname" op/personal-duoshuo-shortname)
+        ("creator-info" op/html-creator-string)
+        ("email" (confound-email (or (op/read-org-option "EMAIL")
+                                     user-mail-address
+                                     "Unknown Email"))))))
+
 (defun op/render-footer (&optional param-table)
   "Render the footer on each page. PARAM-TABLE is similar to
 `op/render-header'."
@@ -159,66 +227,7 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
     :footer-template
     (message "Read footer.mustache from file")
     (file-to-string (concat (op/get-template-dir) "footer.mustache")))
-   (or param-table
-       (let* ((filename (buffer-file-name))
-              (title (or (op/read-org-option "TITLE") "Untitled"))
-              (date (fix-timestamp-string
-                     (or (op/read-org-option "DATE")
-                         (format-time-string "%Y-%m-%d"))))
-              (tags (op/read-org-option "TAGS"))
-              (tags (if tags
-                        (mapcar
-                         #'(lambda (tag-name)
-                             (ht ("link" (op/generate-tag-uri tag-name))
-                                 ("name" tag-name)))
-                         (delete "" (mapcar 'trim-string (split-string tags "[:,]+" t))))))
-              (category (funcall (or op/retrieve-category-function
-                                     #'op/get-file-category)
-                                 filename))
-              (config (cdr (or (assoc category op/category-config-alist)
-                               (assoc "blog" op/category-config-alist))))
-              (uri (funcall (plist-get config :uri-generator)
-                            (plist-get config :uri-template) date title)))
-         (ht ("show-meta" (plist-get config :show-meta))
-             ("show-comment" (plist-get config :show-comment))
-             ("date" (funcall op/date-final-format date))
-             ("mod-date" (funcall
-			  op/date-final-format
-			  (if (not filename)
-			      (format-time-string "%Y-%m-%d")
-			    (or (op/git-last-change-date
-				 op/repository-directory
-				 filename)
-				(format-time-string
-				 "%Y-%m-%d"
-				 (nth 5 (file-attributes filename)))))))
-             ("tags" tags)
-             ("tag-links" (if (not tags) "N/A"
-                            (mapconcat
-                             #'(lambda (tag)
-                                 (mustache-render
-                                  "<a href=\"{{link}}\">{{name}}</a>" tag))
-                             tags ", ")))
-             ("author" (or (op/read-org-option "AUTHOR")
-                           user-full-name
-                           "Unknown Author"))
-	     ("hashover-comment" (and (boundp 'op/hashover-comments)
-				      op/hashover-comments))
-             ("disqus-id" uri)
-             ("disqus-url" (get-full-url uri))
-             ("disqus-comment" (and (boundp 'op/personal-disqus-shortname)
-                                    op/personal-disqus-shortname))
-             ("disqus-shortname" op/personal-disqus-shortname)
-             ("duoshuo-comment" (and (boundp 'op/personal-duoshuo-shortname)
-                                     op/personal-duoshuo-shortname))
-             ("duoshuo-shortname" op/personal-duoshuo-shortname)
-             ("google-analytics" (and (boundp 'op/personal-google-analytics-id)
-                                      op/personal-google-analytics-id))
-             ("google-analytics-id" op/personal-google-analytics-id)
-             ("creator-info" op/html-creator-string)
-             ("email" (confound-email (or (op/read-org-option "EMAIL")
-                                          user-mail-address
-                                          "Unknown Email"))))))))
+   (or param-table (op/footer-param-table))))
 
 ;;; this function is deprecated
 (defun op/update-default-template-parameters ()
