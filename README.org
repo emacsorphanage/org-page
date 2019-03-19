@@ -3,6 +3,7 @@
 #+EMAIL:     ini.kelvin@gmail.com
 #+DATE:      2012-08-23
 
+* Sorry folks, This project is not under active development any more. However, it still can be used if the provided features match your requirement.
 
 * Introduction
 
