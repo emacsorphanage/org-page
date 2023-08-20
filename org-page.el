@@ -269,7 +269,7 @@ month and day): " (unless (string= i "")
            (if (string= title "") (buffer-name) title)
            (user-full-name)
            user-mail-address
-           (format-time-string (substring (car org-time-stamp-formats) 1 -1))
+           (format-time-string (substring (org-time-stamp-format) 1 -1))
            (if (string= uri "") "<TODO: insert your uri here>" uri)
            (if (string= keywords "")
                "<TODO: insert your keywords here>"
