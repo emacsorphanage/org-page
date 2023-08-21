@@ -269,7 +269,7 @@ If COMPONENT-TABLE is nil, the publication will be skipped."
   "Rearrange and sort attribute property lists from FILE-ATTR-LIST. Rearrange
 according to category, and sort according to :sort-by property defined in
 `op/category-config-alist', if category is not in `op/category-config-alist',
-the default 'blog' category will be used. For sorting, later lies headmost."
+the default `blog' category will be used. For sorting, later lies headmost."
   (let (cat-alist cat-list)
     (mapc
      #'(lambda (plist)

@@ -60,7 +60,7 @@
   "The main entrance of org-page. The entire procedure is:
 1) verify configuration
 2) read changed files on branch `op/repository-org-branch' of repository
-`op/repository-directory', the definition of 'changed files' is:
+`op/repository-directory', the definition of \"changed files\" is:
    1. if FORCE-ALL is non-nil, then all files will be published
    2. if FORCE-ALL is nil, the changed files will be obtained based on
 BASE-GIT-COMMIT
@@ -163,7 +163,7 @@ perfectly manipulated by org-page."
 `op/site-domain': <required>
 `op/personal-disqus-shortname': <optional>
 `op/personal-duoshuo-shortname': <optional>
-`op/export-backend': [optional](default 'html)
+`op/export-backend': [optional](default \\='html)
 `op/repository-org-branch': [optional] (but customization recommended)
 `op/repository-html-branch': [optional] (but customization recommended)
 `op/site-main-title': [optional] (but customization recommanded)
@@ -171,7 +171,7 @@ perfectly manipulated by org-page."
 `op/personal-github-link': [optional] (but customization recommended)
 `op/personal-google-analytics-id': [optional] (but customization recommended)
 `op/theme': [optional]
-`op/highlight-render': [optional](default 'js)"
+`op/highlight-render': [optional](default \\='js)"
   (unless (and op/repository-directory
                (file-directory-p op/repository-directory))
     (error "Directory `%s' is not properly configured."

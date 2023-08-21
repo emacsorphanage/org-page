@@ -64,7 +64,8 @@ BODY and push the result into cache and return it."
        (op/update-cache-item ,key (funcall (lambda () ,@body)))))
 
 (defun op/get-category-name (category)
-  "Return the name of the CATEGORY based on op/category-config-alist :label property. 
+  "Return the name of CATEGORY.
+Use :label property in `op/category-config-alist'.
 Default to capitalized CATEGORY name if no :label property found."
   (let* ((config (cdr (or (assoc category op/category-config-alist)
                           (assoc "blog" op/category-config-alist)))))
