@@ -53,7 +53,7 @@ deleted. PUB-ROOT-DIR is the root publication directory."
        #'(lambda (org-file)
            (with-temp-buffer
              (insert-file-contents org-file)
-             (beginning-of-buffer)
+             (goto-char (point-min))
              ;; somewhere need `buffer-file-name',make them happy
              (setq buffer-file-name org-file)
              (setq attr-cell (op/get-org-file-options
@@ -141,7 +141,7 @@ content of the buffer will be converted into html."
                                  "\\`" "" (plist-get attr-plist :uri)))))
       (with-temp-buffer
         (insert post-content)
-        (beginning-of-buffer)
+        (goto-char (point-min))
         (while (re-search-forward
                 ;;; TODO: not only links need to convert, but also inline
                 ;;; images, may add others later
