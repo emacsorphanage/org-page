@@ -26,7 +26,7 @@
 ;;; Code:
 
 (require 'ht)
-
+(require 'op-vars)
 
 (defun compare-standard-date (date1 date2)
   "Compare two standard ISO 8601 format dates, format is as below:
