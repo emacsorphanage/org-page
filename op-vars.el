@@ -47,18 +47,19 @@
   "The directory where org-page is loaded from.")
 
 (defcustom op/repository-directory nil
-  "The git repository directory, where org files stored on branch
-`op/repository-org-branch', and generated html files stored on branch
-`op/repository-html-branch'."
+  "Directory with the git repository, where org files are stored.
+The source branch should be `op/repository-org-branch', and the
+generated html files stored on branch `op/repository-html-branch'."
   :group 'org-page :type 'string)
 
 (defcustom op/export-backend 'html
-  "The org-export backend used for page generation"
+  "Org-export backend used for page generation."
   :group 'org-page :type 'symbol)
 
 (defcustom op/site-domain nil
-  "The domain name of entire site, it is recommended to assign with prefix
-http:// or https://, http will be considered if not assigned."
+  "The domain name of entire site.
+It is recommended to use prefix http:// or https://.
+If prefix is omitted, http:// will be used."
   :group 'org-page :type 'string)
 
 (defcustom op/site-main-title "org-page"
@@ -70,19 +71,20 @@ http:// or https://, http will be considered if not assigned."
   :group 'org-page :type 'string)
 
 (defcustom op/repository-org-branch "source"
-  "The branch where org files stored on, it is within repository presented by
-`op/repository-directory'."
+  "The branch where org files are stored.
+It is inside repository presented by `op/repository-directory'."
   :group 'org-page :type 'string)
 
 (defcustom op/repository-html-branch "master"
-  "The branch where generated html files stored on, it is within repository
-presented by `op/repository-directory'."
+  "The branch where generated html files are stored.
+It is inside repository presented by `op/repository-directory'."
   :group 'org-page :type 'string)
 
 (defcustom op/theme-root-directory
   (concat op/load-directory "themes/")
-  "The root directory that stores themes for page rendering. By default, it
-points to the directory `themes' in org-page installation directory."
+  "The root directory that stores themes for page rendering.
+By default, it points to the directory `themes' in org-page
+installation directory."
   :group 'org-page :type 'string)
 
 (defcustom op/theme 'mdo
@@ -115,29 +117,29 @@ points to the directory `themes' in org-page installation directory."
   :group 'org-page :type 'string)
 
 (defcustom op/template-directory nil
-  "The directory stores templates for page rendering. By default, org-page uses
-`op/theme' and `op/theme-root-directory' to determine the template directory.
+  "The directory that stores templates for page rendering.
+By default, org-page uses `op/theme' and `op/theme-root-directory' to
+determine the template directory.
 DON'T set this variable unless you know what you are doing!"
   :group 'org-page :type 'string)
 
 (defcustom op/confound-email t
-  "This variable is used to determine whether email addresses should be
-confounded or not."
+  "When non-nil, email addresses should be confounded."
   :group 'org-page :type 'boolean)
 
 (defcustom op/tag-rss nil
-  "This variable is used to determine whether a rss.xml will be generated for
-each tag."
+  "When non-nil, generate rss.xml for each tag."
   :group 'org-page :type 'boolean)
 
 (defcustom op/organization nil
-  "This variable is used to determine whether the site is used by organization or not"
+  "When non-nil, the site is used by an organization."
   :group 'org-page :type 'boolean)
 
 (defcustom op/retrieve-category-function 'op/get-file-category
-  "The function used to retrieve an org file's category, its parameter is the
-org file's path, if parameter is nil, it should return all categories, the
-default value is `op/get-file-category'."
+  "The function used to retrieve an org file's category.
+Its sole argument is the org file's path.
+If the argument is nil, it should return all categories, the default
+value is `op/get-file-category'."
   :group 'org-page :type 'function)
 
 (defcustom op/site-preview-directory "~/.op-tmp/"
@@ -170,7 +172,7 @@ default value is `op/get-file-category'."
 
 (defvar op/category-ignore-list
   '("themes" "assets")
-  "Ignore these subdirs/categories for navigation")
+  "Ignore these subdirs/categories for navigation.")
 
 ;;; this variable is deprecated
 (defvar op/default-template-parameters
@@ -236,17 +238,18 @@ default value is `op/get-file-category'."
 
 (defcustom op/date-final-format
   (lambda (datestr) datestr)
-  "final date formatting function. Org-page format dates as
-aaaa-mm-dd by default during the generation of category index
-pages. This function allows the user to change the format.
+  "Function used to format data.
+Org-page format dates as aaaa-mm-dd by default during the generation
+of category index pages.  This function allows the user to change the
+format.
 
 The provided function should accept one string argument which is
-the date in the aaaa-mm-dd format. It should return a string
+the date in the aaaa-mm-dd format.  It should return a string
 representing the date in its new format."
   :group 'org-page :type 'function)
 
 (defcustom op/hashover-comments nil
-  "use hashover commenting system"
+  "When non-nil, use hashover commenting system."
   :group 'org-page
   :type 'boolean)
 
