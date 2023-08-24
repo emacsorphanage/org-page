@@ -211,10 +211,11 @@ mode, format the string with MODE's format settings."
 in format :key, and it will be converted into \"key\" in hash table. This is an
 alternative to `ht-from-plist'."
   (let ((h (ht-create)))
-    (dolist (pair (ht/group-pairs plist) h)
-      (let ((key (substring (symbol-name (car pair)) 1))
-            (value (cadr pair)))
-        (ht-set h key value)))))
+    (while plist
+      (let* ((key (substring (symbol-name (pop plist)) 1))
+             (value (pop plist)))
+        (ht-set h key value)))
+    h))
 
 
 (provide 'op-util)
