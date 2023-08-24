@@ -33,6 +33,47 @@
 (require 'op-vars)
 (require 'op-git)
 
+(defun op/read-org-option (option)
+  "Read option value of org file opened in current buffer.
+e.g:
+#+TITLE: this is title
+will return \"this is title\" if OPTION is \"TITLE\""
+  (let ((match-regexp (org-make-options-regexp `(,option))))
+    (save-excursion
+      (goto-char (point-min))
+      (when (re-search-forward match-regexp nil t)
+        (match-string-no-properties 2 nil)))))
+
+(defun op/generate-tag-uri (tag-name)
+  "Generate tag uri based on TAG-NAME."
+  (concat "/tags/" (encode-string-to-url tag-name) "/"))
+
+(defun op/get-file-category (org-file)
+  "Get org file category presented by ORG-FILE, return all categories if
+ORG-FILE is nil. This is the default function used to get a file's category,
+see `op/retrieve-category-function'. How to judge a file's category is based on
+its name and its root folder name under `op/repository-directory'."
+  (cond ((not org-file)
+         (let ((cat-list '("index" "about" "blog"))) ;; 3 default categories
+           (dolist (f (directory-files op/repository-directory))
+             (when (and (not (equal f "."))
+                        (not (equal f ".."))
+                        (not (equal f ".git"))
+                        (not (member f op/category-ignore-list))
+                        (not (equal f "blog"))
+                        (file-directory-p
+                         (expand-file-name f op/repository-directory)))
+               (setq cat-list (cons f cat-list))))
+           cat-list))
+        ((string= (expand-file-name "index.org" op/repository-directory)
+                  (expand-file-name org-file)) "index")
+        ((string= (expand-file-name "about.org" op/repository-directory)
+                  (expand-file-name org-file)) "about")
+        ((string= (file-name-directory (expand-file-name org-file))
+                  op/repository-directory) "blog")
+        (t (car (split-string (file-relative-name (expand-file-name org-file)
+                                                  op/repository-directory)
+                              "[/\\\\]+")))))
 
 (defun op/get-template-dir ()
   "Return the template directory, it is determined by variable
