@@ -29,7 +29,8 @@
 (require 'op-vars)
 
 (defun compare-standard-date (date1 date2)
-  "Compare two standard ISO 8601 format dates, format is as below:
+  "Compare two standard ISO 8601 format dates DATE1 and DATE2.
+The date format and return values are as below:
 2012-08-17
 1. if date1 is earlier than date2, returns 1
 2. if equal, returns 0
@@ -51,14 +52,17 @@
                             (t 0))))))))
 
 (defun fix-timestamp-string (date-string)
-  "This is a piece of code copied from Xah Lee (I modified a little):
-Returns yyyy-mm-dd format of date-string
-For examples:
+  "Return yyyy-mm-dd format of DATE-STRING.
+
+Examples:
    [Nov. 28, 1994]     => [1994-11-28]
    [November 28, 1994] => [1994-11-28]
    [11/28/1994]        => [1994-11-28]
-Any \"day of week\", or \"time\" info, or any other parts of the string, are
-discarded.
+
+Any \"day of week\", or \"time\" info, or any other parts of the
+string, are discarded.
+
+This is a piece of code is copied from Xah Lee (I modified a little).
 Code detail: URL `http://xahlee.org/emacs/elisp_parse_time.html'"
   (let ((date-str date-string)
         date-list year month date yyyy mm dd)
@@ -141,9 +145,9 @@ T[0-9][0-9]:[0-9][0-9]" date-str)
           (concat yyyy "-" mm "-" dd))))))
 
 (defun confound-email (email)
-  "Confound email to prevent spams using simple rule:
-replace . with <dot>, @ with <at>, e.g.
-name@domain.com => name <at> domain <dot> com"
+  "Confound EMAIL to prevent spams.
+Replace . with <dot>, @ with <at>,
+e.g. name@domain.com => name <at> domain <dot> com."
   (if (not op/confound-email) email
     (replace-regexp-in-string
      " +" " " (replace-regexp-in-string
@@ -177,9 +181,10 @@ so do `trim-string-left' and `trim-string-right'."
   (trim-string-left (trim-string-right str)))
 
 (defun encode-string-to-url (string)
-  "Encode STRING to legal URL. Why we do not use `url-encode-url' to encode the
-string, is that `url-encode-url' will convert all not allowed characters into
-encoded ones, like %3E, but we do NOT want this kind of url."
+  "Encode STRING to legal URL.
+Why we do not use `url-encode-url' to encode the string, is that
+`url-encode-url' will convert all not allowed characters into encoded
+ones, like %3E, but we do NOT want this kind of url."
   (downcase (replace-regexp-in-string "[ .,:;/\\]+" "-" (replace-regexp-in-string "[.!?'\"]" "" (replace-regexp-in-string "[.!?]+$" "" string)))))
 
 (defun get-full-url (uri)
@@ -193,8 +198,9 @@ encoded ones, like %3E, but we do NOT want this kind of url."
     (buffer-string)))
 
 (defun string-to-file (string file &optional mode)
-  "Write STRING into FILE, only when FILE is writable. If MODE is a valid major
-mode, format the string with MODE's format settings."
+  "Write STRING into FILE, only when FILE is writable.
+If MODE is a valid major mode, format the string with MODE's format
+settings."
   (with-temp-buffer
     (insert string)
     (set-buffer-file-coding-system 'utf-8-unix)
@@ -207,9 +213,9 @@ mode, format the string with MODE's format settings."
       (write-region (point-min) (point-max) file))))
 
 (defun convert-plist-to-hashtable (plist)
-  "Convert normal property list PLIST into hash table, keys of PLIST should be
-in format :key, and it will be converted into \"key\" in hash table. This is an
-alternative to `ht-from-plist'."
+  "Convert normal property list PLIST into hash table.
+Keys of PLIST should be in format :key, and it will be converted into
+\"key\" in hash table.  This is an alternative to `ht-from-plist'."
   (let ((h (ht-create)))
     (while plist
       (let* ((key (substring (symbol-name (pop plist)) 1))
