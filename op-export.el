@@ -182,15 +182,17 @@ ancestor directory of assets directory %s." pub-root-dir assets-dir))
     (cons attr-plist component-table)))
 
 (defun op/generate-uri (default-uri-template creation-date title)
-  "Generate URI of org file opened in current buffer. It will be firstly created
-by #+URI option, if it is nil, DEFAULT-URI-TEMPLATE will be used to generate the
-uri. If CREATION-DATE is nil, current date will be used. The uri template option
-can contain following parameters:
+  "Generate URI of org file opened in the current buffer.
+It will be firstly created by #+URI option
+If #+URI is nil, DEFAULT-URI-TEMPLATE will be used to generate the uri.
+If CREATION-DATE is nil, current date will be used.
+
+The uri template option can contain following parameters:
 %y: year of creation date
 %m: month of creation date
 %d: day of creation date
 %f: base file name with suffix .html (a.org->a.html)
-%t: title of current buffer"
+%t: TITLE of current buffer"
   (let ((uri-template (or (op/read-org-option "URI")
                           default-uri-template))
         (date-list (split-string (if creation-date
@@ -206,8 +208,9 @@ can contain following parameters:
                                 (?t . ,encoded-title)))))
 
 (defun op/publish-modified-file (component-table pub-dir)
-  "Publish org file opened in current buffer. COMPONENT-TABLE is the hash table
-used to render the template, PUB-DIR is the directory for published html file.
+  "Publish org file opened in current buffer.
+COMPONENT-TABLE is the hash table used to render the template, PUB-DIR
+is the directory for published html file.
 If COMPONENT-TABLE is nil, the publication will be skipped."
   (when component-table
     (unless (file-directory-p pub-dir)
@@ -227,10 +230,11 @@ If COMPONENT-TABLE is nil, the publication will be skipped."
   )
 
 (defun op/rearrange-category-sorted (file-attr-list)
-  "Rearrange and sort attribute property lists from FILE-ATTR-LIST. Rearrange
-according to category, and sort according to :sort-by property defined in
-`op/category-config-alist', if category is not in `op/category-config-alist',
-the default `blog' category will be used. For sorting, later lies headmost."
+  "Rearrange and sort attribute property lists from FILE-ATTR-LIST.
+Rearrange according to category, and sort according to :sort-by
+property defined in `op/category-config-alist', if category is not in
+`op/category-config-alist', the default `blog' category will be used.
+For sorting, later lies headmost."
   (let (cat-alist cat-list)
     (mapc
      #'(lambda (plist)
@@ -270,8 +274,9 @@ the default `blog' category will be used. For sorting, later lies headmost."
      cat-alist)))
 
 (defun op/update-category-index (file-attr-list pub-base-dir)
-  "Update index page of different categories. FILE-ATTR-LIST is the list of all
-file attribute property lists. PUB-BASE-DIR is the root publication directory."
+  "Update index page of different categories.
+FILE-ATTR-LIST is the list of all file attribute property lists.
+PUB-BASE-DIR is the root publication directory."
   (let* ((sort-alist (op/rearrange-category-sorted file-attr-list))
          cat-dir)
     (mapc
@@ -340,9 +345,9 @@ file attribute property lists. PUB-BASE-DIR is the root publication directory."
      sort-alist)))
 
 (defun op/generate-default-index (file-attr-list pub-base-dir)
-  "Generate default index page, only if index.org does not exist. FILE-ATTR-LIST
-is the list of all file attribute property lists. PUB-BASE-DIR is the root
-publication directory."
+  "Generate default index page, only if index.org does not exist.
+FILE-ATTR-LIST is the list of all file attribute property lists.
+PUB-BASE-DIR is the root publication directory."
   (let ((sort-alist (op/rearrange-category-sorted file-attr-list))
         (id 0)
         (recent-posts (seq-take (sort (copy-sequence file-attr-list)
@@ -409,8 +414,8 @@ publication directory."
        (or (plist-get post :thumb) ""))))
 
 (defun op/generate-default-about (pub-base-dir)
-  "Generate default about page, only if about.org does not exist. PUB-BASE-DIR
-is the root publication directory."
+  "Generate default about page, only if about.org does not exist.
+PUB-BASE-DIR is the root publication directory."
   (let ((pub-dir (expand-file-name "about/" pub-base-dir)))
     (unless (file-directory-p pub-dir)
       (mkdir pub-dir t))
@@ -444,8 +449,9 @@ is the root publication directory."
      (concat pub-dir "index.html") 'html-mode)))
 
 (defun op/update-tags (file-attr-list pub-base-dir)
-  "Update tag pages. FILE-ATTR-LIST is the list of all file attribute property
-lists. PUB-BASE-DIR is the root publication directory.
+  "Update tag pages.
+FILE-ATTR-LIST is the list of all file attribute property lists.
+PUB-BASE-DIR is the root publication directory.
 TODO: improve this function."
   (let ((tag-base-dir (expand-file-name "tags/" pub-base-dir))
         tag-alist tag-list tag-dir)
@@ -569,8 +575,9 @@ TODO: improve this function."
   (concat "/authors/" (encode-string-to-url author-name) "/"))
 
 (defun op/update-authors (file-attr-list pub-base-dir)
-  "Update author pages. FILE-ATTR-LIST is the list of all file attribute property
-lists. PUB-BASE-DIR is the root publication directory.
+  "Update author pages.
+FILE-ATTR-LIST is the list of all file attribute property lists.
+PUB-BASE-DIR is the root publication directory.
 TODO: improve this function."
   (let ((author-base-dir (expand-file-name "authors/" pub-base-dir))
         author-alist author-list author-dir)
