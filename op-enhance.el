@@ -33,8 +33,8 @@
 
 
 (defun op/get-theme-dir ()
-  "Return the resource storage directory, it is determined by variable
-`op/theme-root-directory' and `op/theme'."
+  "Return the resource storage directory.
+It is determined by variable `op/theme-root-directory' and `op/theme'."
   (file-name-as-directory
    (expand-file-name
     (format "%s/resources" (symbol-name op/theme))
