@@ -49,10 +49,13 @@ will return \"this is title\" if OPTION is \"TITLE\""
   (concat "/tags/" (encode-string-to-url tag-name) "/"))
 
 (defun op/get-file-category (org-file)
-  "Get org file category presented by ORG-FILE, return all categories if
-ORG-FILE is nil. This is the default function used to get a file's category,
-see `op/retrieve-category-function'. How to judge a file's category is based on
-its name and its root folder name under `op/repository-directory'."
+  "Get org file category presented by ORG-FILE.
+When ORG-FILE is nil, return all the categories.
+
+This is the default function used to get a file's category, see
+`op/retrieve-category-function'. How to judge a file's category is
+based on its name and its root folder name under
+`op/repository-directory'."
   (cond ((not org-file)
          (let ((cat-list '("index" "about" "blog"))) ;; 3 default categories
            (dolist (f (directory-files op/repository-directory))
@@ -76,8 +79,9 @@ its name and its root folder name under `op/repository-directory'."
                               "[/\\\\]+")))))
 
 (defun op/get-template-dir ()
-  "Return the template directory, it is determined by variable
-`op/theme-root-directory' with `op/theme' or `op/template-directory'."
+  "Return the template directory.
+It is determined by variable `op/theme-root-directory' with `op/theme'
+or `op/template-directory'."
   (or op/template-directory
       (file-name-as-directory
        (expand-file-name
@@ -85,22 +89,24 @@ its name and its root folder name under `op/repository-directory'."
         op/theme-root-directory))))
 
 (defun op/get-cache-item (key)
-  "Get the item associated with KEY in `op/item-cache', if `op/item-cache' is
-nil or there is no item associated with KEY in it, return nil."
+  "Get the item associated with KEY in `op/item-cache'.
+If `op/item-cache' is nil or there is no item associated with KEY in it,
+return nil."
   (and op/item-cache
        (plist-get op/item-cache key)))
 
 (defun op/update-cache-item (key value)
-  "Update the item associated with KEY in `op/item-cache', if `op/item-cache' is
-nil, initialize it."
+  "Update the item associated with KEY in `op/item-cache' to VALUE.
+If `op/item-cache' is nil, initialize it."
   (if op/item-cache
       (plist-put op/item-cache key value)
     (setq op/item-cache `(,key ,value)))
   value)
 
 (defmacro op/get-cache-create (key &rest body)
-  "Firstly get item from `op/item-cache' with KEY, if item not found, evaluate
-BODY and push the result into cache and return it."
+  "Get item from `op/item-cache' with KEY.
+If item is not found, evaluate BODY and push the result into cache and
+return it."
   `(or (op/get-cache-item ,key)
        (op/update-cache-item ,key (funcall (lambda () ,@body)))))
 
@@ -114,9 +120,10 @@ Default to capitalized CATEGORY name if no :label property found."
         (capitalize category))))
 
 (defun op/render-header (&optional param-table)
-  "Render the header on each page. PARAM-TABLE is the hash table from mustache
-to render the template. If it is not set or nil, this function will try to build
-a hash table accordint to current buffer."
+  "Render the header on each page.
+PARAM-TABLE is the hash table from mustache to render the template. If
+it is not set or nil, this function will try to build a hash table
+accordint to current buffer."
   (mustache-render
    (op/get-cache-create
     :header-template
@@ -131,11 +138,12 @@ a hash table accordint to current buffer."
            ("keywords" (op/read-org-option "KEYWORDS"))))))
 
 (defun op/render-navigation-bar (&optional param-table)
-  "Render the navigation bar on each page. it will be read firstly from
-`op/item-cache', if there is no cached content, it will be rendered
-and pushed into cache from template. PARAM-TABLE is the hash table for mustache
-to render the template. If it is not set or nil, this function will try to
-render from a default hash table."
+  "Render the navigation bar on each page.
+It will be read firstly from `op/item-cache', if there is no cached
+content, it will be rendered and pushed into cache from template.
+PARAM-TABLE is the hash table for mustache to render the template. If
+it is not set or nil, this function will try to render from a default
+hash table."
   (op/get-cache-create
    :nav-bar-html
    (message "Render navigation bar from template")
@@ -169,9 +177,10 @@ render from a default hash table."
                   (if op/organization (ht ("authors-li" t)) (ht ("avatar" op/personal-avatar))))))))
 
 (defun op/render-content (&optional template param-table)
-  "Render the content on each page. TEMPLATE is the template name for rendering,
-if it is not set of nil, will use default post.mustache instead. PARAM-TABLE is
-similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
+  "Render the content on each page.
+TEMPLATE is the template name for rendering, if it is not set of nil,
+will use default post.mustache instead. PARAM-TABLE is similar to
+`op/render-header'. `op/highlight-render' is `js' or `htmlize'."
   (mustache-render
    (op/get-cache-create
     (if template
@@ -194,8 +203,8 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
                    (org-export-as op/export-backend nil nil t nil))))))))
 
 (defun op/render-footer (&optional param-table)
-  "Render the footer on each page. PARAM-TABLE is similar to
-`op/render-header'."
+  "Render the footer on each page.
+PARAM-TABLE is similar to `op/render-header'."
   (mustache-render
    (op/get-cache-create
     :footer-template
@@ -264,8 +273,9 @@ similar to `op/render-header'. `op/highlight-render' is `js' or `htmlize'."
 
 ;;; this function is deprecated
 (defun op/update-default-template-parameters ()
-  "Update the default template parameters. It is only needed when user did some
-customization to relevant variables."
+  "Update the default template parameters.
+It is only needed when user did some customization to relevant
+variables."
   (ht-update
    op/default-template-parameters
    (ht ("site-main-title" op/site-main-title)
@@ -287,7 +297,10 @@ customization to relevant variables."
 (defun op/compose-template-parameters (attr-plist content)
   "Compose parameters for org file represented in current buffer.
 ATTR-PLIST is the attribute plist of the buffer, retrieved by the combination of
-`org-export--get-inbuffer-options' and `op/get-inbuffer-extra-options'."
+`org-export--get-inbuffer-options' and `op/get-inbuffer-extra-options'.
+
+The return value is a hash table mapping attributes from ATTR-PLIST to
+their values.  In addition, \"content\" attribute will be set to CONTENT."
   (let* ((info
           (org-combine-plists
            (org-export--get-global-options 'html)
