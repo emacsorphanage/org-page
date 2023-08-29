@@ -173,14 +173,14 @@ files, committed by org-page.")
 `op/highlight-render': [optional](default \\='js)"
   (unless (and op/repository-directory
                (file-directory-p op/repository-directory))
-    (error "Directory `%s' is not properly configured."
+    (error "Directory `%s' is not properly configured"
            (symbol-name 'op/repository-directory)))
   (unless (file-directory-p (op/get-theme-dir))
     (error "Org-page cannot detect theme directory `%s' automatically, please \
-help configure it manually, usually it should be <org-page directory>/themes/."
+help configure it manually, usually it should be <org-page directory>/themes/"
            (symbol-name 'op/theme)))
   (unless op/site-domain
-    (error "Site domain `%s' is not properly configured."
+    (error "Site domain `%s' is not properly configured"
            (symbol-name 'op/site-domain)))
 
   (setq op/repository-directory (expand-file-name op/repository-directory))
@@ -314,7 +314,7 @@ responsibility to guarantee the two parameters are valid."
          (path (concat dir filename)))
     (op/git-change-branch op/repository-directory op/repository-org-branch)
     (if (file-exists-p path)
-        (error "Post `%s' already exists." path))
+        (error "Post `%s' already exists" path))
     (unless (file-directory-p dir)
       (mkdir dir t))
     (switch-to-buffer (find-file path))
