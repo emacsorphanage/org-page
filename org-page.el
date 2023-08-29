@@ -78,7 +78,7 @@ then the branch `op/repository-html-branch' will be pushed to remote repo."
    (let* ((f (y-or-n-p "Publish all org files? "))
           (b (unless f (read-string "Base git commit: " "HEAD~1")))
           (p (when (y-or-n-p
-                    "Publish to a directory? (to original repo if not) ")
+                    "Publish to a directory (to original repo if not)? ")
                (read-directory-name "Publication directory: ")))
           (a (when (not p)
                (y-or-n-p "Auto commit to repo? ")))
