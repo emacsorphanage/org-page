@@ -142,8 +142,7 @@ files, committed by org-page.")
       (message "Publication finished, output directory: %s." pub-base-dir))))
 
 (defun op/new-repository (repo-dir)
-  "Generate a new git repository in directory REPO-DIR, which can be
-perfectly manipulated by org-page."
+  "Generate a new org-page-compatible git repository in directory REPO-DIR."
   (interactive
    (list (read-directory-name
           "Specify a directory to become the repository: " nil nil nil)))
@@ -194,8 +193,8 @@ help configure it manually, usually it should be <org-page directory>/themes/."
     (setq op/highlight-render 'js)))
 
 (defun op/generate-readme (save-dir)
-  "Generate README for `op/new-repository'. SAVE-DIR is the directory where to
-save generated README."
+  "Generate README for `op/new-repository'.
+SAVE-DIR is the directory where to save generated README."
   (string-to-file
    (concat
     (format "Personal site of %s, managed by emacs, org mode, git and org-page."
@@ -207,8 +206,8 @@ structure are organized by org-page.")
    (expand-file-name "README" save-dir)))
 
 (defun op/generate-index (save-dir)
-  "Generate index.org for `op/new-repository'. SAVE-DIR is the directory where
-to save generated index.org."
+  "Generate index.org for `op/new-repository'.
+SAVE-DIR is the directory where to save generated index.org."
   (string-to-file
    (concat "#+TITLE: Index" "\n\n"
            (format "This is the home page of %s."
@@ -216,8 +215,8 @@ to save generated index.org."
    (expand-file-name "index.org" save-dir)))
 
 (defun op/generate-about (save-dir)
-  "Generate about.org for `op/new-repository'. SAVE-DIR is the directory where
-to save generated about.org."
+  "Generate about.org for `op/new-repository'.
+SAVE-DIR is the directory where to save generated about.org."
   (string-to-file
    (concat "#+TITLE: About" "\n\n"
            (format "* About %s" (or user-full-name "[Author]")) "\n\n"
