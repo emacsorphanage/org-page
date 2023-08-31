@@ -40,8 +40,9 @@ When optional BRANCH is offered, check that branch instead of pointer HEAD."
          (output (git-run "ls-tree" "-r" "--name-only"
                           (or branch "HEAD"))))
     (--map (expand-file-name it repo-dir)
+	   (--filter (not (validate-ignore-categories it))
            (--filter (string-suffix-p org-file-ext it t)
-                     (split-string output "\n")))))
+                     (split-string output "\n"))))))
 
 (defun op/git-branch-name (repo-dir)
   "Return name of current branch of git repository presented by REPO-DIR."
