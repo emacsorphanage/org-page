@@ -5,7 +5,7 @@
 ;; Author: Kelvin Hu <ini DOT kelvin AT gmail DOT com>
 ;; Keywords: org-mode, convenience, beautify
 ;; Homepage: https://github.com/kelvinh/org-page
-
+;; Package-Requires: ((ht "1.5") (simple-httpd "1.4.6") (mustache "0.22") (htmlize "1.47") (org "8.0") (dash "2.0.0") (cl-lib "0.5") (git "0.1.1"))
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
