@@ -223,6 +223,17 @@ Keys of PLIST should be in format :key, and it will be converted into
         (ht-set h key value)))
     h))
 
+(defun validate-ignore-categories (file)
+  (if op/category-config-alist
+      (let ((rst nil)
+	    (len (length op/category-ignore-list)))
+	(while (> len 0)
+	  (setq len (- len 1))
+	  (when (string-prefix-p (nth len op/category-ignore-list) file)
+	    (setq len 0)
+	    (setq rst t)))
+	rst)))
+
 
 (provide 'op-util)
 
