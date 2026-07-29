@@ -50,6 +50,7 @@
 (require 'op-git)
 (require 'op-enhance)
 (require 'op-export)
+(require 'op-watch)
 (require 'simple-httpd)
 
 (defconst org-page-version "0.5")
@@ -339,6 +340,22 @@ When invoked without prefix argument then PATH defaults to
   (httpd-serve-directory path)
   (browse-url (format "http://%s:%d" (system-name) httpd-port)))
 
+(defun op/do-publication-and-preview-watch (path)
+  "Do publication in PATH and preview the site in browser, then
+automatically re-publish any changed .org file.
+
+When invoked without prefix argument then PATH defaults to
+`op/site-preview-directory'."
+  (interactive
+   (if current-prefix-arg
+       (list (read-directory-name "Path: "))
+     (list op/site-preview-directory)))
+
+  (op/do-publication-and-preview-site path)
+  (op/stop-all-watches)
+
+  (op/watch-files (op/git-all-files op/repository-directory)
+                  (file-name-as-directory (expand-file-name path))))
 
 (provide 'org-page)
 
